@@ -30,14 +30,19 @@ LIB:= libyoloplugin.a
 INCS:= -I"$(TENSORRT_INSTALL_DIR)/include" -I"/usr/local/cuda-$(CUDA_VER)/include"
 LIBS:= -L"$(TENSORRT_INSTALL_DIR)/lib" -lnvinfer -lnvinfer_plugin \
 	   -L"/usr/local/cuda-$(CUDA_VER)/lib64" -lcudart -lcublas -lcurand 
-CFLAGS = -std=c++11 -fPIC -Wunused-variable `pkg-config --cflags glib-2.0`
+CFLAGS:= -std=c++11 -fPIC -Wunused-variable `pkg-config --cflags glib-2.0`
 
-all: deps
+all: dir deps
 	ar rcs $(LIB) $(OBJS)
+	mv $(OBJS) obj
+
+dir:	
+	if [ ! -d "models" ]; then mkdir -p models; fi
+	if [ ! -d "obj" ]; then mkdir -p obj; fi
 
 deps: $(SRCS)
 	$(CXX) $(INCS) -c $(SRCS) $(CFLAGS) $(LIBS)
 
-clean:
-	rm ./*.o
-	rm ./*.a
+clean: 
+	rm -f ./obj/*.o
+	rm -f ./*.a
