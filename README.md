@@ -40,7 +40,7 @@ Following steps describe the changes required to run YOLO in the deepstream app
     ```
 
 2.  Update path to the video file source in the URI field under [source0] group
-    of the config file
+    of the config file    
     `uri=file://relative/path/to/source/video`
 
 3.  Go to the sources/gst-yoloplugin/yoloplugin_lib/data folder and add your yolo .cfg and .weights file.
@@ -57,10 +57,12 @@ Following steps describe the changes required to run YOLO in the deepstream app
 
 5.  Update the paths of the .cfg and weights file and other network params in network_config.cpp file(if needed).
 
-6.  Add absolute paths of images to be used for calibration in the calibrationImages.txt file within the data folder.
+6.  Create a new folder named `models` within `\yoloplugin_lib\` to be used for caching TensorRT plan files   
 
-7.  Go the sources/gst-yoloplugin directory and run    
+7.  Add absolute paths of images to be used for calibration in the calibrationImages.txt file within the data folder.
+
+8.  Go the sources/gst-yoloplugin directory and run    
     `make && sudo make install`
 
-8.  Go to the root folder of this repo and run     
+9.  Go to the root folder of this repo and run     
     `deepstream-app -c config/deepstream-app_yolo_config.txt`
