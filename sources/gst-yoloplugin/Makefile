@@ -57,7 +57,7 @@ PKGS:= gstreamer-1.0 gstreamer-base-1.0 gstreamer-video-1.0
 CFLAGS+=$(shell pkg-config --cflags $(PKGS))
 LIBS+=$(shell pkg-config --libs $(PKGS))
 
-all: $(LIB)
+all: $(DEP) $(LIB)
 
 %.o: %.cpp $(INCS) Makefile
 	@echo $(CFLAGS)
@@ -75,3 +75,5 @@ install: $(LIB)
 
 clean:
 	rm -rf $(OBJS) $(LIB)
+	rm -f ./yoloplugin_lib/obj/*.o
+	rm -f ./yoloplugin_lib/*.a
