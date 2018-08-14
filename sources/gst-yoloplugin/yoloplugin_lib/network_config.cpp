@@ -25,18 +25,21 @@ SOFTWARE.
 
 #include "network_config.h"
 
-// Common global vars
-const bool PRINT_PERF_INFO = false;
-const bool PRINT_PRED_INFO = false;
+namespace config
+{
 
-const std::string PRECISION = "kFLOAT";
-const std::string INPUT_BLOB_NAME = "data";
-const uint INPUT_H = 416;
-const uint INPUT_W = 416;
-const uint INPUT_C = 3;
-const uint64_t INPUT_SIZE = INPUT_C * INPUT_H * INPUT_W;
-const uint OUTPUT_CLASSES = 80;
-const std::vector<std::string> CLASS_NAMES
+// Common global vars
+const bool kPRINT_PERF_INFO = false;
+const bool kPRINT_PRED_INFO = false;
+
+const std::string kPRECISION = "kFLOAT";
+const std::string kINPUT_BLOB_NAME = "data";
+const uint kINPUT_H = 416;
+const uint kINPUT_W = 416;
+const uint kINPUT_C = 3;
+const uint64_t kINPUT_SIZE = kINPUT_C * kINPUT_H * kINPUT_W;
+const uint kOUTPUT_CLASSES = 80;
+const std::vector<std::string> kCLASS_NAMES
     = {"person",        "bicycle",       "car",           "motorbike",
        "aeroplane",     "bus",           "train",         "truck",
        "boat",          "traffic light", "fire hydrant",  "stop sign",
@@ -57,61 +60,61 @@ const std::vector<std::string> CLASS_NAMES
        "microwave",     "oven",          "toaster",       "sink",
        "refrigerator",  "book",          "clock",         "vase",
        "scissors",      "teddy bear",    "hair drier",    "toothbrush"};
-const std::string DS_LIB_PATH = "sources/gst-yoloplugin/yoloplugin_lib/";
-const std::string MODELS_PATH = DS_LIB_PATH + "models/";
-const std::string CALIBRATION_SET = DS_LIB_PATH + "data/calibrationImages.txt";
+const std::string kDS_LIB_PATH = "sources/gst-yoloplugin/yoloplugin_lib/";
+const std::string kMODELS_PATH = kDS_LIB_PATH + "models/";
+const std::string kCALIBRATION_SET = kDS_LIB_PATH + "data/calibration_images.txt";
 
-// Model V2 specific global vars
+// Model V2 specific common global vars
 #ifdef MODEL_V2
 
-const float PROB_THRESH = 0.5f;
-const float NMS_THRESH = 0.5f;
-
-const std::string YOLO_CONFIG_PATH = DS_LIB_PATH + "data/yolov2.cfg";
-const std::string TRAINED_WEIGHTS_PATH = DS_LIB_PATH + "data/yolov2.weights";
-const std::string NETWORK_TYPE = "yolov2";
-const std::string CALIB_TABLE_PATH = DS_LIB_PATH + "calibration/yolov2-calibration.table";
-
-const uint BBOXES = 5;
-const uint STRIDE = 32;
-const uint GRID_SIZE = INPUT_H / STRIDE;
-const uint64_t OUTPUT_SIZE = GRID_SIZE * GRID_SIZE * (BBOXES * (5 + OUTPUT_CLASSES));
+const float kPROB_THRESH = 0.5f;
+const float kNMS_THRESH = 0.5f;
+const std::string kYOLO_CONFIG_PATH = kDS_LIB_PATH + "data/yolov2.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = kDS_LIB_PATH + "data/yolov2.weights";
+const std::string kNETWORK_TYPE = "yolov2";
+const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov2-calibration.table";
+const uint kBBOXES = 5;
 // Anchors have been converted to network input resolution {0.57273, 0.677385, 1.87446,
 // 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828} x 32 (stride)
-const std::vector<float> ANCHORS = {18.32736,  21.67632,  59.98272,  66.00096,  106.82976,
-                                    175.17888, 252.25024, 112.88896, 312.65664, 293.38496};
-const std::string OUTPUT_BLOB_NAME = "region_32";
-
+const std::vector<float> kANCHORS = {18.32736,  21.67632,  59.98272,  66.00096,  106.82976,
+                                     175.17888, 252.25024, 112.88896, 312.65664, 293.38496};
 #endif
 
-// Model V3 specific global vars
+// Model V2 specific unique global vars
+const uint kSTRIDE = 32;
+const uint kGRID_SIZE = kINPUT_H / kSTRIDE;
+const uint64_t kOUTPUT_SIZE = kGRID_SIZE * kGRID_SIZE * (kBBOXES * (5 + kOUTPUT_CLASSES));
+const std::string kOUTPUT_BLOB_NAME = "region_32";
+
+// Model V3 specific common global vars
 #ifdef MODEL_V3
 
-const float PROB_THRESH = 0.7f;
-const float NMS_THRESH = 0.5f;
-
-const std::string YOLO_CONFIG_PATH = DS_LIB_PATH + "data/yolov3.cfg";
-const std::string TRAINED_WEIGHTS_PATH = DS_LIB_PATH + "data/yolov3.weights";
-const std::string NETWORK_TYPE = "yolov3";
-const std::string CALIB_TABLE_PATH = DS_LIB_PATH + "calibration/yolov3-calibration.table";
-
-const uint BBOXES = 3;
-const uint STRIDE_1 = 32;
-const uint STRIDE_2 = 16;
-const uint STRIDE_3 = 8;
-const uint GRID_SIZE_1 = INPUT_H / STRIDE_1;
-const uint GRID_SIZE_2 = INPUT_H / STRIDE_2;
-const uint GRID_SIZE_3 = INPUT_H / STRIDE_3;
-const uint64_t OUTPUT_SIZE_1 = GRID_SIZE_1 * GRID_SIZE_1 * (BBOXES * (5 + OUTPUT_CLASSES));
-const uint64_t OUTPUT_SIZE_2 = GRID_SIZE_2 * GRID_SIZE_2 * (BBOXES * (5 + OUTPUT_CLASSES));
-const uint64_t OUTPUT_SIZE_3 = GRID_SIZE_3 * GRID_SIZE_3 * (BBOXES * (5 + OUTPUT_CLASSES));
-const std::vector<int> MASK_1 = {6, 7, 8};
-const std::vector<int> MASK_2 = {3, 4, 5};
-const std::vector<int> MASK_3 = {0, 1, 2};
-const std::string OUTPUT_BLOB_NAME_1 = "yolo_83";
-const std::string OUTPUT_BLOB_NAME_2 = "yolo_95";
-const std::string OUTPUT_BLOB_NAME_3 = "yolo_107";
-const std::vector<float> ANCHORS = {10.0, 13.0, 16.0,  30.0,  33.0, 23.0,  30.0,  61.0,  62.0,
-                                    45.0, 59.0, 119.0, 116.0, 90.0, 156.0, 198.0, 373.0, 326.0};
-
+const float kPROB_THRESH = 0.7f;
+const float kNMS_THRESH = 0.5f;
+const std::string kYOLO_CONFIG_PATH = kDS_LIB_PATH + "data/yolov3.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = kDS_LIB_PATH + "data/yolov3.weights";
+const std::string kNETWORK_TYPE = "yolov3";
+const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov3-calibration.table";
+const uint kBBOXES = 3;
+const std::vector<float> kANCHORS = {10.0, 13.0, 16.0,  30.0,  33.0, 23.0,  30.0,  61.0,  62.0,
+                                     45.0, 59.0, 119.0, 116.0, 90.0, 156.0, 198.0, 373.0, 326.0};
 #endif
+
+// Model V3 specific unique global vars
+const uint kSTRIDE_1 = 32;
+const uint kSTRIDE_2 = 16;
+const uint kSTRIDE_3 = 8;
+const uint kGRID_SIZE_1 = kINPUT_H / kSTRIDE_1;
+const uint kGRID_SIZE_2 = kINPUT_H / kSTRIDE_2;
+const uint kGRID_SIZE_3 = kINPUT_H / kSTRIDE_3;
+const uint64_t kOUTPUT_SIZE_1 = kGRID_SIZE_1 * kGRID_SIZE_1 * (kBBOXES * (5 + kOUTPUT_CLASSES));
+const uint64_t kOUTPUT_SIZE_2 = kGRID_SIZE_2 * kGRID_SIZE_2 * (kBBOXES * (5 + kOUTPUT_CLASSES));
+const uint64_t kOUTPUT_SIZE_3 = kGRID_SIZE_3 * kGRID_SIZE_3 * (kBBOXES * (5 + kOUTPUT_CLASSES));
+const std::vector<int> kMASK_1 = {6, 7, 8};
+const std::vector<int> kMASK_2 = {3, 4, 5};
+const std::vector<int> kMASK_3 = {0, 1, 2};
+const std::string kOUTPUT_BLOB_NAME_1 = "yolo_83";
+const std::string kOUTPUT_BLOB_NAME_2 = "yolo_95";
+const std::string kOUTPUT_BLOB_NAME_3 = "yolo_107";
+
+} // namespace config

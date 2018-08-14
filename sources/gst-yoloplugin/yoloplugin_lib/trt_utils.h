@@ -36,8 +36,10 @@ SOFTWARE.
 
 #include "NvInfer.h"
 
+#include "ds_image.h"
 #include "plugin_factory.h"
 
+class DsImage;
 struct BBox
 {
     float x1, y1, x2, y2;
@@ -73,6 +75,8 @@ public:
 inline float sigmoid(const float& x) { return 1.0f / (1.0f + exp(-x)); }
 
 // Common helper functions
+cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages, const int& inputH,
+                         const int& inputW);
 std::string trim(std::string s);
 float clamp(const float val, const float minVal, const float maxVal);
 bool fileExists(const std::string fileName);
@@ -81,7 +85,7 @@ BBox convertBBox(const float& bx, const float& by, const float& bw, const float&
 void printPredictions(const BBoxInfo& info, const std::string& className);
 std::vector<std::string> loadImageList(const std::string filename);
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo);
-nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath);
+nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFactory* pluginFactory);
 std::vector<std::map<std::string, std::string>> parseConfig(const std::string cfgFilePath);
 void displayConfig(const std::vector<std::map<std::string, std::string>>& blocks);
 std::vector<float> loadWeights(const std::string weightsFilePath, const std::string& networkType);

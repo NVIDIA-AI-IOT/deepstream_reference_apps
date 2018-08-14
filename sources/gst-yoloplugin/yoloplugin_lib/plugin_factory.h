@@ -48,10 +48,11 @@ class PluginFactory : public nvinfer1::IPluginFactory
 {
 
 public:
+    PluginFactory();
     nvinfer1::IPlugin* createPlugin(const char* layerName, const void* serialData,
                                     size_t serialLength) override;
     bool isPlugin(const char* name);
-    void destroyPlugin();
+    void destroy();
 
 private:
     static const int m_MaxLeakyLayers = 72;
@@ -75,7 +76,7 @@ private:
 
     unique_ptr_INvPlugin m_ReorgLayer;
     unique_ptr_INvPlugin m_RegionLayer;
-    unique_ptr_INvPlugin m_LeakyReLULayer[m_MaxLeakyLayers];
+    unique_ptr_INvPlugin m_LeakyReLULayers[m_MaxLeakyLayers];
 };
 
 #endif // __PLUGIN_LAYER_H__

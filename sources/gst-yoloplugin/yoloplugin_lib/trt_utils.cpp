@@ -25,8 +25,19 @@ SOFTWARE.
 
 #include "trt_utils.h"
 
+#include <experimental/filesystem>
 #include <fstream>
 #include <iomanip>
+
+cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages, const int& inputH,
+                         const int& inputW)
+{
+    std::vector<cv::Mat> letterboxStack(inputImages.size());
+    for (uint i = 0; i < inputImages.size(); ++i)
+    { inputImages.at(i).getLetterBoxedImage().copyTo(letterboxStack.at(i)); }
+    return cv::dnn::blobFromImages(letterboxStack, 1.0, cv::Size(inputW, inputH),
+                                   cv::Scalar(0.0, 0.0, 0.0), false, false);
+}
 
 static inline void leftTrim(std::string& s)
 {
@@ -45,21 +56,20 @@ inline std::string trim(std::string s)
     return s;
 }
 
-float clamp(const float val, const float val1, const float val2)
+float clamp(const float val, const float minVal, const float maxVal)
 {
-    assert(val1 <= val2);
-    return std::min(val2, std::max(val1, val));
+    assert(minVal <= maxVal);
+    return std::min(maxVal, std::max(minVal, val));
 }
 
 bool fileExists(const std::string fileName)
 {
-    FILE* file = fopen(fileName.c_str(), "r");
-    if (file != nullptr)
+    if (!std::experimental::filesystem::exists(std::experimental::filesystem::path(fileName)))
     {
-        fclose(file);
-        return true;
+        std::cout << "File does not exist : " << fileName << std::endl;
+        return false;
     }
-    return false;
+    return true;
 }
 
 BBox convertBBox(const float& bx, const float& by, const float& bw, const float& bh,
@@ -88,7 +98,7 @@ void printPredictions(const BBoxInfo& b, const std::string& className)
 
 std::vector<std::string> loadImageList(const std::string filename)
 {
-    fileExists(filename);
+    assert(fileExists(filename));
     std::vector<std::string> labelInfo;
 
     FILE* f = fopen(filename.c_str(), "r");
@@ -156,7 +166,7 @@ std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<B
     return out;
 }
 
-nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath)
+nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFactory* pluginFactory)
 {
     // reading the model in memory
     std::cout << "Loading TRT Engine..." << std::endl;
@@ -177,15 +187,12 @@ nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath)
 
     Logger nvLogger;
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(nvLogger);
-    PluginFactory pluginFactory;
     nvinfer1::ICudaEngine* engine
-        = runtime->deserializeCudaEngine(modelMem, modelSize, &pluginFactory);
+        = runtime->deserializeCudaEngine(modelMem, modelSize, pluginFactory);
     free(modelMem);
-
     runtime->destroy();
-    pluginFactory.destroyPlugin();
-
     std::cout << "Loading Complete!" << std::endl;
+
     return engine;
 }
 
@@ -228,7 +235,7 @@ std::vector<std::map<std::string, std::string>> parseConfig(const std::string cf
 
 void displayConfig(const std::vector<std::map<std::string, std::string>>& blocks)
 {
-    for (int i = 0; i < blocks.size(); ++i)
+    for (uint i = 0; i < blocks.size(); ++i)
     {
         std::map<std::string, std::string> block = blocks.at(i);
         std::cout << "--------------------------------" << std::endl;
@@ -260,7 +267,10 @@ std::vector<float> loadWeights(const std::string weightsFilePath, const std::str
         file.ignore(4 * 5);
     }
     else
-        assert(0 && "Invalid network type");
+    {
+        std::cout << "Invalid network type" << std::endl;
+        assert(0);
+    }
 
     std::vector<float> weights;
     char* floatWeight = new char[4];

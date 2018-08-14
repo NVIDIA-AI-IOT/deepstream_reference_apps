@@ -36,7 +36,6 @@ class YoloV2 : public Yolo
 {
 public:
     explicit YoloV2(const uint batchSize);
-    virtual ~YoloV2();
     void doInference(const unsigned char* input) override;
     std::vector<BBoxInfo> decodeDetections(const int& imageIdx, const int& imageH,
                                            const int& imageW) override;

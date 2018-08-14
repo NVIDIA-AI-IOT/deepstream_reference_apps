@@ -27,6 +27,7 @@ SOFTWARE.
 #define _YOLO_H_
 
 #include "calibrator.h"
+#include "plugin_factory.h"
 #include "trt_utils.h"
 
 #include "NvInfer.h"
@@ -81,6 +82,8 @@ protected:
     std::vector<void*> m_Bindings;
     std::vector<float*> m_TrtOutputBuffers;
     int m_InputIndex;
+    cudaStream_t m_CudaStream;
+    PluginFactory* m_PluginFactory;
 
 private:
     void createYOLOEngine(const int batchSize, const std::string yoloConfigPath,

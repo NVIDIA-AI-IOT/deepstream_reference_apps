@@ -32,9 +32,9 @@ SOFTWARE.
 class Int8EntropyCalibrator : public nvinfer1::IInt8EntropyCalibrator
 {
 public:
-    Int8EntropyCalibrator(const int& batchSize, const std::string& calibrationSetPath,
+    Int8EntropyCalibrator(const uint& batchSize, const std::string& calibrationSetPath,
                           const std::string& calibTableFilePath, const uint64_t& inputSize,
-                          const int& inputH, const int& inputW, const std::string& inputBlobName);
+                          const uint& inputH, const uint& inputW, const std::string& inputBlobName);
     virtual ~Int8EntropyCalibrator() { NV_CUDA_CHECK(cudaFree(m_DeviceInput)); }
 
     int getBatchSize() const override { return m_BatchSize; }
@@ -43,14 +43,14 @@ public:
     void writeCalibrationCache(const void* cache, size_t length) override;
 
 private:
-    const int m_BatchSize;
-    const int m_InputH;
-    const int m_InputW;
+    const uint m_BatchSize;
+    const uint m_InputH;
+    const uint m_InputW;
     const uint64_t m_InputSize;
     const uint64_t m_InputCount;
     const char* m_InputBlobName;
     const std::string m_CalibTableFilePath{nullptr};
-    int m_ImageIndex;
+    uint m_ImageIndex;
     bool m_ReadCache{true};
     void* m_DeviceInput{nullptr};
     std::vector<std::string> m_ImageList;

@@ -48,7 +48,8 @@ static void decodeBatchDetections(const YoloPluginCtx* ctx, std::vector<YoloPlug
         std::vector<BBoxInfo> remaining
             = nonMaximumSuppression(ctx->inferenceNetwork->getNMSThresh(), binfo);
         out->numObjects = remaining.size();
-        for (int j = 0; j < remaining.size(); ++j)
+        assert(out->numObjects <= MAX_OBJECTS_PER_FRAME);
+        for (uint j = 0; j < remaining.size(); ++j)
         {
             BBoxInfo b = remaining.at(j);
             YoloPluginObject obj;
@@ -72,7 +73,7 @@ static void dsPreProcessBatchInput(const std::vector<cv::Mat*>& cvmats, cv::Mat&
 
     std::vector<cv::Mat> batch_images(
         cvmats.size(), cv::Mat(cv::Size(processingWidth, processingHeight), CV_8UC3));
-    for (int i = 0; i < cvmats.size(); ++i)
+    for (uint i = 0; i < cvmats.size(); ++i)
     {
         cv::Mat imageResize, imageBorder, imageFloat, inputImage;
         inputImage = *cvmats.at(i);

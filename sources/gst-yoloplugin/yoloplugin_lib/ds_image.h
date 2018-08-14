@@ -37,14 +37,15 @@ private:
     float m_ScalingFactor;
     std::string m_ImagePath;
 
-    // unaltered original DsImage
+    // unaltered original Image
     cv::Mat m_OrigImage;
-    // letterboxed DsImage given to the network as input
+    // letterboxed Image given to the network as input
     cv::Mat m_LetterboxImage;
 
 public:
-    explicit DsImage(const std::string& path, const int& inputH, const int& inputW);
-    const float* getImageData() const;
+    DsImage();
+    DsImage(const std::string& path, const int& inputH, const int& inputW);
+    cv::Mat getLetterBoxedImage() const;
 };
 
 #endif

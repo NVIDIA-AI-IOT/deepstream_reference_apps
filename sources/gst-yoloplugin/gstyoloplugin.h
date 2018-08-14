@@ -42,7 +42,7 @@ SOFTWARE.
 #include <cuda_runtime.h>
 
 /* Package and library details required for plugin_init */
-#define PACKAGE "dsexample"
+#define PACKAGE "nvyolo"
 #define VERSION "1.0"
 #define LICENSE "Proprietary"
 #define DESCRIPTION "NVIDIA example plugin for integration with DeepStream on DGPU"
@@ -96,7 +96,7 @@ struct _GstYoloPlugin
     gint processing_height;
 
     // Amount of objects processed in single call to algorithm
-    gint batch_size;
+    guint batch_size;
 
     // GPU ID on which we expect to execute the task
     guint gpu_id;

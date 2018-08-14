@@ -35,6 +35,7 @@ SOFTWARE.
 extern "C" {
 #endif
 
+#define MAX_OBJECTS_PER_FRAME 32
 typedef struct YoloPluginCtx YoloPluginCtx;
 typedef struct YoloPluginOutput YoloPluginOutput;
 // Init parameters structure as input, required for instantiating yoloplugin_lib
@@ -72,7 +73,7 @@ typedef struct
 struct YoloPluginOutput
 {
     int numObjects;
-    YoloPluginObject object[20];
+    YoloPluginObject object[MAX_OBJECTS_PER_FRAME];
 };
 
 // Initialize library context

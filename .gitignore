@@ -20,27 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
-SRCS:= $(wildcard *.cpp)
-BUILD_PATH:= ./build/
-OBJS= $(patsubst %, $(BUILD_PATH)%, $(SRCS:.cpp=.o))
-TARGET:= libyoloplugin.a
-INCS:= -I"$(TENSORRT_INSTALL_DIR)/include" -I"/usr/local/cuda-$(CUDA_VER)/include"
-LIBS:= -L"$(TENSORRT_INSTALL_DIR)/lib" -lnvinfer -lnvinfer_plugin \
-	   -L"/usr/local/cuda-$(CUDA_VER)/lib64" -lcudart -lcublas -lcurand 
-CXXFLAGS:= -std=c++11 -lstdc++fs -fPIC -Wall -Wunused-function -Wunused-variable `pkg-config --cflags glib-2.0` 
-
-all: dir $(SRCS) $(OBJS)
-	ar rcs $(TARGET) $(OBJS)
-
-dir:	
-	if [ ! -d "models" ]; then mkdir -p models; fi
-	if [ ! -d "calibration" ]; then mkdir -p calibration; fi
-	if [ ! -d "build" ]; then mkdir -p build; fi
-
-$(BUILD_PATH)%.o: %.cpp
-	$(CXX) $(INCS) -c -o $@ $(CXXFLAGS) $<
-
-clean: 
-	rm -f ./build/*
-	rm -f ./*.a
+sources/**/*.o
+sources/**/*.a
+sources/**/*.so
+sources/**/*.cfg
+sources/**/*.weights
+sources/**/*.engine
+sources/**/deepstream-yolo-app

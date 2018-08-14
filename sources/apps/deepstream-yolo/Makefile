@@ -21,26 +21,43 @@
 # SOFTWARE.
 
 
+CXX := g++
+
+APP:= deepstream-yolo-app
+
 SRCS:= $(wildcard *.cpp)
-BUILD_PATH:= ./build/
-OBJS= $(patsubst %, $(BUILD_PATH)%, $(SRCS:.cpp=.o))
-TARGET:= libyoloplugin.a
-INCS:= -I"$(TENSORRT_INSTALL_DIR)/include" -I"/usr/local/cuda-$(CUDA_VER)/include"
-LIBS:= -L"$(TENSORRT_INSTALL_DIR)/lib" -lnvinfer -lnvinfer_plugin \
-	   -L"/usr/local/cuda-$(CUDA_VER)/lib64" -lcudart -lcublas -lcurand 
-CXXFLAGS:= -std=c++11 -lstdc++fs -fPIC -Wall -Wunused-function -Wunused-variable `pkg-config --cflags glib-2.0` 
 
-all: dir $(SRCS) $(OBJS)
-	ar rcs $(TARGET) $(OBJS)
+INCS:= $(wildcard *.h)
 
-dir:	
-	if [ ! -d "models" ]; then mkdir -p models; fi
-	if [ ! -d "calibration" ]; then mkdir -p calibration; fi
-	if [ ! -d "build" ]; then mkdir -p build; fi
+PKGS:= gstreamer-1.0
 
-$(BUILD_PATH)%.o: %.cpp
-	$(CXX) $(INCS) -c -o $@ $(CXXFLAGS) $<
+OBJS:= $(SRCS:.cpp=.o)
 
-clean: 
-	rm -f ./build/*
-	rm -f ./*.a
+CONFIG :=../../../Makefile.config
+ifeq ($(wildcard $(CONFIG)),)
+$(error $(CONFIG) missing.)
+endif
+include $(CONFIG)
+
+CXXFLAGS:= -I $(DEEPSTREAM_INSTALL_DIR)/sources/includes \
+		   -I /usr/include/gstreamer-1.0	
+
+CXXFLAGS+= -std=c++11 -Wunused-variable `pkg-config --cflags $(PKGS)`
+
+LIBS:= `pkg-config --libs $(PKGS)`
+
+all: $(APP)
+
+.o: .cpp $(INCS) Makefile
+	$(CXX) -c $@ $(CXXFLAGS) $<
+
+$(APP): $(OBJS) Makefile
+	$(CXX) -o $(APP) $(OBJS) $(CXXFLAGS) $(LIBS) 
+
+install: $(APP)
+	cp -rv $(APP) /usr/bin/
+
+clean:
+	rm -rf $(OBJS) $(APP)
+
+

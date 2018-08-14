@@ -24,6 +24,8 @@ SOFTWARE.
 */
 #include "ds_image.h"
 
+DsImage::DsImage() : m_Height(0), m_Width(0), m_XOffset(0), m_YOffset(0), m_ScalingFactor(0.0) {}
+
 DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) :
     m_Height(0),
     m_Width(0),
@@ -34,7 +36,16 @@ DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) 
     m_OrigImage = cv::imread(path, CV_LOAD_IMAGE_COLOR);
 
     if (!m_OrigImage.data || m_OrigImage.cols <= 0 || m_OrigImage.rows <= 0)
-        assert(!"Unable to open DsImage");
+    {
+        std::cout << "Unable to open image : " << path << std::endl;
+        assert(0);
+    }
+
+    if (m_OrigImage.channels() != 3)
+    {
+        std::cout << "Non RGB images are not supported : " << path << std::endl;
+        assert(0);
+    }
 
     m_Height = m_OrigImage.rows;
     m_Width = m_OrigImage.cols;
@@ -64,8 +75,9 @@ DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) 
                        m_XOffset, cv::BORDER_CONSTANT, cv::Scalar(128, 128, 128));
 
     m_LetterboxImage.convertTo(m_LetterboxImage, CV_32FC3, 1 / 255.0);
-    // converting to RGB and NCHW format
-    m_LetterboxImage = cv::dnn::blobFromImage(m_LetterboxImage);
+    cv::threshold(m_LetterboxImage, m_LetterboxImage, 1.0, 1.0, cv::ThresholdTypes::THRESH_TRUNC);
+    // converting to RGB
+    cv::cvtColor(m_LetterboxImage, m_LetterboxImage, CV_BGR2RGB);
 }
 
-const float* DsImage::getImageData() const { return m_LetterboxImage.ptr<float>(0); }
+cv::Mat DsImage::getLetterBoxedImage() const { return m_LetterboxImage; }

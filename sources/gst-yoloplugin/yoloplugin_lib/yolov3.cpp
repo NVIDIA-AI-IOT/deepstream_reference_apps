@@ -27,25 +27,27 @@ SOFTWARE.
 
 YoloV3::YoloV3(uint batchSize) :
     Yolo(batchSize),
-    m_Stride1(STRIDE_1),
-    m_Stride2(STRIDE_2),
-    m_Stride3(STRIDE_3),
-    m_GridSize1(GRID_SIZE_1),
-    m_GridSize2(GRID_SIZE_2),
-    m_GridSize3(GRID_SIZE_3),
-    m_OutputSize1(OUTPUT_SIZE_1),
-    m_OutputSize2(OUTPUT_SIZE_2),
-    m_OutputSize3(OUTPUT_SIZE_3),
+    m_Stride1(config::kSTRIDE_1),
+    m_Stride2(config::kSTRIDE_2),
+    m_Stride3(config::kSTRIDE_3),
+    m_GridSize1(config::kGRID_SIZE_1),
+    m_GridSize2(config::kGRID_SIZE_2),
+    m_GridSize3(config::kGRID_SIZE_3),
     m_OutputIndex1(-1),
     m_OutputIndex2(-1),
     m_OutputIndex3(-1),
-    m_OutputBlobName1(OUTPUT_BLOB_NAME_1),
-    m_OutputBlobName2(OUTPUT_BLOB_NAME_2),
-    m_OutputBlobName3(OUTPUT_BLOB_NAME_3),
-    m_Mask1(MASK_1),
-    m_Mask2(MASK_2),
-    m_Mask3(MASK_3)
+    m_OutputSize1(config::kOUTPUT_SIZE_1),
+    m_OutputSize2(config::kOUTPUT_SIZE_2),
+    m_OutputSize3(config::kOUTPUT_SIZE_3),
+    m_Mask1(config::kMASK_1),
+    m_Mask2(config::kMASK_2),
+    m_Mask3(config::kMASK_3),
+    m_OutputBlobName1(config::kOUTPUT_BLOB_NAME_1),
+    m_OutputBlobName2(config::kOUTPUT_BLOB_NAME_2),
+    m_OutputBlobName3(config::kOUTPUT_BLOB_NAME_3)
 {
+    assert(m_NetworkType == "yolov3");
+    // Allocate Buffers
     m_OutputIndex1 = m_Engine->getBindingIndex(m_OutputBlobName1.c_str());
     assert(m_OutputIndex1 != -1);
     m_OutputIndex2 = m_Engine->getBindingIndex(m_OutputBlobName2.c_str());
@@ -67,26 +69,23 @@ YoloV3::YoloV3(uint batchSize) :
 
 void YoloV3::doInference(const unsigned char* input)
 {
-    cudaStream_t stream;
-    NV_CUDA_CHECK(cudaStreamCreate(&stream));
     NV_CUDA_CHECK(cudaMemcpyAsync(m_Bindings.at(m_InputIndex), input,
                                   m_BatchSize * m_InputSize * sizeof(float), cudaMemcpyHostToDevice,
-                                  stream));
+                                  m_CudaStream));
 
-    m_Context->enqueue(m_BatchSize, m_Bindings.data(), stream, nullptr);
+    m_Context->enqueue(m_BatchSize, m_Bindings.data(), m_CudaStream, nullptr);
 
     NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(0), m_Bindings.at(m_OutputIndex1),
                                   m_BatchSize * m_OutputSize1 * sizeof(float),
-                                  cudaMemcpyDeviceToHost, stream));
+                                  cudaMemcpyDeviceToHost, m_CudaStream));
     NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(1), m_Bindings.at(m_OutputIndex2),
                                   m_BatchSize * m_OutputSize1 * sizeof(float),
-                                  cudaMemcpyDeviceToHost, stream));
+                                  cudaMemcpyDeviceToHost, m_CudaStream));
     NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(2), m_Bindings.at(m_OutputIndex3),
                                   m_BatchSize * m_OutputSize1 * sizeof(float),
-                                  cudaMemcpyDeviceToHost, stream));
+                                  cudaMemcpyDeviceToHost, m_CudaStream));
 
-    cudaStreamSynchronize(stream);
-    cudaStreamDestroy(stream);
+    cudaStreamSynchronize(m_CudaStream);
 }
 
 std::vector<BBoxInfo> YoloV3::decodeDetections(const int& imageIdx, const int& imageH,
@@ -118,11 +117,11 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int& imageH, const int& imageW,
     float scalingFactor
         = std::min(static_cast<float>(m_InputW) / imageW, static_cast<float>(m_InputH) / imageH);
     std::vector<BBoxInfo> binfo;
-    for (int y = 0; y < gridSize; ++y)
+    for (uint y = 0; y < gridSize; ++y)
     {
-        for (int x = 0; x < gridSize; ++x)
+        for (uint x = 0; x < gridSize; ++x)
         {
-            for (int b = 0; b < m_NumBBoxes; ++b)
+            for (uint b = 0; b < m_NumBBoxes; ++b)
             {
                 const float pw = m_Anchors[mask[b] * 2];
                 const float ph = m_Anchors[mask[b] * 2 + 1];
@@ -148,7 +147,7 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int& imageH, const int& imageW,
                 float maxProb = 0.0f;
                 int maxIndex = -1;
 
-                for (int i = 0; i < m_NumOutputClasses; ++i)
+                for (uint i = 0; i < m_NumOutputClasses; ++i)
                 {
                     float prob = sigmoid(
                         detections[bbindex
@@ -181,6 +180,11 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int& imageH, const int& imageW,
                     bbi.box.y1 /= scalingFactor;
                     bbi.box.y2 /= scalingFactor;
 
+                    bbi.box.x1 = clamp(bbi.box.x1, 0, imageW);
+                    bbi.box.x2 = clamp(bbi.box.x2, 0, imageW);
+                    bbi.box.y1 = clamp(bbi.box.y1, 0, imageH);
+                    bbi.box.y2 = clamp(bbi.box.y2, 0, imageH);
+
                     bbi.label = maxIndex;
                     bbi.prob = maxProb;
 
@@ -190,12 +194,4 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int& imageH, const int& imageW,
         }
     }
     return binfo;
-}
-
-YoloV3::~YoloV3()
-{
-    NV_CUDA_CHECK(cudaFree(m_Bindings.at(m_InputIndex)));
-    NV_CUDA_CHECK(cudaFree(m_Bindings.at(m_OutputIndex1)));
-    NV_CUDA_CHECK(cudaFree(m_Bindings.at(m_OutputIndex2)));
-    NV_CUDA_CHECK(cudaFree(m_Bindings.at(m_OutputIndex3)));
 }

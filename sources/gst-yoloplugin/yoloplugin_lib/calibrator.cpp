@@ -28,21 +28,22 @@ SOFTWARE.
 #include <iostream>
 #include <iterator>
 
-Int8EntropyCalibrator::Int8EntropyCalibrator(const int& batchSize,
+Int8EntropyCalibrator::Int8EntropyCalibrator(const uint& batchSize,
                                              const std::string& calibrationSetPath,
                                              const std::string& calibTableFilePath,
-                                             const uint64_t& inputSize, const int& inputH,
-                                             const int& inputW, const std::string& inputBlobName) :
+                                             const uint64_t& inputSize, const uint& inputH,
+                                             const uint& inputW, const std::string& inputBlobName) :
     m_BatchSize(batchSize),
     m_InputH(inputH),
     m_InputW(inputW),
     m_InputSize(inputSize),
-    m_InputCount(m_BatchSize * m_InputSize),
+    m_InputCount(batchSize * inputSize),
     m_InputBlobName(inputBlobName.c_str()),
     m_CalibTableFilePath(calibTableFilePath),
     m_ImageIndex(0)
 {
     m_ImageList = loadImageList(calibrationSetPath);
+    m_ImageList.resize(static_cast<int>(m_ImageList.size() / m_BatchSize) * m_BatchSize);
     std::random_shuffle(m_ImageList.begin(), m_ImageList.end(), [](int i) { return rand() % i; });
     NV_CUDA_CHECK(cudaMalloc(&m_DeviceInput, m_InputCount * sizeof(float)));
 }
@@ -50,25 +51,28 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const int& batchSize,
 bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int nbBindings)
 {
     if (m_ImageIndex + m_BatchSize >= m_ImageList.size()) return false;
-    float* trtInput = new float[m_InputSize * m_BatchSize];
-    for (int j = m_ImageIndex; j < m_ImageIndex + m_BatchSize; ++j)
+
+    // Load next batch
+    std::vector<DsImage> dsImages(m_BatchSize);
+    for (uint j = m_ImageIndex; j < m_ImageIndex + m_BatchSize; ++j)
     {
-        DsImage inputImage(m_ImageList[j], m_InputH, m_InputW);
-        const float* data = inputImage.getImageData();
-        for (int i = 0; i < m_InputSize; ++i)
-        { trtInput[(j - m_ImageIndex) * m_InputSize + i] = clamp(data[i], 0.0, 1.0); } }
+        DsImage inputImage(m_ImageList.at(j), m_InputH, m_InputW);
+        dsImages.at(j - m_ImageIndex) = inputImage;
+    }
     m_ImageIndex += m_BatchSize;
 
-    NV_CUDA_CHECK(
-        cudaMemcpy(m_DeviceInput, trtInput, m_InputCount * sizeof(float), cudaMemcpyHostToDevice));
+    cv::Mat trtInput = blobFromDsImages(dsImages, m_InputH, m_InputW);
+
+    NV_CUDA_CHECK(cudaMemcpy(m_DeviceInput, trtInput.ptr<float>(0), m_InputCount * sizeof(float),
+                             cudaMemcpyHostToDevice));
     assert(!strcmp(names[0], m_InputBlobName));
     bindings[0] = m_DeviceInput;
-    delete trtInput;
     return true;
 }
 
 const void* Int8EntropyCalibrator::readCalibrationCache(size_t& length)
 {
+    void* output;
     m_CalibrationCache.clear();
     assert(!m_CalibTableFilePath.empty());
     std::ifstream input(m_CalibTableFilePath, std::ios::binary);
@@ -78,7 +82,19 @@ const void* Int8EntropyCalibrator::readCalibrationCache(size_t& length)
                   std::back_inserter(m_CalibrationCache));
 
     length = m_CalibrationCache.size();
-    return length ? &m_CalibrationCache[0] : nullptr;
+    if (length)
+    {
+        std::cout << "Using cached calibration table to build the engine" << std::endl;
+        output = &m_CalibrationCache[0];
+    }
+
+    else
+    {
+        std::cout << "New calibration table will be created to build the engine" << std::endl;
+        output = nullptr;
+    }
+
+    return output;
 }
 
 void Int8EntropyCalibrator::writeCalibrationCache(const void* cache, size_t length)

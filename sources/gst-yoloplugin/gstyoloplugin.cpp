@@ -156,7 +156,7 @@ static void gst_yoloplugin_class_init(GstYoloPluginClass* klass)
 
     /* Set metadata describing the element */
     gst_element_class_set_details_simple(
-        gstelement_class, "YoloPlugin", "YoloPlugin",
+        gstelement_class, "NvYolo", "NvYolo",
         "Process a 3rdparty example algorithm on objects / full frame", "Nvidia");
 }
 
@@ -263,7 +263,7 @@ static gboolean gst_yoloplugin_start(GstBaseTransform* btrans)
     GST_DEBUG_OBJECT(yoloplugin, "allocated cuda buffer %p \n", yoloplugin->hconv_buf);
 
     yoloplugin->cvmats = std::vector<cv::Mat*>(yoloplugin->batch_size, nullptr);
-    for (int k = 0; k < batch_size; ++k)
+    for (uint k = 0; k < batch_size; ++k)
     {
         yoloplugin->cvmats.at(k) = new cv::Mat(
             cv::Size(yoloplugin->processing_width, yoloplugin->processing_height), CV_8UC3);
@@ -301,7 +301,7 @@ static gboolean gst_yoloplugin_stop(GstBaseTransform* btrans)
     }
     if (yoloplugin->npp_stream) { cudaStreamDestroy(yoloplugin->npp_stream); }
 
-    for (int i = 0; i < yoloplugin->batch_size; ++i) { delete yoloplugin->cvmats.at(i); }
+    for (uint i = 0; i < yoloplugin->batch_size; ++i) { delete yoloplugin->cvmats.at(i); }
     GST_DEBUG_OBJECT(yoloplugin, "deleted CV Mat \n");
     // Deinit the algorithm library
     YoloPluginCtxDeinit(yoloplugin->yolopluginlib_ctx);
@@ -454,7 +454,7 @@ static GstFlowReturn gst_yoloplugin_transform_ip(GstBaseTransform* btrans, GstBu
         // Process to get the outputs
         outputs = YoloPluginProcess(yoloplugin->yolopluginlib_ctx, yoloplugin->cvmats);
 
-        for (int k = 0; k < outputs.size(); ++k)
+        for (uint k = 0; k < outputs.size(); ++k)
         {
             if (!outputs.at(k)) continue;
             // Attach the metadata for the full frame
@@ -502,7 +502,7 @@ static GstFlowReturn gst_yoloplugin_transform_ip(GstBaseTransform* btrans, GstBu
             // Process the object crop to obtain label
             outputs = YoloPluginProcess(yoloplugin->yolopluginlib_ctx, yoloplugin->cvmats);
 
-            for (int k = 0; k < outputs.size(); ++k)
+            for (uint k = 0; k < outputs.size(); ++k)
             {
                 if (!outputs.at(k)) continue;
                 NvDsObjectParams* obj_param = &bbparams->obj_params[k];
@@ -666,9 +666,9 @@ static void attach_metadata_object(GstYoloPlugin* yoloplugin, NvDsObjectParams* 
  */
 static gboolean yoloplugin_plugin_init(GstPlugin* plugin)
 {
-    GST_DEBUG_CATEGORY_INIT(gst_yoloplugin_debug, "dsexample", 0, "dsexample plugin");
+    GST_DEBUG_CATEGORY_INIT(gst_yoloplugin_debug, "yolo", 0, "yolo plugin");
 
-    return gst_element_register(plugin, "dsexample", GST_RANK_PRIMARY, GST_TYPE_YOLOPLUGIN);
+    return gst_element_register(plugin, "nvyolo", GST_RANK_PRIMARY, GST_TYPE_YOLOPLUGIN);
 }
 
 GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR, yoloplugin, DESCRIPTION,

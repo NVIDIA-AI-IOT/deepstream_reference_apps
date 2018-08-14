@@ -25,6 +25,11 @@ SOFTWARE.
 
 #include "plugin_factory.h"
 
+PluginFactory::PluginFactory() : m_ReorgLayer{nullptr}, m_RegionLayer{nullptr}
+{
+    for (int i = 0; i < m_MaxLeakyLayers; ++i) m_LeakyReLULayers[i] = nullptr;
+}
+
 nvinfer1::IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialData,
                                                size_t serialLength)
 {
@@ -32,11 +37,11 @@ nvinfer1::IPlugin* PluginFactory::createPlugin(const char* layerName, const void
     if (std::string(layerName).find("leaky") != std::string::npos)
     {
         assert(m_LeakyReLUCount >= 0 && m_LeakyReLUCount <= m_MaxLeakyLayers);
-        assert(m_LeakyReLULayer[m_LeakyReLUCount] == nullptr);
-        m_LeakyReLULayer[m_LeakyReLUCount]
+        assert(m_LeakyReLULayers[m_LeakyReLUCount] == nullptr);
+        m_LeakyReLULayers[m_LeakyReLUCount]
             = unique_ptr_INvPlugin(nvinfer1::plugin::createPReLUPlugin(serialData, serialLength));
         ++m_LeakyReLUCount;
-        return m_LeakyReLULayer[m_LeakyReLUCount - 1].get();
+        return m_LeakyReLULayers[m_LeakyReLUCount - 1].get();
     }
     else if (std::string(layerName).find("reorg") != std::string::npos)
     {
@@ -54,6 +59,7 @@ nvinfer1::IPlugin* PluginFactory::createPlugin(const char* layerName, const void
     }
     else
     {
+        std::cout << "Unrecognised layer : " << layerName << std::endl;
         assert(0);
         return nullptr;
     }
@@ -66,18 +72,12 @@ bool PluginFactory::isPlugin(const char* name)
             || (std::string(name).find("region") != std::string::npos));
 }
 
-void PluginFactory::destroyPlugin()
+void PluginFactory::destroy()
 {
-    m_ReorgLayer.release();
-    m_ReorgLayer = nullptr;
-    m_RegionLayer.release();
-    m_RegionLayer = nullptr;
+    m_ReorgLayer.reset();
+    m_RegionLayer.reset();
 
-    for (int i = 0; i < m_MaxLeakyLayers; ++i)
-    {
-        m_LeakyReLULayer[i].release();
-        m_LeakyReLULayer[i] = nullptr;
-    }
+    for (int i = 0; i < m_MaxLeakyLayers; ++i) { m_LeakyReLULayers[i].reset(); }
 
     m_LeakyReLUCount = 0;
 }

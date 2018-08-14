@@ -28,12 +28,13 @@ SOFTWARE.
 
 YoloV2::YoloV2(uint batchSize) :
     Yolo(batchSize),
-    m_Stride(STRIDE),
-    m_GridSize(GRID_SIZE),
+    m_Stride(config::kSTRIDE),
+    m_GridSize(config::kGRID_SIZE),
     m_OutputIndex(-1),
-    m_OutputSize(OUTPUT_SIZE),
-    m_OutputBlobName(OUTPUT_BLOB_NAME)
+    m_OutputSize(config::kOUTPUT_SIZE),
+    m_OutputBlobName(config::kOUTPUT_BLOB_NAME)
 {
+    assert(m_NetworkType == "yolov2");
     // Allocate Buffers
     m_OutputIndex = m_Engine->getBindingIndex(m_OutputBlobName.c_str());
     assert(m_OutputIndex != -1);
@@ -46,19 +47,16 @@ YoloV2::YoloV2(uint batchSize) :
 
 void YoloV2::doInference(const unsigned char* input)
 {
-    cudaStream_t stream;
-    NV_CUDA_CHECK(cudaStreamCreate(&stream));
     NV_CUDA_CHECK(cudaMemcpyAsync(m_Bindings.at(m_InputIndex), input,
                                   m_BatchSize * m_InputSize * sizeof(float), cudaMemcpyHostToDevice,
-                                  stream));
+                                  m_CudaStream));
 
-    m_Context->enqueue(m_BatchSize, m_Bindings.data(), stream, nullptr);
+    m_Context->enqueue(m_BatchSize, m_Bindings.data(), m_CudaStream, nullptr);
 
     NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(0), m_Bindings.at(m_OutputIndex),
                                   m_BatchSize * m_OutputSize * sizeof(float),
-                                  cudaMemcpyDeviceToHost, stream));
-    cudaStreamSynchronize(stream);
-    cudaStreamDestroy(stream);
+                                  cudaMemcpyDeviceToHost, m_CudaStream));
+    cudaStreamSynchronize(m_CudaStream);
 }
 
 std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& imageH,
@@ -68,11 +66,11 @@ std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& i
     const float* detections = &m_TrtOutputBuffers.at(0)[imageIdx * m_OutputSize];
     float scalingFactor
         = std::min(static_cast<float>(m_InputW) / imageW, static_cast<float>(m_InputH) / imageH);
-    for (int y = 0; y < m_GridSize; y++)
+    for (uint y = 0; y < m_GridSize; y++)
     {
-        for (int x = 0; x < m_GridSize; x++)
+        for (uint x = 0; x < m_GridSize; x++)
         {
-            for (int b = 0; b < m_NumBBoxes; b++)
+            for (uint b = 0; b < m_NumBBoxes; b++)
             {
                 const float pw = m_Anchors[2 * b];
                 const float ph = m_Anchors[2 * b + 1];
@@ -92,7 +90,7 @@ std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& i
                 float maxProb = 0.0f;
                 int maxIndex = -1;
 
-                for (int i = 0; i < m_NumOutputClasses; i++)
+                for (uint i = 0; i < m_NumOutputClasses; i++)
                 {
                     float prob
                         = detections[bbindex
@@ -120,11 +118,16 @@ std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& i
                     bbi.box.y1 -= yCorrection;
                     bbi.box.y2 -= yCorrection;
 
-                    // Restore to input resolution
+                    // Restore to input image resolution
                     bbi.box.x1 /= scalingFactor;
                     bbi.box.x2 /= scalingFactor;
                     bbi.box.y1 /= scalingFactor;
                     bbi.box.y2 /= scalingFactor;
+
+                    bbi.box.x1 = clamp(bbi.box.x1, 0, imageW);
+                    bbi.box.x2 = clamp(bbi.box.x2, 0, imageW);
+                    bbi.box.y1 = clamp(bbi.box.y1, 0, imageH);
+                    bbi.box.y2 = clamp(bbi.box.y2, 0, imageH);
 
                     bbi.label = maxIndex;
                     bbi.prob = maxProb;
@@ -135,10 +138,4 @@ std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& i
         }
     }
     return binfo;
-}
-
-YoloV2::~YoloV2()
-{
-    NV_CUDA_CHECK(cudaFree(m_Bindings.at(m_InputIndex)));
-    NV_CUDA_CHECK(cudaFree(m_Bindings.at(m_OutputIndex)));
 }
