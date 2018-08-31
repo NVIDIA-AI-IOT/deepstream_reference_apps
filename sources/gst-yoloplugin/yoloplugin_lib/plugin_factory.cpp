@@ -77,7 +77,10 @@ void PluginFactory::destroy()
     m_ReorgLayer.reset();
     m_RegionLayer.reset();
 
-    for (int i = 0; i < m_MaxLeakyLayers; ++i) { m_LeakyReLULayers[i].reset(); }
+    for (int i = 0; i < m_MaxLeakyLayers; ++i)
+    {
+        m_LeakyReLULayers[i].reset();
+    }
 
     m_LeakyReLUCount = 0;
 }

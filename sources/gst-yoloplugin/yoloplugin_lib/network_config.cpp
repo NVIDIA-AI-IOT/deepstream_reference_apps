@@ -31,6 +31,7 @@ namespace config
 // Common global vars
 const bool kPRINT_PERF_INFO = false;
 const bool kPRINT_PRED_INFO = false;
+const bool kSAVE_DETECTIONS = false;
 
 const std::string kPRECISION = "kFLOAT";
 const std::string kINPUT_BLOB_NAME = "data";
@@ -62,7 +63,9 @@ const std::vector<std::string> kCLASS_NAMES
        "scissors",      "teddy bear",    "hair drier",    "toothbrush"};
 const std::string kDS_LIB_PATH = "sources/gst-yoloplugin/yoloplugin_lib/";
 const std::string kMODELS_PATH = kDS_LIB_PATH + "models/";
+const std::string kDETECTION_RESULTS_PATH = kDS_LIB_PATH + "detections/";
 const std::string kCALIBRATION_SET = kDS_LIB_PATH + "data/calibration_images.txt";
+const std::string kTEST_IMAGES = kDS_LIB_PATH + "data/test_images.txt";
 
 // Model V2 specific common global vars
 #ifdef MODEL_V2

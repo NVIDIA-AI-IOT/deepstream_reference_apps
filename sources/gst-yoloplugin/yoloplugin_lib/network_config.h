@@ -45,6 +45,7 @@ namespace config
 // Common global vars
 extern const bool kPRINT_PRED_INFO;
 extern const bool kPRINT_PERF_INFO;
+extern const bool kSAVE_DETECTIONS;
 
 extern const std::string kPRECISION;
 extern const std::string kINPUT_BLOB_NAME;
@@ -60,11 +61,13 @@ extern const uint kBBOXES;
 extern const std::vector<float> kANCHORS;
 
 extern const std::string kMODELS_PATH;
+extern const std::string kDETECTION_RESULTS_PATH;
 extern const std::string kYOLO_CONFIG_PATH;
 extern const std::string kTRAINED_WEIGHTS_PATH;
 extern const std::string kNETWORK_TYPE;
 extern const std::string kCALIB_TABLE_PATH;
 extern const std::string kCALIBRATION_SET;
+extern const std::string kTEST_IMAGES;
 
 // Model V2 specific global vars
 extern const uint kSTRIDE;

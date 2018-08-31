@@ -37,7 +37,11 @@ DEP:=$(SUBDIR)/libyoloplugin.a
 DEP_FILES:=$(wildcard $(SUBDIR)/*.cpp)
 DEP_FILES+=$(wildcard $(SUBDIR)/*.h)
 
-CXXFLAGS := -fPIC -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable
+CXXFLAGS := -O2 -fPIC -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable
+INCS:= -I"$(TENSORRT_INSTALL_DIR)/include" \
+       -I"/usr/local/cuda-$(CUDA_VER)/include" \
+	   -I "$(OPENCV_INSTALL_DIR)/include" \
+	   -I "$(DEEPSTREAM_INSTALL_DIR)/sources/includes" 
 LIBS := -shared -Wl,-no-undefined \
   -L $(SUBDIR) -lyoloplugin \
   -L$(OPENCV_INSTALL_DIR)/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_dnn -lopencv_imgcodecs -Wl,-rpath="$(OPENCV_INSTALL_DIR)/lib"\
@@ -45,31 +49,25 @@ LIBS := -shared -Wl,-no-undefined \
   -L/usr/local/deepstream/ -lgstnvquery -lgstnvdsmeta -Wl,-rpath,/usr/local/deepstream/ \
   -L $(TENSORRT_INSTALL_DIR)/lib -lnvinfer -lnvinfer_plugin -Wl,-rpath="$(TENSORRT_INSTALL_DIR)/lib"
 
-
-CXXFLAGS+= \
-	-I /usr/local/cuda-$(CUDA_VER)/include \
-	-I $(DEEPSTREAM_INSTALL_DIR)/sources/includes \
-    -I $(OPENCV_INSTALL_DIR)/include \
-	-I $(TENSORRT_INSTALL_DIR)/include
-
-
 OBJS:= $(SRCS:.cpp=.o)
 
 PKGS:= gstreamer-1.0 gstreamer-base-1.0 gstreamer-video-1.0
 CXXFLAGS+=$(shell pkg-config --cflags $(PKGS))
 LIBS+=$(shell pkg-config --libs $(PKGS))
 
+.PHONY: all install clean 
+
 all: $(LIB)
 
-%.o: %.cpp $(INCS) Makefile
-	$(CXX) -c -o $@ $(CXXFLAGS) $<
+%.o: %.cpp Makefile
+	$(CXX) -c -o $@ $(INCS) $(CXXFLAGS) $<
 
 $(LIB): $(OBJS) $(DEP) Makefile
 	$(CXX) -o $@ $(OBJS) $(LIBS) $(CXXFLAGS)
 
 $(DEP): $(DEP_FILES)
 	@echo "Building yoloplugin_lib"
-	$(MAKE) -C $(SUBDIR) CXX="$(CXX)" CUDA_VER="$(CUDA_VER)" TENSORRT_INSTALL_DIR="$(TENSORRT_INSTALL_DIR)"
+	$(MAKE) -C $(SUBDIR) CXX="$(CXX)" CUDA_VER="$(CUDA_VER)" TENSORRT_INSTALL_DIR="$(TENSORRT_INSTALL_DIR)" OPENCV_INSTALL_DIR="$(OPENCV_INSTALL_DIR)"
 
 install: $(LIB)
 	cp -rv $(LIB) /usr/lib/x86_64-linux-gnu/gstreamer-1.0/

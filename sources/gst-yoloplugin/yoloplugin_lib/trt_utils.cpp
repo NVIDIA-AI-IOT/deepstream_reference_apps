@@ -34,22 +34,24 @@ cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages, const int& inp
 {
     std::vector<cv::Mat> letterboxStack(inputImages.size());
     for (uint i = 0; i < inputImages.size(); ++i)
-    { inputImages.at(i).getLetterBoxedImage().copyTo(letterboxStack.at(i)); }
+    {
+        inputImages.at(i).getLetterBoxedImage().copyTo(letterboxStack.at(i));
+    }
     return cv::dnn::blobFromImages(letterboxStack, 1.0, cv::Size(inputW, inputH),
                                    cv::Scalar(0.0, 0.0, 0.0), false, false);
 }
 
-static inline void leftTrim(std::string& s)
+static void leftTrim(std::string& s)
 {
     s.erase(s.begin(), find_if(s.begin(), s.end(), [](int ch) { return !isspace(ch); }));
 }
 
-static inline void rightTrim(std::string& s)
+static void rightTrim(std::string& s)
 {
     s.erase(find_if(s.rbegin(), s.rend(), [](int ch) { return !isspace(ch); }).base(), s.end());
 }
 
-inline std::string trim(std::string s)
+std::string trim(std::string s)
 {
     leftTrim(s);
     rightTrim(s);
@@ -291,7 +293,10 @@ std::string dimsToString(const nvinfer1::Dims d)
 {
     std::stringstream s;
     assert(d.nbDims >= 1);
-    for (int i = 0; i < d.nbDims - 1; ++i) { s << std::setw(4) << d.d[i] << " x"; }
+    for (int i = 0; i < d.nbDims - 1; ++i)
+    {
+        s << std::setw(4) << d.d[i] << " x";
+    }
     s << std::setw(4) << d.d[d.nbDims - 1];
 
     return s.str();
@@ -505,10 +510,16 @@ nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::str
     }
     shift.values = shiftWt;
     float* scaleWt = new float[size];
-    for (int i = 0; i < size; ++i) { scaleWt[i] = bnWeights.at(i) / bnRunningVar[i]; }
+    for (int i = 0; i < size; ++i)
+    {
+        scaleWt[i] = bnWeights.at(i) / bnRunningVar[i];
+    }
     scale.values = scaleWt;
     float* powerWt = new float[size];
-    for (int i = 0; i < size; ++i) { powerWt[i] = 1.0; }
+    for (int i = 0; i < size; ++i)
+    {
+        powerWt[i] = 1.0;
+    }
     power.values = powerWt;
     trtWeights.push_back(shift);
     trtWeights.push_back(scale);
@@ -562,8 +573,14 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     */
     for (int i = 0, idx = 0; i < h; ++i)
     {
-        for (int j = 0; j < w; ++j, ++idx) { preWt[idx] = (i == j) ? 1.0 : 0.0; }
-        for (int j = 0; j < w; ++j, ++idx) { preWt[idx] = (i == j) ? 1.0 : 0.0; }
+        for (int j = 0; j < w; ++j, ++idx)
+        {
+            preWt[idx] = (i == j) ? 1.0 : 0.0;
+        }
+        for (int j = 0; j < w; ++j, ++idx)
+        {
+            preWt[idx] = (i == j) ? 1.0 : 0.0;
+        }
     }
     pre.values = preWt;
     nvinfer1::IConstantLayer* preM = network->addConstant(preDims, pre);
@@ -587,7 +604,10 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     */
     for (int i = 0, idx = 0; i < h; ++i)
     {
-        for (int j = 0; j < 2 * w; ++j, ++idx) { postWt[idx] = (j / 2 == i) ? 1.0 : 0.0; }
+        for (int j = 0; j < 2 * w; ++j, ++idx)
+        {
+            postWt[idx] = (j / 2 == i) ? 1.0 : 0.0;
+        }
     }
     post.values = postWt;
     nvinfer1::IConstantLayer* post_m = network->addConstant(postDims, post);

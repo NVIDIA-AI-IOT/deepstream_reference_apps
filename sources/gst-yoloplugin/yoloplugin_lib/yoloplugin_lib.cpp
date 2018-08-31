@@ -61,7 +61,10 @@ static void decodeBatchDetections(const YoloPluginCtx* ctx, std::vector<YoloPlug
             out->object[j] = obj;
 
             if (ctx->inferenceNetwork->isPrintPredictions())
-            { printPredictions(b, ctx->inferenceNetwork->getClassName(b.label)); } }
+            {
+                printPredictions(b, ctx->inferenceNetwork->getClassName(b.label));
+            }
+        }
         outputs.at(p) = out;
     }
 }

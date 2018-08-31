@@ -56,8 +56,7 @@ bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int 
     std::vector<DsImage> dsImages(m_BatchSize);
     for (uint j = m_ImageIndex; j < m_ImageIndex + m_BatchSize; ++j)
     {
-        DsImage inputImage(m_ImageList.at(j), m_InputH, m_InputW);
-        dsImages.at(j - m_ImageIndex) = inputImage;
+        dsImages.at(j - m_ImageIndex) = DsImage(m_ImageList.at(j), m_InputH, m_InputW);
     }
     m_ImageIndex += m_BatchSize;
 

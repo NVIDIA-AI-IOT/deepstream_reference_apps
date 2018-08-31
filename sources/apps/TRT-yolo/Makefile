@@ -20,18 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
 CXX := g++
+CUDA_VER:=9.2
+APP:= TRT-yolo-app
+YOLO_LIB:= ../../gst-yoloplugin/yoloplugin_lib
 
-APP:= deepstream-yolo-app
-
-SRCS:= $(wildcard *.cpp)
-
-INCS:= $(wildcard *.h)
-
-PKGS:= gstreamer-1.0
-
-OBJS:= $(SRCS:.cpp=.o)
+OBJS = $(wildcard $(YOLO_LIB)/build/*.o)
+DEPS:= $(wildcard $(YOLO_LIB)/*.cpp)
+DEPS+= $(wildcard $(YOLO_LIB)/*.h)
 
 CONFIG :=../../../Makefile.config
 ifeq ($(wildcard $(CONFIG)),)
@@ -39,29 +35,30 @@ $(error $(CONFIG) missing.)
 endif
 include $(CONFIG)
 
-CXXFLAGS:= -I $(DEEPSTREAM_INSTALL_DIR)/sources/includes \
-		   -I /usr/include/gstreamer-1.0	
+CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -I $(YOLO_LIB)
 
-CXXFLAGS+= -std=c++11 -Wunused-variable `pkg-config --cflags $(PKGS)`
+LIBS:= -L "$(TENSORRT_INSTALL_DIR)/lib" -lnvinfer -lnvinfer_plugin -Wl,-rpath="$(TENSORRT_INSTALL_DIR)/lib" \
+       -L "/usr/local/cuda-$(CUDA_VER)/lib64" -lcudart -lcublas -lcurand -Wl,-rpath="/usr/local/cuda-$(CUDA_VER)/lib64" \
+       -L "$(OPENCV_INSTALL_DIR)/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_dnn -Wl,-rpath="$(OPENCV_INSTALL_DIR)/lib" \
+       -L "/usr/lib/x86_64-linux-gnu" -lgflags
 
-LIBS:= `pkg-config --libs $(PKGS)`
-
-.PHONY: all install clean
+.PHONY: all deps install clean
 
 all: $(APP)
 
-.o: .cpp $(INCS) Makefile
-	$(CXX) -c $@ $(CXXFLAGS) $<
-
-$(APP): $(OBJS) Makefile
+$(APP): deps
 	@echo Building $(APP)
-	$(CXX) -o $(APP) $(OBJS) $(CXXFLAGS) $(LIBS) 
+	$(CXX) -o $(APP) TRT-yolo-app.cpp $(OBJS) $(CXXFLAGS) $(LIBS) 
+
+deps: $(DEPS)
+	@echo "Building yoloplugin_lib"
+	$(MAKE) -C $(YOLO_LIB) dirs
+	$(MAKE) -C $(YOLO_LIB) deps  CXX="$(CXX)" CUDA_VER="$(CUDA_VER)" TENSORRT_INSTALL_DIR="$(TENSORRT_INSTALL_DIR)" OPENCV_INSTALL_DIR="$(OPENCV_INSTALL_DIR)"
 
 install: $(APP)
 	@echo Installing $(APP)
 	cp -rv $(APP) /usr/bin/
 
 clean:
-	rm -rf $(OBJS) $(APP)
-
-
+	rm -rf $(APP)
+	$(MAKE) -C $(YOLO_LIB) clean

@@ -39,13 +39,14 @@ SOFTWARE.
 class Yolo
 {
 public:
-    float getNMSThresh() const;
-    std::string getClassName(const int& label) const;
-    std::string getCalibTableFilePath() const;
-    int getInputH() const;
-    int getInputW() const;
-    bool isPrintPredictions() const;
-    bool isPrintPerfInfo() const;
+    std::string getNetworkType() const { return m_NetworkType; }
+    float getNMSThresh() const { return m_NMSThresh; }
+    std::string getClassName(const int& label) const { return m_ClassNames.at(label); }
+    std::string getCalibTableFilePath() const { return m_CalibTableFilePath; }
+    int getInputH() const { return m_InputH; }
+    int getInputW() const { return m_InputW; }
+    bool isPrintPredictions() const { return m_PrintPredictions; }
+    bool isPrintPerfInfo() const { return m_PrintPerfInfo; }
     virtual void doInference(const unsigned char* input) = 0;
     virtual std::vector<BBoxInfo> decodeDetections(const int& imageIdx, const int& imageH,
                                                    const int& imageW)

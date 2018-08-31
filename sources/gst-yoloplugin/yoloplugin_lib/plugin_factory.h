@@ -69,7 +69,10 @@ private:
     {
         void operator()(nvinfer1::plugin::INvPlugin* ptr)
         {
-            if (ptr) { ptr->destroy(); }
+            if (ptr)
+            {
+                ptr->destroy();
+            }
         }
     };
     typedef std::unique_ptr<nvinfer1::plugin::INvPlugin, nvPluginDeleter> unique_ptr_INvPlugin;

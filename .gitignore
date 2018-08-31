@@ -27,3 +27,5 @@ sources/**/*.cfg
 sources/**/*.weights
 sources/**/*.engine
 sources/**/deepstream-yolo-app
+sources/**/TRT-yolo-app
+sources/**/*.jpeg

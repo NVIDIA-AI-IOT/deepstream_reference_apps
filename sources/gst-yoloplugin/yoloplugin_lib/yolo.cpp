@@ -67,7 +67,9 @@ Yolo::Yolo(uint batchSize) :
         std::cout << "Creating a new TensorRT Engine" << std::endl;
 
         if (m_Precision == "kFLOAT")
-        { createYOLOEngine(m_BatchSize, m_ConfigFilePath, m_TrainedWeightsPath, planFilePath); }
+        {
+            createYOLOEngine(m_BatchSize, m_ConfigFilePath, m_TrainedWeightsPath, planFilePath);
+        }
         else if (m_Precision == "kINT8")
         {
             Int8EntropyCalibrator calibrator(m_BatchSize, m_CalibImagesFilePath,
@@ -103,20 +105,6 @@ Yolo::Yolo(uint batchSize) :
     assert(m_BatchSize <= static_cast<uint>(m_Engine->getMaxBatchSize()));
     NV_CUDA_CHECK(cudaStreamCreate(&m_CudaStream));
 };
-
-float Yolo::getNMSThresh() const { return m_NMSThresh; }
-
-std::string Yolo::getClassName(const int& label) const { return m_ClassNames.at(label); }
-
-std::string Yolo::getCalibTableFilePath() const { return m_CalibTableFilePath; }
-
-int Yolo::getInputH() const { return m_InputH; }
-
-int Yolo::getInputW() const { return m_InputW; }
-
-bool Yolo::isPrintPredictions() const { return m_PrintPredictions; }
-
-bool Yolo::isPrintPerfInfo() const { return m_PrintPerfInfo; }
 
 Yolo::~Yolo()
 {
@@ -177,7 +165,9 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
         std::string layerIndex = "(" + std::to_string(i) + ")";
 
         if (blocks.at(i).at("type") == "net")
-        { printLayerInfo("", "layer", "     inp_size", "     out_size", "weightPtr"); }
+        {
+            printLayerInfo("", "layer", "     inp_size", "     out_size", "weightPtr");
+        }
         else if (blocks.at(i).at("type") == "convolutional")
         {
             std::string inputVol = dimsToString(previous->getDimensions());
@@ -280,8 +270,14 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
             {
                 int idx1 = std::stoi(trim(blocks.at(i).at("layers").substr(0, found)));
                 int idx2 = std::stoi(trim(blocks.at(i).at("layers").substr(found + 1)));
-                if (idx1 < 0) { idx1 = tensorOutputs.size() + idx1; }
-                if (idx2 < 0) { idx2 = tensorOutputs.size() + idx2; }
+                if (idx1 < 0)
+                {
+                    idx1 = tensorOutputs.size() + idx1;
+                }
+                if (idx2 < 0)
+                {
+                    idx2 = tensorOutputs.size() + idx2;
+                }
                 assert(idx1 < static_cast<int>(tensorOutputs.size()) && idx1 >= 0);
                 assert(idx2 < static_cast<int>(tensorOutputs.size()) && idx2 >= 0);
                 nvinfer1::ITensor** concatInputs
@@ -307,7 +303,10 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
             else
             {
                 int idx = std::stoi(trim(blocks.at(i).at("layers")));
-                if (idx < 0) { idx = tensorOutputs.size() + idx; }
+                if (idx < 0)
+                {
+                    idx = tensorOutputs.size() + idx;
+                }
                 assert(idx < static_cast<int>(tensorOutputs.size()) && idx >= 0);
                 previous = tensorOutputs[idx];
                 assert(previous != nullptr);
@@ -391,5 +390,8 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
     modelStream->destroy();
 
     // deallocate the weights
-    for (uint i = 0; i < trtWeights.size(); ++i) { free(const_cast<void*>(trtWeights[i].values)); }
+    for (uint i = 0; i < trtWeights.size(); ++i)
+    {
+        free(const_cast<void*>(trtWeights[i].values));
+    }
 }

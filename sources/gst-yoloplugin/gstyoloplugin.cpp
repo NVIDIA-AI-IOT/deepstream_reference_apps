@@ -239,7 +239,10 @@ static gboolean gst_yoloplugin_start(GstBaseTransform* btrans)
         || gst_pad_peer_query(GST_BASE_TRANSFORM_SRC_PAD(btrans), queryparams))
     {
         if (gst_nvquery_batch_size_parse(queryparams, &batch_size))
-        { yoloplugin->batch_size = batch_size; } }
+        {
+            yoloplugin->batch_size = batch_size;
+        }
+    }
     GST_DEBUG_OBJECT(yoloplugin, "Setting batch-size %d \n", yoloplugin->batch_size);
     gst_query_unref(queryparams);
 
@@ -259,7 +262,10 @@ static gboolean gst_yoloplugin_start(GstBaseTransform* btrans)
     // Create host memory for conversion/scaling
     CUerr = cudaMallocHost(&yoloplugin->hconv_buf,
                            yoloplugin->processing_width * yoloplugin->processing_height * 4);
-    if (CUerr != cudaSuccess) { goto error; }
+    if (CUerr != cudaSuccess)
+    {
+        goto error;
+    }
     GST_DEBUG_OBJECT(yoloplugin, "allocated cuda buffer %p \n", yoloplugin->hconv_buf);
 
     yoloplugin->cvmats = std::vector<cv::Mat*>(yoloplugin->batch_size, nullptr);
@@ -299,9 +305,15 @@ static gboolean gst_yoloplugin_stop(GstBaseTransform* btrans)
         yoloplugin->hconv_buf = NULL;
         GST_DEBUG_OBJECT(yoloplugin, "Freed cuda host buffer \n");
     }
-    if (yoloplugin->npp_stream) { cudaStreamDestroy(yoloplugin->npp_stream); }
+    if (yoloplugin->npp_stream)
+    {
+        cudaStreamDestroy(yoloplugin->npp_stream);
+    }
 
-    for (uint i = 0; i < yoloplugin->batch_size; ++i) { delete yoloplugin->cvmats.at(i); }
+    for (uint i = 0; i < yoloplugin->batch_size; ++i)
+    {
+        delete yoloplugin->cvmats.at(i);
+    }
     GST_DEBUG_OBJECT(yoloplugin, "deleted CV Mat \n");
     // Deinit the algorithm library
     YoloPluginCtxDeinit(yoloplugin->yolopluginlib_ctx);
@@ -429,7 +441,10 @@ static GstFlowReturn gst_yoloplugin_transform_ip(GstBaseTransform* btrans, GstBu
     /* Stream meta for batched mode */
     streamMeta = gst_buffer_get_nvstream_meta(inbuf);
     if (streamMeta && streamMeta->num_filled < yoloplugin->batch_size)
-    { batch_size = streamMeta->num_filled; } if (yoloplugin->process_full_frame)
+    {
+        batch_size = streamMeta->num_filled;
+    }
+    if (yoloplugin->process_full_frame)
     {
         for (guint i = 0; i < batch_size; i++)
         {
@@ -485,7 +500,10 @@ static GstFlowReturn gst_yoloplugin_transform_ip(GstBaseTransform* btrans, GstBu
             bbparams = (NvDsFrameMeta*) dsmeta->meta_data;
             // Check if these parameters have been set by the primary detector /
             // tracker
-            if (bbparams->gie_type != 1) { continue; }
+            if (bbparams->gie_type != 1)
+            {
+                continue;
+            }
             // Iterate through all the objects
             for (guint i = 0; i < bbparams->num_rects; i++)
             {
@@ -497,8 +515,14 @@ static GstFlowReturn gst_yoloplugin_transform_ip(GstBaseTransform* btrans, GstBu
                                            scale_ratio, yoloplugin->video_info.width,
                                            yoloplugin->video_info.height)
                     != GST_FLOW_OK)
-                { continue; } if (!obj_param->text_params.display_text)
-                { bbparams->num_strings++; } }
+                {
+                    continue;
+                }
+                if (!obj_param->text_params.display_text)
+                {
+                    bbparams->num_strings++;
+                }
+            }
             // Process the object crop to obtain label
             outputs = YoloPluginProcess(yoloplugin->yolopluginlib_ctx, yoloplugin->cvmats);
 
@@ -525,7 +549,10 @@ static void free_ds_meta(gpointer meta_data)
 {
     NvDsFrameMeta* params = (NvDsFrameMeta*) meta_data;
     for (guint i = 0; i < params->num_rects; i++)
-    { g_free(params->obj_params[i].text_params.display_text); } g_free(params->obj_params);
+    {
+        g_free(params->obj_params[i].text_params.display_text);
+    }
+    g_free(params->obj_params);
     g_free(params);
 }
 
