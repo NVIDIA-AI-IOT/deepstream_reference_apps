@@ -85,7 +85,8 @@ BBox convertBBox(const float& bx, const float& by, const float& bw, const float&
 void printPredictions(const BBoxInfo& info, const std::string& className);
 std::vector<std::string> loadImageList(const std::string filename);
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo);
-nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFactory* pluginFactory);
+nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFactory* pluginFactory,
+                                     Logger& logger);
 std::vector<std::map<std::string, std::string>> parseConfig(const std::string cfgFilePath);
 void displayConfig(const std::vector<std::map<std::string, std::string>>& blocks);
 std::vector<float> loadWeights(const std::string weightsFilePath, const std::string& networkType);

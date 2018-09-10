@@ -37,8 +37,9 @@ public:
     int getImageHeight() const { return m_Height; }
     int getImageWidth() const { return m_Width; }
     cv::Mat getLetterBoxedImage() const { return m_LetterboxImage; }
+    std::string getImageName() const { return m_ImageName; }
     void addBBox(BBoxInfo box, const std::string& labelName);
-    void showImage(const std::string& windowName = "Detections") const;
+    void showImage() const;
     void saveImageJPEG(const std::string& dirPath) const;
 
 private:

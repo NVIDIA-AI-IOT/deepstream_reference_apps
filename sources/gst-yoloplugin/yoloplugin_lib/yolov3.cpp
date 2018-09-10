@@ -129,29 +129,25 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int& imageH, const int& imageW,
                 const int numGridCells = gridSize * gridSize;
                 const int bbindex = y * gridSize + x;
                 const float bx
-                    = x
-                    + sigmoid(
-                          detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 0)]);
+                    = x + detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 0)];
                 const float by
-                    = y
-                    + sigmoid(
-                          detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 1)]);
-                const float bw = pw
-                    * exp(detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 2)]);
-                const float bh = ph
-                    * exp(detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 3)]);
+                    = y + detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 1)];
+                const float bw
+                    = pw * detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 2)];
+                const float bh
+                    = ph * detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 3)];
 
-                const float objectness = sigmoid(
-                    detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 4)]);
+                const float objectness
+                    = detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 4)];
 
                 float maxProb = 0.0f;
                 int maxIndex = -1;
 
                 for (uint i = 0; i < m_NumOutputClasses; ++i)
                 {
-                    float prob = sigmoid(
-                        detections[bbindex
-                                   + numGridCells * (b * (5 + m_NumOutputClasses) + (5 + i))]);
+                    float prob
+                        = detections[bbindex
+                                      + numGridCells * (b * (5 + m_NumOutputClasses) + (5 + i))];
 
                     if (prob > maxProb)
                     {

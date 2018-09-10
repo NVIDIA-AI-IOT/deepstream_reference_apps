@@ -168,7 +168,8 @@ std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<B
     return out;
 }
 
-nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFactory* pluginFactory)
+nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFactory* pluginFactory,
+                                     Logger& logger)
 {
     // reading the model in memory
     std::cout << "Loading TRT Engine..." << std::endl;
@@ -187,8 +188,7 @@ nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFacto
     void* modelMem = malloc(modelSize);
     trtModelStream.read((char*) modelMem, modelSize);
 
-    Logger nvLogger;
-    nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(nvLogger);
+    nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(logger);
     nvinfer1::ICudaEngine* engine
         = runtime->deserializeCudaEngine(modelMem, modelSize, pluginFactory);
     free(modelMem);
@@ -397,7 +397,6 @@ nvinfer1::ILayer* netAddConvLinear(int layerIdx, std::map<std::string, std::stri
     conv->setName(convLayerName.c_str());
     conv->setStride(nvinfer1::DimsHW{stride, stride});
     conv->setPadding(nvinfer1::DimsHW{pad, pad});
-    inputChannels = filters;
 
     return conv;
 }
@@ -493,7 +492,6 @@ nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::str
     conv->setName(convLayerName.c_str());
     conv->setStride(nvinfer1::DimsHW{stride, stride});
     conv->setPadding(nvinfer1::DimsHW{pad, pad});
-    inputChannels = filters;
 
     /***** BATCHNORM LAYER *****/
     /***************************/
@@ -642,7 +640,7 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
 void printLayerInfo(std::string layerIndex, std::string layerName, std::string layerInput,
                     std::string layerOutput, std::string weightPtr)
 {
-    std::cout << std::setw(6) << std::left << layerIndex << std::setw(9) << std::left << layerName;
+    std::cout << std::setw(6) << std::left << layerIndex << std::setw(15) << std::left << layerName;
     std::cout << std::setw(20) << std::left << layerInput << std::setw(20) << std::left
               << layerOutput;
     std::cout << std::setw(6) << std::left << weightPtr << std::endl;

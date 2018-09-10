@@ -20,13 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-CXX := g++
-CUDA_VER:=9.2
 APP:= TRT-yolo-app
 YOLO_LIB:= ../../gst-yoloplugin/yoloplugin_lib
 
 OBJS = $(wildcard $(YOLO_LIB)/build/*.o)
 DEPS:= $(wildcard $(YOLO_LIB)/*.cpp)
+DEPS:= $(wildcard $(YOLO_LIB)/*.cu)
 DEPS+= $(wildcard $(YOLO_LIB)/*.h)
 
 CONFIG :=../../../Makefile.config
@@ -52,8 +51,7 @@ $(APP): deps
 
 deps: $(DEPS)
 	@echo "Building yoloplugin_lib"
-	$(MAKE) -C $(YOLO_LIB) dirs
-	$(MAKE) -C $(YOLO_LIB) deps  CXX="$(CXX)" CUDA_VER="$(CUDA_VER)" TENSORRT_INSTALL_DIR="$(TENSORRT_INSTALL_DIR)" OPENCV_INSTALL_DIR="$(OPENCV_INSTALL_DIR)"
+	$(MAKE) -C $(YOLO_LIB)
 
 install: $(APP)
 	@echo Installing $(APP)

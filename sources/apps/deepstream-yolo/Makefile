@@ -21,8 +21,6 @@
 # SOFTWARE.
 
 
-CXX := g++
-
 APP:= deepstream-yolo-app
 
 SRCS:= $(wildcard *.cpp)
@@ -63,5 +61,3 @@ install: $(APP)
 
 clean:
 	rm -rf $(OBJS) $(APP)
-
-

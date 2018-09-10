@@ -20,8 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-CUDA_VER:=9.2
-CXX:= g++
 SRCS:= gstyoloplugin.cpp
 INCS:= $(wildcard *.h)
 LIB:=libgstnvyolo.so
@@ -63,13 +61,15 @@ all: $(LIB)
 	$(CXX) -c -o $@ $(INCS) $(CXXFLAGS) $<
 
 $(LIB): $(OBJS) $(DEP) Makefile
+	@echo "Building $(LIB)"
 	$(CXX) -o $@ $(OBJS) $(LIBS) $(CXXFLAGS)
 
 $(DEP): $(DEP_FILES)
 	@echo "Building yoloplugin_lib"
-	$(MAKE) -C $(SUBDIR) CXX="$(CXX)" CUDA_VER="$(CUDA_VER)" TENSORRT_INSTALL_DIR="$(TENSORRT_INSTALL_DIR)" OPENCV_INSTALL_DIR="$(OPENCV_INSTALL_DIR)"
+	$(MAKE) -C $(SUBDIR)
 
 install: $(LIB)
+	@echo "Installing $(LIB)"
 	cp -rv $(LIB) /usr/lib/x86_64-linux-gnu/gstreamer-1.0/
 
 clean:

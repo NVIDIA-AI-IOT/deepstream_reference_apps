@@ -75,6 +75,7 @@ protected:
     const std::vector<std::string> m_ClassNames;
     const bool m_PrintPerfInfo;
     const bool m_PrintPredictions;
+    Logger m_Logger;
 
     // TRT specific members
     const uint m_BatchSize;

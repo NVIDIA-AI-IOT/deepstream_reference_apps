@@ -21,10 +21,20 @@
 # SOFTWARE.
 
 
+CONFIG :=../../../Makefile.config
+ifeq ($(wildcard $(CONFIG)),)
+$(error $(CONFIG) missing.)
+endif
+include $(CONFIG)
+
+CUCC:=/usr/local/cuda-$(CUDA_VER)/bin/nvcc
 SRCS:= $(wildcard *.cpp)
+KERNELS:= $(wildcard *.cu)
 BUILD_PATH:= ./build/
 OBJS= $(patsubst %, $(BUILD_PATH)%, $(SRCS:.cpp=.o))
+OBJS+=$(patsubst %, $(BUILD_PATH)%, $(KERNELS:.cu=.o))
 DEPS:= $(SRCS)
+DEPS+= $(KERNELS)
 DEPS+= $(wildcard *.h)
 TARGET:= libyoloplugin.a
 INCS:= -I"$(TENSORRT_INSTALL_DIR)/include" \
@@ -51,6 +61,8 @@ deps: $(DEPS) $(OBJS)
 $(BUILD_PATH)%.o: %.cpp %.h
 	$(CXX) $(INCS) -c -o $@ $(CXXFLAGS) $<
 
+$(BUILD_PATH)%.o: %.cu
+	$(CUCC) -c -o $@ -arch=compute_50 --shared -Xcompiler -fPIC  $<
 clean: 
 	rm -f ./build/*
 	rm -f ./*.a

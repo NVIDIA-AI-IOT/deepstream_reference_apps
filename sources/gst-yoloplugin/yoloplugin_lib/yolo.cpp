@@ -47,6 +47,7 @@ Yolo::Yolo(uint batchSize) :
     m_ClassNames(config::kCLASS_NAMES),
     m_PrintPerfInfo(config::kPRINT_PERF_INFO),
     m_PrintPredictions(config::kPRINT_PRED_INFO),
+    m_Logger(Logger()),
     m_BatchSize(batchSize),
     m_Engine(nullptr),
     m_Context(nullptr),
@@ -94,7 +95,7 @@ Yolo::Yolo(uint batchSize) :
                   << std::endl;
 
     assert(m_PluginFactory != nullptr);
-    m_Engine = loadTRTEngine(planFilePath, m_PluginFactory);
+    m_Engine = loadTRTEngine(planFilePath, m_PluginFactory, m_Logger);
     assert(m_Engine != nullptr);
     m_Context = m_Engine->createExecutionContext();
     assert(m_Context != nullptr);
@@ -138,8 +139,7 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
     std::vector<nvinfer1::Weights> trtWeights;
     int weightPtr = 0;
     int channels = m_InputC;
-    Logger nvLogger;
-    nvinfer1::IBuilder* builder = nvinfer1::createInferBuilder(nvLogger);
+    nvinfer1::IBuilder* builder = nvinfer1::createInferBuilder(m_Logger);
     nvinfer1::INetworkDefinition* network = builder->createNetwork();
 
     if ((dataType == nvinfer1::DataType::kINT8 && !builder->platformHasFastInt8())
@@ -172,18 +172,26 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
         {
             std::string inputVol = dimsToString(previous->getDimensions());
             nvinfer1::ILayer* out;
+            std::string layerType;
             // check if batch_norm enabled
             if (blocks.at(i).find("batch_normalize") != blocks.at(i).end())
+            {
                 out = netAddConvBNLeaky(i, blocks.at(i), weights, trtWeights, weightPtr, channels,
                                         previous, network);
+                layerType = "conv-bn-leaky";
+            }
             else
+            {
                 out = netAddConvLinear(i, blocks.at(i), weights, trtWeights, weightPtr, channels,
                                        previous, network);
+                layerType = "conv-linear";
+            }
             previous = out->getOutput(0);
             assert(previous != nullptr);
+            channels = getNumChannels(previous);
             std::string outputVol = dimsToString(previous->getDimensions());
             tensorOutputs.push_back(out->getOutput(0));
-            printLayerInfo(layerIndex, "conv", inputVol, outputVol, std::to_string(weightPtr));
+            printLayerInfo(layerIndex, layerType, inputVol, outputVol, std::to_string(weightPtr));
         }
         else if (blocks.at(i).at("type") == "shortcut")
         {
@@ -210,14 +218,26 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
         }
         else if (blocks.at(i).at("type") == "yolo")
         {
+            nvinfer1::Dims prevTensorDims = previous->getDimensions();
+            assert(prevTensorDims.d[1] == prevTensorDims.d[2]);
+            uint gridSize = prevTensorDims.d[1];
+            nvinfer1::IPlugin* yoloPlugin
+                = new YoloLayerV3(m_NumBBoxes, m_NumOutputClasses, gridSize);
+            assert(yoloPlugin != nullptr);
+            nvinfer1::IPluginLayer* yolo = network->addPlugin(&previous, 1, *yoloPlugin);
+            assert(yolo != nullptr);
             std::string layerName = "yolo_" + std::to_string(i);
-            previous->setName(layerName.c_str());
-            network->markOutput(*previous);
+            yolo->setName(layerName.c_str());
             std::string inputVol = dimsToString(previous->getDimensions());
-            // for index consistency
-            tensorOutputs.push_back(tensorOutputs.back());
+            previous = yolo->getOutput(0);
+            assert(previous != nullptr);
+            previous->setName(layerName.c_str());
+            std::string outputVol = dimsToString(previous->getDimensions());
+            network->markOutput(*previous);
+            channels = getNumChannels(previous);
+            tensorOutputs.push_back(yolo->getOutput(0));
             outputLayers.push_back(tensorOutputs.back());
-            printLayerInfo(layerIndex, "yolo", inputVol, "        -", "    -");
+            printLayerInfo(layerIndex, "yolo", inputVol, outputVol, std::to_string(weightPtr));
         }
         else if (blocks.at(i).at("type") == "region")
         {
@@ -234,12 +254,11 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
             region->setName(layerName.c_str());
 
             previous = region->getOutput(0);
-            previous->setName(layerName.c_str());
             assert(previous != nullptr);
+            previous->setName(layerName.c_str());
             std::string outputVol = dimsToString(previous->getDimensions());
             network->markOutput(*previous);
             channels = getNumChannels(previous);
-            // for index consistency
             tensorOutputs.push_back(region->getOutput(0));
             outputLayers.push_back(tensorOutputs.back());
             printLayerInfo(layerIndex, "region", inputVol, outputVol, std::to_string(weightPtr));
@@ -258,7 +277,6 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
             assert(previous != nullptr);
             std::string outputVol = dimsToString(previous->getDimensions());
             channels = getNumChannels(previous);
-            // for index consistency
             tensorOutputs.push_back(reorg->getOutput(0));
             printLayerInfo(layerIndex, "reorg", inputVol, outputVol, std::to_string(weightPtr));
         }
