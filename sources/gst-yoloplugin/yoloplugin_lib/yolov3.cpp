@@ -79,10 +79,10 @@ void YoloV3::doInference(const unsigned char* input)
                                   m_BatchSize * m_OutputSize1 * sizeof(float),
                                   cudaMemcpyDeviceToHost, m_CudaStream));
     NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(1), m_Bindings.at(m_OutputIndex2),
-                                  m_BatchSize * m_OutputSize1 * sizeof(float),
+                                  m_BatchSize * m_OutputSize2 * sizeof(float),
                                   cudaMemcpyDeviceToHost, m_CudaStream));
     NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(2), m_Bindings.at(m_OutputIndex3),
-                                  m_BatchSize * m_OutputSize1 * sizeof(float),
+                                  m_BatchSize * m_OutputSize3 * sizeof(float),
                                   cudaMemcpyDeviceToHost, m_CudaStream));
 
     cudaStreamSynchronize(m_CudaStream);
