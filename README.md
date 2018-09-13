@@ -8,6 +8,9 @@ Download and install DeepStream 2.0
 Install GStreamer pre-requisites using:     
    `sudo apt-get install libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev`
 
+Install Google flags using:
+   `sudo apt-get install libgflags-dev`
+
 ## Setup ##
 
 In the `Makefile.config` file present in the root directory update install paths for all the dependencies    
