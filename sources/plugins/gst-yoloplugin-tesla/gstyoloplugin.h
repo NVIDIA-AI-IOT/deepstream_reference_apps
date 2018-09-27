@@ -37,7 +37,7 @@ SOFTWARE.
 #include "gstnvdsmeta.h"
 #include "gstnvstreammeta.h"
 #include "nvbuffer.h"
-#include "yoloplugin_lib/yoloplugin_lib.h"
+#include "yoloplugin_lib.h"
 #include <cuda.h>
 #include <cuda_runtime.h>
 

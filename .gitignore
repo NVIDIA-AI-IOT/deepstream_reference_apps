@@ -23,9 +23,12 @@
 sources/**/*.o
 sources/**/*.a
 sources/**/*.so
-sources/**/*.cfg
-sources/**/*.weights
 sources/**/*.engine
 sources/**/deepstream-yolo-app
-sources/**/TRT-yolo-app
+sources/**/trt-yolo-app
 sources/**/*.jpeg
+data/**/*.cfg
+data/**/*.weights
+data/**/*.mp4
+data/**/*.h264
+data/**/*.jpeg

@@ -20,13 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-APP:= TRT-yolo-app
-YOLO_LIB:= ../../gst-yoloplugin/yoloplugin_lib
+APP:= trt-yolo-app
+LIB:= ../../lib
 
-OBJS = $(wildcard $(YOLO_LIB)/build/*.o)
-DEPS:= $(wildcard $(YOLO_LIB)/*.cpp)
-DEPS:= $(wildcard $(YOLO_LIB)/*.cu)
-DEPS+= $(wildcard $(YOLO_LIB)/*.h)
+OBJS = $(wildcard $(LIB)/build/*.o)
+DEPS:= $(wildcard $(LIB)/*.cpp)
+DEPS:= $(wildcard $(LIB)/*.cu)
+DEPS+= $(wildcard $(LIB)/*.h)
 
 CONFIG :=../../../Makefile.config
 ifeq ($(wildcard $(CONFIG)),)
@@ -34,24 +34,24 @@ $(error $(CONFIG) missing.)
 endif
 include $(CONFIG)
 
-CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -I $(YOLO_LIB) -I /usr/local/cuda-$(CUDA_VER)/include
+CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors -I $(LIB)
 
 LIBS:= -L "$(TENSORRT_INSTALL_DIR)/lib" -lnvinfer -lnvinfer_plugin -Wl,-rpath="$(TENSORRT_INSTALL_DIR)/lib" \
        -L "/usr/local/cuda-$(CUDA_VER)/lib64" -lcudart -lcublas -lcurand -Wl,-rpath="/usr/local/cuda-$(CUDA_VER)/lib64" \
        -L "$(OPENCV_INSTALL_DIR)/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_dnn -Wl,-rpath="$(OPENCV_INSTALL_DIR)/lib" \
        -L "/usr/lib/x86_64-linux-gnu" -lgflags
 
-.PHONY: all deps install clean
+.PHONY: all deps install clean clean_models clean_detections reinstall
 
 all: $(APP)
 
 $(APP): deps
 	@echo Building $(APP)
-	$(CXX) -o $(APP) TRT-yolo-app.cpp $(OBJS) $(CXXFLAGS) $(LIBS) 
+	$(CXX) -o $(APP) trt-yolo-app.cpp $(OBJS) $(CXXFLAGS) $(LIBS) 
 
 deps: $(DEPS)
-	@echo "Building yoloplugin_lib"
-	$(MAKE) -C $(YOLO_LIB)
+	@echo "Building lib"
+	$(MAKE) -C $(LIB)
 
 install: $(APP)
 	@echo Installing $(APP)
@@ -59,4 +59,16 @@ install: $(APP)
 
 clean:
 	rm -rf $(APP)
-	$(MAKE) -C $(YOLO_LIB) clean
+	$(MAKE) -C $(LIB) clean
+
+clean_models:
+	$(MAKE) -C $(LIB) clean_models
+
+clean_detections:
+	$(MAKE) -C $(LIB) clean_detections
+
+reinstall: $(APP)
+	@echo "Re installing $(APP)"
+	$(MAKE) clean
+	$(MAKE) all
+	$(MAKE) install

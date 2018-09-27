@@ -31,7 +31,7 @@ namespace config
 // Common global vars
 const bool kPRINT_PERF_INFO = false;
 const bool kPRINT_PRED_INFO = false;
-const bool kSAVE_DETECTIONS = false;
+const bool kSAVE_DETECTIONS = true;
 
 const std::string kPRECISION = "kFLOAT";
 const std::string kINPUT_BLOB_NAME = "data";
@@ -61,19 +61,19 @@ const std::vector<std::string> kCLASS_NAMES
        "microwave",     "oven",          "toaster",       "sink",
        "refrigerator",  "book",          "clock",         "vase",
        "scissors",      "teddy bear",    "hair drier",    "toothbrush"};
-const std::string kDS_LIB_PATH = "sources/gst-yoloplugin/yoloplugin_lib/";
+const std::string kDS_LIB_PATH = "sources/lib/";
 const std::string kMODELS_PATH = kDS_LIB_PATH + "models/";
-const std::string kDETECTION_RESULTS_PATH = kDS_LIB_PATH + "detections/";
-const std::string kCALIBRATION_SET = kDS_LIB_PATH + "data/calibration_images.txt";
-const std::string kTEST_IMAGES = kDS_LIB_PATH + "data/test_images.txt";
+const std::string kDETECTION_RESULTS_PATH = "data/detections/";
+const std::string kCALIBRATION_SET = "data/calibration_images.txt";
+const std::string kTEST_IMAGES = "data/test_images.txt";
 
 // Model V2 specific common global vars
 #ifdef MODEL_V2
 
 const float kPROB_THRESH = 0.5f;
 const float kNMS_THRESH = 0.5f;
-const std::string kYOLO_CONFIG_PATH = kDS_LIB_PATH + "data/yolov2.cfg";
-const std::string kTRAINED_WEIGHTS_PATH = kDS_LIB_PATH + "data/yolov2.weights";
+const std::string kYOLO_CONFIG_PATH = "data/yolov2.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = "data/yolov2.weights";
 const std::string kNETWORK_TYPE = "yolov2";
 const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov2-calibration.table";
 const uint kBBOXES = 5;
@@ -94,8 +94,8 @@ const std::string kOUTPUT_BLOB_NAME = "region_32";
 
 const float kPROB_THRESH = 0.7f;
 const float kNMS_THRESH = 0.5f;
-const std::string kYOLO_CONFIG_PATH = kDS_LIB_PATH + "data/yolov3.cfg";
-const std::string kTRAINED_WEIGHTS_PATH = kDS_LIB_PATH + "data/yolov3.weights";
+const std::string kYOLO_CONFIG_PATH = "data/yolov3.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = "data/yolov3.weights";
 const std::string kNETWORK_TYPE = "yolov3";
 const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov3-calibration.table";
 const uint kBBOXES = 3;

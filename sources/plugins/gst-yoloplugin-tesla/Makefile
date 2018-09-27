@@ -24,22 +24,24 @@ SRCS:= gstyoloplugin.cpp
 INCS:= $(wildcard *.h)
 LIB:=libgstnvyolo.so
 
-CONFIG :=../../Makefile.config
+CONFIG :=../../../Makefile.config
 ifeq ($(wildcard $(CONFIG)),)
 $(error $(CONFIG) missing.)
 endif
 include $(CONFIG)
 
-SUBDIR := yoloplugin_lib
+
+SUBDIR :=../../lib
 DEP:=$(SUBDIR)/libyoloplugin.a
 DEP_FILES:=$(wildcard $(SUBDIR)/*.cpp)
 DEP_FILES+=$(wildcard $(SUBDIR)/*.h)
 
-CXXFLAGS := -O2 -fPIC -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable
+CXXFLAGS := -O2 -fPIC -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors
 INCS:= -I"$(TENSORRT_INSTALL_DIR)/include" \
        -I"/usr/local/cuda-$(CUDA_VER)/include" \
 	   -I "$(OPENCV_INSTALL_DIR)/include" \
-	   -I "$(DEEPSTREAM_INSTALL_DIR)/sources/includes" 
+	   -I "$(DEEPSTREAM_INSTALL_DIR)/sources/includes" \
+	   -I "$(SUBDIR)/"
 LIBS := -shared -Wl,-no-undefined \
   -L $(SUBDIR) -lyoloplugin \
   -L$(OPENCV_INSTALL_DIR)/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_dnn -lopencv_imgcodecs -Wl,-rpath="$(OPENCV_INSTALL_DIR)/lib"\
@@ -53,7 +55,7 @@ PKGS:= gstreamer-1.0 gstreamer-base-1.0 gstreamer-video-1.0
 CXXFLAGS+=$(shell pkg-config --cflags $(PKGS))
 LIBS+=$(shell pkg-config --libs $(PKGS))
 
-.PHONY: all install clean 
+.PHONY: all install clean clean_models reinstall
 
 all: $(LIB)
 
@@ -62,10 +64,10 @@ all: $(LIB)
 
 $(LIB): $(OBJS) $(DEP) Makefile
 	@echo "Building $(LIB)"
-	$(CXX) -o $@ $(OBJS) $(LIBS) $(CXXFLAGS)
+	$(CXX) -o $@ $(OBJS) $(DEP) $(LIBS) $(CXXFLAGS)
 
 $(DEP): $(DEP_FILES)
-	@echo "Building yoloplugin_lib"
+	@echo "Building lib"
 	$(MAKE) -C $(SUBDIR)
 
 install: $(LIB)
@@ -75,3 +77,12 @@ install: $(LIB)
 clean:
 	rm -rf $(OBJS) $(LIB)
 	$(MAKE) -C $(SUBDIR) clean
+
+clean_models:
+	$(MAKE) -C $(SUBDIR) clean_models
+
+reinstall: $(LIB)
+	@echo "Re installing $(LIB)"
+	$(MAKE) clean
+	$(MAKE) all
+	$(MAKE) install

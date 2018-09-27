@@ -31,6 +31,7 @@ PKGS:= gstreamer-1.0
 
 OBJS:= $(SRCS:.cpp=.o)
 
+LIB:= ../../lib
 CONFIG :=../../../Makefile.config
 ifeq ($(wildcard $(CONFIG)),)
 $(error $(CONFIG) missing.)
@@ -40,11 +41,11 @@ include $(CONFIG)
 CXXFLAGS:= -I $(DEEPSTREAM_INSTALL_DIR)/sources/includes \
 		   -I /usr/include/gstreamer-1.0	
 
-CXXFLAGS+= -std=c++11 -Wunused-variable `pkg-config --cflags $(PKGS)`
+CXXFLAGS+= -std=c++11 -Wunused-variable -Wfatal-errors `pkg-config --cflags $(PKGS)`
 
 LIBS:= `pkg-config --libs $(PKGS)`
 
-.PHONY: all install clean
+.PHONY: all install clean clean_models reinstall
 
 all: $(APP)
 
@@ -61,3 +62,10 @@ install: $(APP)
 
 clean:
 	rm -rf $(OBJS) $(APP)
+clean_models:
+	$(MAKE) -C $(LIB) clean_models
+reinstall: $(APP)
+	@echo "Re installing $(APP)"
+	$(MAKE) clean
+	$(MAKE) all
+	$(MAKE) install

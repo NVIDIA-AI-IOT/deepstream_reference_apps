@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 
-CONFIG :=../../../Makefile.config
+CONFIG :=../../Makefile.config
 ifeq ($(wildcard $(CONFIG)),)
 $(error $(CONFIG) missing.)
 endif
@@ -43,7 +43,8 @@ INCS:= -I"$(TENSORRT_INSTALL_DIR)/include" \
 LIBS:= -L"$(TENSORRT_INSTALL_DIR)/lib" -lnvinfer -lnvinfer_plugin -Wl,-rpath="$(TENSORRT_INSTALL_DIR)/lib" \
 	   -L"/usr/local/cuda-$(CUDA_VER)/lib64" -lcudart -lcublas -lcurand -Wl,-rpath="/usr/local/cuda-$(CUDA_VER)/lib64" \
 	   -L "$(OPENCV_INSTALL_DIR)/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_dnn -Wl,-rpath="$(OPENCV_INSTALL_DIR)/lib"
-CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -fPIC -Wall -Wunused-function -Wunused-variable `pkg-config --cflags glib-2.0` 
+
+CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -fPIC -Wall -Wunused-function -Wunused-variable -Wfatal-errors `pkg-config --cflags glib-2.0`
 
 .PHONY: all dirs clean deps
 
@@ -54,7 +55,7 @@ dirs:
 	if [ ! -d "models" ]; then mkdir -p models; fi
 	if [ ! -d "calibration" ]; then mkdir -p calibration; fi
 	if [ ! -d "build" ]; then mkdir -p build; fi
-	if [ ! -d "detections" ]; then mkdir -p detections; fi
+	if [ ! -d "../../../data/detections" ]; then mkdir -p ./../../data/detections; fi
 
 deps: $(DEPS) $(OBJS)
 
@@ -66,3 +67,9 @@ $(BUILD_PATH)%.o: %.cu
 clean: 
 	rm -f ./build/*
 	rm -f ./*.a
+
+clean_models:
+	rm -rf ./models/*
+
+clean_detections:
+	rm -rf ./detections/*
