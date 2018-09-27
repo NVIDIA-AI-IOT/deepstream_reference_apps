@@ -95,6 +95,8 @@ void displayDimType(const nvinfer1::Dims d);
 int getNumChannels(nvinfer1::ITensor* t);
 
 // Helper functions to create yolo engine
+nvinfer1::ILayer* netAddPadding1(int layerIdx, std::map<std::string, std::string>& block,
+                                 nvinfer1::ITensor* input, nvinfer1::INetworkDefinition* network);
 nvinfer1::ILayer* netAddMaxpool(int layerIdx, std::map<std::string, std::string>& block,
                                 nvinfer1::ITensor* input, nvinfer1::INetworkDefinition* network);
 nvinfer1::ILayer* netAddConvLinear(int layerIdx, std::map<std::string, std::string>& block,

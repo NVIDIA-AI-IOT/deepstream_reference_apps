@@ -348,6 +348,18 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
         }
         else if (blocks.at(i).at("type") == "maxpool")
         {
+            // Tiny YOLO networks have maxpool layers with a stride of 1 but expect "same" padding.
+            // For this reason the input should be padded with an extra row and column.
+            if (blocks.at(i).find("stride") != blocks.at(i).end() && std::stoi(blocks.at(i).at("stride")) == 1) {
+                std::cout << "Adding padding layer to support asymmetric padding." << std::endl;
+                std::string inputVol = dimsToString(previous->getDimensions());
+                nvinfer1::ILayer* out = netAddPadding1(i, blocks.at(i), previous, network);
+                previous = out->getOutput(0);
+                assert(previous != nullptr);
+                std::string outputVol = dimsToString(previous->getDimensions());
+                printLayerInfo(layerIndex, "padding1", inputVol, outputVol, std::to_string(weightPtr));
+            }
+
             std::string inputVol = dimsToString(previous->getDimensions());
             nvinfer1::ILayer* out = netAddMaxpool(i, blocks.at(i), previous, network);
             previous = out->getOutput(0);

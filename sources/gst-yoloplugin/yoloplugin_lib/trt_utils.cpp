@@ -326,6 +326,19 @@ int getNumChannels(nvinfer1::ITensor* t)
     return d.d[0];
 }
 
+nvinfer1::ILayer* netAddPadding1(int layerIdx, std::map<std::string, std::string>& block,
+                                 nvinfer1::ITensor* input, nvinfer1::INetworkDefinition* network)
+{
+    // addPadding performs zero-padding. Actually it would be better to add -std::numeric_limits<float>::max()
+    // for use in combination with the maxpool layer.
+    nvinfer1::IPaddingLayer* pad = network->addPadding(*input, nvinfer1::DimsHW{0, 0}, nvinfer1::DimsHW{1, 1});
+    assert(pad);
+    std::string paddingLayerName = "padding_" + std::to_string(layerIdx);
+    pad->setName(paddingLayerName.c_str());
+
+    return pad;
+}
+
 nvinfer1::ILayer* netAddMaxpool(int layerIdx, std::map<std::string, std::string>& block,
                                 nvinfer1::ITensor* input, nvinfer1::INetworkDefinition* network)
 {
