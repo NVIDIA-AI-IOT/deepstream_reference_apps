@@ -37,8 +37,10 @@ SOFTWARE.
 #include <vector>
 
 // Uncomment the macro to choose a type of network
-#define MODEL_V2
+// #define MODEL_V2
+// #define MODEL_V2_TINY
 // #define MODEL_V3
+#define MODEL_V3_TINY
 
 namespace config
 {
@@ -70,12 +72,26 @@ extern const std::string kCALIBRATION_SET;
 extern const std::string kTEST_IMAGES;
 
 // Model V2 specific global vars
+namespace yoloV2
+{
 extern const uint kSTRIDE;
 extern const uint kGRID_SIZE;
 extern const uint64_t kOUTPUT_SIZE;
 extern const std::string kOUTPUT_BLOB_NAME;
+} // namespace yoloV2
+
+// Model V2 Tiny specific global vars
+namespace yoloV2Tiny
+{
+extern const uint kSTRIDE;
+extern const uint kGRID_SIZE;
+extern const uint64_t kOUTPUT_SIZE;
+extern const std::string kOUTPUT_BLOB_NAME;
+} // namespace yoloV2Tiny
 
 // Model V3 specific global vars
+namespace yoloV3
+{
 extern const uint kSTRIDE_1;
 extern const uint kSTRIDE_2;
 extern const uint kSTRIDE_3;
@@ -91,6 +107,22 @@ extern const std::vector<int> kMASK_3;
 extern const std::string kOUTPUT_BLOB_NAME_1;
 extern const std::string kOUTPUT_BLOB_NAME_2;
 extern const std::string kOUTPUT_BLOB_NAME_3;
+} // namespace yoloV3
+
+// Model V3 Tiny specific global vars
+namespace yoloV3Tiny
+{
+extern const uint kSTRIDE_1;
+extern const uint kSTRIDE_2;
+extern const uint kGRID_SIZE_1;
+extern const uint kGRID_SIZE_2;
+extern const uint64_t kOUTPUT_SIZE_1;
+extern const uint64_t kOUTPUT_SIZE_2;
+extern const std::vector<int> kMASK_1;
+extern const std::vector<int> kMASK_2;
+extern const std::string kOUTPUT_BLOB_NAME_1;
+extern const std::string kOUTPUT_BLOB_NAME_2;
+} // namespace yoloV3Tiny
 
 } // namespace config
 

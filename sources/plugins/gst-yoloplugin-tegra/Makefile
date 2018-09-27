@@ -35,15 +35,15 @@ $(error "CUDA_VER variable is not set in Makefile.config")
 endif
 
 ifeq ($(PLATFORM),)
-$(error PLATFORM variable is not set in Makefile.config)
+$(error "PLATFORM variable is not set in Makefile.config")
 endif
 
-ifneq ($(PLATFORM), TESLA)
-$(error This plugin is developed for TESLA platform)
+ifneq ($(PLATFORM), TEGRA)
+$(error "This plugin is developed for TEGRA platform. Check PLATFORM variable in Makefile.config")
 endif
 
-ifeq (' $(DEEPSTREAM_INSTALL_DIR)', ' /path/to/DeepStream_Release_2.0')
-$(error DEEPSTREAM_INSTALL_DIR variable is not set in Makefile.config)
+ifeq (' $(NVGSTIVA_APP_INSTALL_DIR)', ' /path/to/nvgstiva-app_sources')
+$(error NVGSTIVA_APP_INSTALL_DIR variable is not set in Makefile.config)
 endif
 
 SUBDIR :=../../lib
@@ -52,21 +52,20 @@ DEP_FILES:=$(wildcard $(SUBDIR)/*.cpp)
 DEP_FILES+=$(wildcard $(SUBDIR)/*.h)
 
 CXXFLAGS := -O2 -fPIC -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors
-INCS:= -I "$(TENSORRT_INSTALL_DIR)/include" \
-       -I "/usr/local/cuda-$(CUDA_VER)/include" \
-	   -I "$(OPENCV_INSTALL_DIR)/include" \
-	   -I "$(DEEPSTREAM_INSTALL_DIR)/sources/includes" \
+INCS:= -I "/usr/local/cuda-$(CUDA_VER)/include" \
+	   -I "$(NVGSTIVA_APP_INSTALL_DIR)/nvgstiva-app/includes" \
+       -I "/usr/include/aarch64-linux-gnu" \
 	   -I "$(SUBDIR)/"
+
 LIBS := -shared -Wl,-no-undefined \
-  -L $(SUBDIR) -lyoloplugin \
-  -L$(OPENCV_INSTALL_DIR)/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_dnn -lopencv_imgcodecs -Wl,-rpath="$(OPENCV_INSTALL_DIR)/lib"\
-  -L/usr/local/cuda-$(CUDA_VER)/lib64/ -lcudart -lnppc -lnppig -lnpps -Wl,-rpath="/usr/local/cuda-$(CUDA_VER)/lib64"\
-  -L/usr/local/deepstream/ -lgstnvquery -lgstnvdsmeta -Wl,-rpath,/usr/local/deepstream/ \
-  -L $(TENSORRT_INSTALL_DIR)/lib -lnvinfer -lnvinfer_plugin -Wl,-rpath="$(TENSORRT_INSTALL_DIR)/lib"
+  -L/usr/lib/aarch64-linux-gnu/tegra -lnvbuf_utils -lgstnvivameta -Wl,-rpath="/usr/lib/aarch64-linux-gnu/tegra" \
+  -L/usr/lib/aarch64-linux-gnu -lnvinfer -lnvinfer_plugin -lEGL -Wl,-rpath="/usr/lib/aarch64-linux-gnu" \
+  -L $(SUBDIR) -lyoloplugin -Wl,-rpath=$(SUBDIR) \
+  -L/usr/local/cuda-$(CUDA_VER)/lib64/ -lcudart -lnppc -lnppig -lnpps -Wl,-rpath="/usr/local/cuda-$(CUDA_VER)/lib64"
 
 OBJS:= $(SRCS:.cpp=.o)
 
-PKGS:= gstreamer-1.0 gstreamer-base-1.0 gstreamer-video-1.0
+PKGS:= gstreamer-1.0 gstreamer-base-1.0 gstreamer-video-1.0 opencv
 CXXFLAGS+=$(shell pkg-config --cflags $(PKGS))
 LIBS+=$(shell pkg-config --libs $(PKGS))
 
@@ -79,7 +78,7 @@ all: $(LIB)
 
 $(LIB): $(OBJS) $(DEP) Makefile
 	@echo "Building $(LIB)"
-	$(CXX) -o $@ $(OBJS) $(DEP) $(LIBS) $(CXXFLAGS)
+	$(CXX) -o $@ $(OBJS) $(DEP) $(LIBS) $(CXXFLAGS) $(INCS)
 
 $(DEP): $(DEP_FILES)
 	@echo "Building lib"
@@ -87,7 +86,7 @@ $(DEP): $(DEP_FILES)
 
 install: $(LIB)
 	@echo "Installing $(LIB)"
-	cp -rv $(LIB) /usr/lib/x86_64-linux-gnu/gstreamer-1.0/
+	cp -rv $(LIB) /usr/lib/aarch64-linux-gnu/gstreamer-1.0/
 
 clean:
 	rm -rf $(OBJS) $(LIB)

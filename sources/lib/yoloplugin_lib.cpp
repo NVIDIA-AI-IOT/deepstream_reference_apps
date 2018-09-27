@@ -30,8 +30,16 @@ SOFTWARE.
 #include "yolov2.h"
 #endif
 
+#ifdef MODEL_V2_TINY
+#include "yolov2-tiny.h"
+#endif
+
 #ifdef MODEL_V3
 #include "yolov3.h"
+#endif
+
+#ifdef MODEL_V3_TINY
+#include "yolov3-tiny.h"
 #endif
 
 #include <iomanip>
@@ -111,8 +119,16 @@ YoloPluginCtx* YoloPluginCtxInit(YoloPluginInitParams* initParams, size_t batchS
     ctx->inferenceNetwork = new YoloV2(batchSize);
 #endif
 
+#ifdef MODEL_V2_TINY
+    ctx->inferenceNetwork = new YoloV2Tiny(batchSize);
+#endif
+
 #ifdef MODEL_V3
     ctx->inferenceNetwork = new YoloV3(batchSize);
+#endif
+
+#ifdef MODEL_V3_TINY
+    ctx->inferenceNetwork = new YoloV3Tiny(batchSize);
 #endif
 
     return ctx;

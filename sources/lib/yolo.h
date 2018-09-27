@@ -86,6 +86,7 @@ protected:
     int m_InputIndex;
     cudaStream_t m_CudaStream;
     PluginFactory* m_PluginFactory;
+    std::unique_ptr<YoloTinyMaxpoolPaddingFormula> m_TinyMaxpoolPaddingFormula;
 
 private:
     void createYOLOEngine(const int batchSize, const std::string yoloConfigPath,

@@ -23,18 +23,18 @@ SOFTWARE.
 *
 */
 
-#include "yolov2.h"
+#include "yolov2-tiny.h"
 #include "network_config.h"
 
-YoloV2::YoloV2(uint batchSize) :
+YoloV2Tiny::YoloV2Tiny(uint batchSize) :
     Yolo(batchSize),
-    m_Stride(config::yoloV2::kSTRIDE),
-    m_GridSize(config::yoloV2::kGRID_SIZE),
+    m_Stride(config::yoloV2Tiny::kSTRIDE),
+    m_GridSize(config::yoloV2Tiny::kGRID_SIZE),
     m_OutputIndex(-1),
-    m_OutputSize(config::yoloV2::kOUTPUT_SIZE),
-    m_OutputBlobName(config::yoloV2::kOUTPUT_BLOB_NAME)
+    m_OutputSize(config::yoloV2Tiny::kOUTPUT_SIZE),
+    m_OutputBlobName(config::yoloV2Tiny::kOUTPUT_BLOB_NAME)
 {
-    assert(m_NetworkType == "yolov2");
+    assert(m_NetworkType == "yolov2-tiny");
     // Allocate Buffers
     m_OutputIndex = m_Engine->getBindingIndex(m_OutputBlobName.c_str());
     assert(m_OutputIndex != -1);
@@ -45,7 +45,7 @@ YoloV2::YoloV2(uint batchSize) :
     m_TrtOutputBuffers.front() = new float[m_OutputSize * m_BatchSize];
 };
 
-void YoloV2::doInference(const unsigned char* input)
+void YoloV2Tiny::doInference(const unsigned char* input)
 {
     NV_CUDA_CHECK(cudaMemcpyAsync(m_Bindings.at(m_InputIndex), input,
                                   m_BatchSize * m_InputSize * sizeof(float), cudaMemcpyHostToDevice,
@@ -59,8 +59,8 @@ void YoloV2::doInference(const unsigned char* input)
     cudaStreamSynchronize(m_CudaStream);
 }
 
-std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& imageH,
-                                               const int& imageW)
+std::vector<BBoxInfo> YoloV2Tiny::decodeDetections(const int& imageIdx, const int& imageH,
+                                                   const int& imageW)
 {
     std::vector<BBoxInfo> binfo;
     const float* detections = &m_TrtOutputBuffers.at(0)[imageIdx * m_OutputSize];

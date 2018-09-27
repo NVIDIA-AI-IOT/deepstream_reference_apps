@@ -20,18 +20,63 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+[application]
+enable-perf-measurement=1
+roi-marking=0
+perf-measurement-interval-sec=5
+gie-kitti-output-dir=/home/nvidia/kitti1
+# 0 = standalone; 1 = server; 2 = client
+app-mode=0
 
-#Update the install directory paths for dependencies below
-CXX=g++
-CUDA_VER:=
+[source0]
+enable=1
+#Type - 1=CameraCSi 2=CameraV4L2 3=URI
+type=3
+camera-width=1280
+camera-height=720
+camera-fps-n=30
+camera-fps-d=1
+camera-csi-sensor-id=0
+camera-v4l2-dev-node=0
+uri=file:///home/nvidia/sample_720p.mp4
 
-#Set to TEGRA for jetson or TESLA for dGPU's
-PLATFORM:=
+[sink0]
+enable=1
+#Type - 1=FakeSink 2=OverlaySink 3=EglSink 4=XvImageSink 5=File
+type=3
+display-id=0
+offset-x=0
+offset-y=0
+width=0
+height=0
+sync=0
+overlay-index=1
+source-id=0
 
-#For Tesla Plugins
-OPENCV_INSTALL_DIR:= /path/to/opencv-3.4.0
-TENSORRT_INSTALL_DIR:= /path/to/TensorRT-4.0
-DEEPSTREAM_INSTALL_DIR:= /path/to/DeepStream_Release_2.0
+[osd]
+enable=1
+osd-mode=2
+border-width=3
+text-size=10
+text-color=1;1;1;1;
+text-bg-color=0.3;0.3;0.3;1
+font=Arial
+show-clock=0
+clock-x-offset=800
+clock-y-offset=820
+clock-text-size=12
+clock-color=1;0;0;0;
 
-#For Tegra Plugins
-NVGSTIVA_APP_INSTALL_DIR:= /path/to/nvgstiva-app_sources
+[ds-example]
+enable=1
+processing-width=640
+processing-height=480
+full-frame=1
+unique-id=15
+
+[tests]
+file-loop-count=0
+#0=send overlaps; 1=do not send overlaps
+server-overlap-mode=1
+#Fixed to 1 for diplay color in GUI mode
+color-mode=1

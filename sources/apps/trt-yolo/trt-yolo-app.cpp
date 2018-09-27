@@ -32,8 +32,16 @@ SOFTWARE.
 #include "yolov2.h"
 #endif
 
+#ifdef MODEL_V2_TINY
+#include "yolov2-tiny.h"
+#endif
+
 #ifdef MODEL_V3
 #include "yolov3.h"
+#endif
+
+#ifdef MODEL_V3_TINY
+#include "yolov3-tiny.h"
 #endif
 
 #include <experimental/filesystem>
@@ -56,8 +64,16 @@ int main(int argc, char** argv)
     inferNet = std::unique_ptr<Yolo>{new YoloV2(FLAGS_batch_size)};
 #endif
 
+#ifdef MODEL_V2_TINY
+    inferNet = std::unique_ptr<Yolo>(new YoloV2Tiny(FLAGS_batch_size));
+#endif
+
 #ifdef MODEL_V3
     inferNet = std::unique_ptr<Yolo>{new YoloV3(FLAGS_batch_size)};
+#endif
+
+#ifdef MODEL_V3_TINY
+    inferNet = std::unique_ptr<Yolo>{new YoloV3Tiny(FLAGS_batch_size)};
 #endif
 
     std::vector<std::string> imageList = loadImageList(config::kTEST_IMAGES);
@@ -76,8 +92,8 @@ int main(int argc, char** argv)
         // Load a new batch
         for (uint imageIdx = loopIdx; imageIdx < (loopIdx + FLAGS_batch_size); ++imageIdx)
         {
-            dsImages.at(imageIdx - loopIdx) = DsImage(imageList.at(imageIdx), inferNet->getInputH(),
-                                                      inferNet->getInputW());
+            dsImages.at(imageIdx - loopIdx)
+                = DsImage(imageList.at(imageIdx), inferNet->getInputH(), inferNet->getInputW());
         }
 
         cv::Mat trtInput = blobFromDsImages(dsImages, inferNet->getInputH(), inferNet->getInputW());

@@ -34,6 +34,8 @@ SOFTWARE.
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <set>
+
 #include "NvInfer.h"
 
 #include "ds_image.h"
@@ -70,6 +72,39 @@ public:
         }
         std::cerr << msg << std::endl;
     }
+};
+
+class YoloTinyMaxpoolPaddingFormula : public nvinfer1::IOutputDimensionsFormula
+{
+
+private:
+    std::set<std::string> m_SamePaddingLayers;
+
+    nvinfer1::DimsHW compute(nvinfer1::DimsHW inputDims, nvinfer1::DimsHW kernelSize,
+                             nvinfer1::DimsHW stride, nvinfer1::DimsHW padding,
+                             nvinfer1::DimsHW dilation, const char* layerName) override
+    {
+        assert(inputDims.d[0] == inputDims.d[1]);
+        assert(kernelSize.d[0] == kernelSize.d[1]);
+        assert(stride.d[0] == stride.d[1]);
+        assert(padding.d[0] == padding.d[1]);
+
+        int outputDim;
+        // Only layer maxpool_12 makes use of same padding
+        if (m_SamePaddingLayers.find(layerName) != m_SamePaddingLayers.end())
+        {
+            outputDim = (inputDims.d[0] + 2 * padding.d[0]) / stride.d[0];
+        }
+        // Valid Padding
+        else
+        {
+            outputDim = (inputDims.d[0] - kernelSize.d[0]) / stride.d[0] + 1;
+        }
+        return nvinfer1::DimsHW{outputDim, outputDim};
+    }
+
+public:
+    void addSamePaddingLayer(std::string input) { m_SamePaddingLayers.insert(input); }
 };
 
 inline float sigmoid(const float& x) { return 1.0f / (1.0f + exp(-x)); }

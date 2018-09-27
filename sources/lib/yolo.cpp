@@ -55,7 +55,8 @@ Yolo::Yolo(uint batchSize) :
     m_TrtOutputBuffers(),
     m_InputIndex(-1),
     m_CudaStream(nullptr),
-    m_PluginFactory(new PluginFactory)
+    m_PluginFactory(new PluginFactory),
+    m_TinyMaxpoolPaddingFormula(new YoloTinyMaxpoolPaddingFormula)
 {
     std::string planFilePath = m_ModelsPath + m_NetworkType + "-" + m_Precision + "-batch"
         + std::to_string(m_BatchSize) + ".engine";
@@ -156,6 +157,9 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
     nvinfer1::ITensor* previous = data;
     std::vector<nvinfer1::ITensor*> tensorOutputs;
     std::vector<nvinfer1::ITensor*> outputLayers;
+
+    // Set the output dimensions formula for pooling layers
+    network->setPoolingOutputDimensionsFormula(m_TinyMaxpoolPaddingFormula.get());
 
     // build the network using the network API
     for (uint i = 0; i < blocks.size(); ++i)
@@ -348,6 +352,11 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
         }
         else if (blocks.at(i).at("type") == "maxpool")
         {
+            // Add same padding layers
+            if (blocks.at(i).at("size") == "2" && blocks.at(i).at("stride") == "1")
+            {
+                m_TinyMaxpoolPaddingFormula->addSamePaddingLayer("maxpool_" + std::to_string(i));
+            }
             std::string inputVol = dimsToString(previous->getDimensions());
             nvinfer1::ILayer* out = netAddMaxpool(i, blocks.at(i), previous, network);
             previous = out->getOutput(0);
@@ -362,6 +371,12 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
                       << std::endl;
             assert(0);
         }
+    }
+
+    if (weights.size() != weightPtr)
+    {
+        std::cout << "Number of unused weights left : " << weights.size() - weightPtr << std::endl;
+        assert(0);
     }
 
     std::cout << "Output layers :" << std::endl;

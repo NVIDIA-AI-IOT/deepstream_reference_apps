@@ -84,10 +84,37 @@ const std::vector<float> kANCHORS = {18.32736,  21.67632,  59.98272,  66.00096, 
 #endif
 
 // Model V2 specific unique global vars
+namespace yoloV2
+{
 const uint kSTRIDE = 32;
 const uint kGRID_SIZE = kINPUT_H / kSTRIDE;
 const uint64_t kOUTPUT_SIZE = kGRID_SIZE * kGRID_SIZE * (kBBOXES * (5 + kOUTPUT_CLASSES));
 const std::string kOUTPUT_BLOB_NAME = "region_32";
+} // namespace yoloV2
+
+// Model V2 specific common global vars
+#ifdef MODEL_V2_TINY
+
+const float kPROB_THRESH = 0.5f;
+const float kNMS_THRESH = 0.5f;
+const std::string kYOLO_CONFIG_PATH = "data/yolov2-tiny.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = "data/yolov2-tiny.weights";
+const std::string kNETWORK_TYPE = "yolov2-tiny";
+const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov2-tiny-calibration.table";
+const uint kBBOXES = 5;
+// Anchors have been converted to network input resolution {0.57273, 0.677385, 1.87446,
+// 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828} x 32 (stride)
+const std::vector<float> kANCHORS = {18.32736,  21.67632,  59.98272,  66.00096,  106.82976,
+                                     175.17888, 252.25024, 112.88896, 312.65664, 293.38496};
+#endif
+
+namespace yoloV2Tiny
+{
+const uint kSTRIDE = 32;
+const uint kGRID_SIZE = kINPUT_H / kSTRIDE;
+const uint64_t kOUTPUT_SIZE = kGRID_SIZE * kGRID_SIZE * (kBBOXES * (5 + kOUTPUT_CLASSES));
+const std::string kOUTPUT_BLOB_NAME = "region_16";
+} // namespace yoloV2Tiny
 
 // Model V3 specific common global vars
 #ifdef MODEL_V3
@@ -104,6 +131,8 @@ const std::vector<float> kANCHORS = {10.0, 13.0, 16.0,  30.0,  33.0, 23.0,  30.0
 #endif
 
 // Model V3 specific unique global vars
+namespace yoloV3
+{
 const uint kSTRIDE_1 = 32;
 const uint kSTRIDE_2 = 16;
 const uint kSTRIDE_3 = 8;
@@ -119,5 +148,34 @@ const std::vector<int> kMASK_3 = {0, 1, 2};
 const std::string kOUTPUT_BLOB_NAME_1 = "yolo_83";
 const std::string kOUTPUT_BLOB_NAME_2 = "yolo_95";
 const std::string kOUTPUT_BLOB_NAME_3 = "yolo_107";
+} // namespace yoloV3
 
+// Model V3 Tiny specific common global vars
+#ifdef MODEL_V3_TINY
+
+const float kPROB_THRESH = 0.5f;
+const float kNMS_THRESH = 0.5f;
+const std::string kYOLO_CONFIG_PATH = "data/yolov3-tiny.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = "data/yolov3-tiny.weights";
+const std::string kNETWORK_TYPE = "yolov3-tiny";
+const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov3-tiny-calibration.table";
+const uint kBBOXES = 3;
+const std::vector<float> kANCHORS
+    = {10.0, 14.0, 23.0, 27.0, 37.0, 58.0, 81.0, 82.0, 135.0, 169.0, 344.0, 319.0};
+#endif
+
+// Model V3 specific common global vars
+namespace yoloV3Tiny
+{
+const uint kSTRIDE_1 = 32;
+const uint kSTRIDE_2 = 16;
+const uint kGRID_SIZE_1 = kINPUT_H / kSTRIDE_1;
+const uint kGRID_SIZE_2 = kINPUT_H / kSTRIDE_2;
+const uint64_t kOUTPUT_SIZE_1 = kGRID_SIZE_1 * kGRID_SIZE_1 * (kBBOXES * (5 + kOUTPUT_CLASSES));
+const uint64_t kOUTPUT_SIZE_2 = kGRID_SIZE_2 * kGRID_SIZE_2 * (kBBOXES * (5 + kOUTPUT_CLASSES));
+const std::vector<int> kMASK_1 = {3, 4, 5};
+const std::vector<int> kMASK_2 = {0, 1, 2};
+const std::string kOUTPUT_BLOB_NAME_1 = "yolo_17";
+const std::string kOUTPUT_BLOB_NAME_2 = "yolo_24";
+} // namespace yoloV3Tiny
 } // namespace config

@@ -263,7 +263,8 @@ std::vector<float> loadWeights(const std::string weightsFilePath, const std::str
         // Remove 4 int32 bytes of data from the stream belonging to the header
         file.ignore(4 * 4);
     }
-    else if (networkType == "yolov3")
+    else if ((networkType == "yolov3") || (networkType == "yolov3-tiny")
+             || (networkType == "yolov2-tiny"))
     {
         // Remove 5 int32 bytes of data from the stream belonging to the header
         file.ignore(4 * 5);
@@ -286,6 +287,7 @@ std::vector<float> loadWeights(const std::string weightsFilePath, const std::str
     std::cout << "Loading complete!" << std::endl;
     delete[] floatWeight;
 
+    std::cout << "Total Number of weights read : " << weights.size() << std::endl;
     return weights;
 }
 

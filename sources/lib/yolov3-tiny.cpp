@@ -22,97 +22,75 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *
 */
-#include "yolov3.h"
+
+#include "yolov3-tiny.h"
 #include "network_config.h"
 
-YoloV3::YoloV3(uint batchSize) :
+YoloV3Tiny::YoloV3Tiny(uint batchSize) :
     Yolo(batchSize),
-    m_Stride1(config::yoloV3::kSTRIDE_1),
-    m_Stride2(config::yoloV3::kSTRIDE_2),
-    m_Stride3(config::yoloV3::kSTRIDE_3),
-    m_GridSize1(config::yoloV3::kGRID_SIZE_1),
-    m_GridSize2(config::yoloV3::kGRID_SIZE_2),
-    m_GridSize3(config::yoloV3::kGRID_SIZE_3),
+    m_Stride1(config::yoloV3Tiny::kSTRIDE_1),
+    m_Stride2(config::yoloV3Tiny::kSTRIDE_2),
+    m_GridSize1(config::yoloV3Tiny::kGRID_SIZE_1),
+    m_GridSize2(config::yoloV3Tiny::kGRID_SIZE_2),
     m_OutputIndex1(-1),
     m_OutputIndex2(-1),
-    m_OutputIndex3(-1),
-    m_OutputSize1(config::yoloV3::kOUTPUT_SIZE_1),
-    m_OutputSize2(config::yoloV3::kOUTPUT_SIZE_2),
-    m_OutputSize3(config::yoloV3::kOUTPUT_SIZE_3),
-    m_Mask1(config::yoloV3::kMASK_1),
-    m_Mask2(config::yoloV3::kMASK_2),
-    m_Mask3(config::yoloV3::kMASK_3),
-    m_OutputBlobName1(config::yoloV3::kOUTPUT_BLOB_NAME_1),
-    m_OutputBlobName2(config::yoloV3::kOUTPUT_BLOB_NAME_2),
-    m_OutputBlobName3(config::yoloV3::kOUTPUT_BLOB_NAME_3)
+    m_OutputSize1(config::yoloV3Tiny::kOUTPUT_SIZE_1),
+    m_OutputSize2(config::yoloV3Tiny::kOUTPUT_SIZE_2),
+    m_Mask1(config::yoloV3Tiny::kMASK_1),
+    m_Mask2(config::yoloV3Tiny::kMASK_2),
+    m_OutputBlobName1(config::yoloV3Tiny::kOUTPUT_BLOB_NAME_1),
+    m_OutputBlobName2(config::yoloV3Tiny::kOUTPUT_BLOB_NAME_2)
 {
-    assert(m_NetworkType == "yolov3");
+    assert(m_NetworkType == "yolov3-tiny");
     // Allocate Buffers
     m_OutputIndex1 = m_Engine->getBindingIndex(m_OutputBlobName1.c_str());
     assert(m_OutputIndex1 != -1);
     m_OutputIndex2 = m_Engine->getBindingIndex(m_OutputBlobName2.c_str());
     assert(m_OutputIndex2 != -1);
-    m_OutputIndex3 = m_Engine->getBindingIndex(m_OutputBlobName3.c_str());
-    assert(m_OutputIndex3 != -1);
     NV_CUDA_CHECK(
         cudaMalloc(&m_Bindings.at(m_InputIndex), m_BatchSize * m_InputSize * sizeof(float)));
     NV_CUDA_CHECK(
         cudaMalloc(&m_Bindings.at(m_OutputIndex1), m_BatchSize * m_OutputSize1 * sizeof(float)));
     NV_CUDA_CHECK(
         cudaMalloc(&m_Bindings.at(m_OutputIndex2), m_BatchSize * m_OutputSize2 * sizeof(float)));
-    NV_CUDA_CHECK(
-        cudaMalloc(&m_Bindings.at(m_OutputIndex3), m_BatchSize * m_OutputSize3 * sizeof(float)));
     m_TrtOutputBuffers.at(0) = new float[m_OutputSize1 * m_BatchSize];
     m_TrtOutputBuffers.at(1) = new float[m_OutputSize2 * m_BatchSize];
-    m_TrtOutputBuffers.at(2) = new float[m_OutputSize3 * m_BatchSize];
 };
 
-void YoloV3::doInference(const unsigned char* input)
+void YoloV3Tiny::doInference(const unsigned char* input)
 {
     NV_CUDA_CHECK(cudaMemcpyAsync(m_Bindings.at(m_InputIndex), input,
                                   m_BatchSize * m_InputSize * sizeof(float), cudaMemcpyHostToDevice,
                                   m_CudaStream));
-
     m_Context->enqueue(m_BatchSize, m_Bindings.data(), m_CudaStream, nullptr);
-
     NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(0), m_Bindings.at(m_OutputIndex1),
                                   m_BatchSize * m_OutputSize1 * sizeof(float),
                                   cudaMemcpyDeviceToHost, m_CudaStream));
     NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(1), m_Bindings.at(m_OutputIndex2),
                                   m_BatchSize * m_OutputSize2 * sizeof(float),
                                   cudaMemcpyDeviceToHost, m_CudaStream));
-    NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(2), m_Bindings.at(m_OutputIndex3),
-                                  m_BatchSize * m_OutputSize3 * sizeof(float),
-                                  cudaMemcpyDeviceToHost, m_CudaStream));
-
     cudaStreamSynchronize(m_CudaStream);
 }
 
-std::vector<BBoxInfo> YoloV3::decodeDetections(const int& imageIdx, const int& imageH,
-                                               const int& imageW)
+std::vector<BBoxInfo> YoloV3Tiny::decodeDetections(const int& imageIdx, const int& imageH,
+                                                   const int& imageW)
 {
     std::vector<BBoxInfo> binfo;
-
     std::vector<BBoxInfo> binfo1
         = decodeTensor(imageH, imageW, &m_TrtOutputBuffers.at(0)[imageIdx * m_OutputSize1], m_Mask1,
                        m_GridSize1, m_Stride1);
     std::vector<BBoxInfo> binfo2
         = decodeTensor(imageH, imageW, &m_TrtOutputBuffers.at(1)[imageIdx * m_OutputSize2], m_Mask2,
                        m_GridSize2, m_Stride2);
-    std::vector<BBoxInfo> binfo3
-        = decodeTensor(imageH, imageW, &m_TrtOutputBuffers.at(2)[imageIdx * m_OutputSize3], m_Mask3,
-                       m_GridSize3, m_Stride3);
-
     binfo.insert(binfo.end(), binfo1.begin(), binfo1.end());
     binfo.insert(binfo.end(), binfo2.begin(), binfo2.end());
-    binfo.insert(binfo.end(), binfo3.begin(), binfo3.end());
 
     return binfo;
 }
 
-std::vector<BBoxInfo> YoloV3::decodeTensor(const int& imageH, const int& imageW,
-                                           const float* detections, const std::vector<int> mask,
-                                           const uint gridSize, const uint stride)
+std::vector<BBoxInfo> YoloV3Tiny::decodeTensor(const int& imageH, const int& imageW,
+                                               const float* detections, const std::vector<int> mask,
+                                               const uint gridSize, const uint stride)
 {
     float scalingFactor
         = std::min(static_cast<float>(m_InputW) / imageW, static_cast<float>(m_InputH) / imageH);

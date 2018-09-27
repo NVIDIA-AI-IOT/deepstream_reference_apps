@@ -32,11 +32,28 @@ PKGS:= gstreamer-1.0
 OBJS:= $(SRCS:.cpp=.o)
 
 LIB:= ../../lib
+
 CONFIG :=../../../Makefile.config
 ifeq ($(wildcard $(CONFIG)),)
 $(error $(CONFIG) missing.)
 endif
 include $(CONFIG)
+
+ifeq ($(CUDA_VER),)
+$(error "CUDA_VER variable is not set in Makefile.config")
+endif
+
+ifeq ($(PLATFORM),)
+$(error PLATFORM variable is not set in Makefile.config)
+endif
+
+ifneq ($(PLATFORM), TESLA)
+$(error This app is developed for TESLA platform)
+endif
+
+ifeq (' $(DEEPSTREAM_INSTALL_DIR)', ' /path/to/DeepStream_Release_2.0')
+$(error DEEPSTREAM_INSTALL_DIR variable is not set in Makefile.config)
+endif
 
 CXXFLAGS:= -I $(DEEPSTREAM_INSTALL_DIR)/sources/includes \
 		   -I /usr/include/gstreamer-1.0	
@@ -62,8 +79,10 @@ install: $(APP)
 
 clean:
 	rm -rf $(OBJS) $(APP)
+
 clean_models:
 	$(MAKE) -C $(LIB) clean_models
+
 reinstall: $(APP)
 	@echo "Re installing $(APP)"
 	$(MAKE) clean
