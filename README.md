@@ -3,7 +3,7 @@
 
 ## Installing Pre-requisites: ##
 
-Download and install DeepStream 2.0
+If the target platform is a dGPU, download and install DeepStream 2.0. For Tegra platforms, flash your device with Jetpack 3.3 and install Deepstream 1.5.
 
 Install GStreamer pre-requisites using:
    `sudo apt-get install libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev`
