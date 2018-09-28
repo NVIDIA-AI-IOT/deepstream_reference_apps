@@ -42,7 +42,7 @@ ifeq ($(PLATFORM),)
 $(error "PLATFORM variable is not set in Makefile.config")
 endif
 
-CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors -I $(LIB)
+CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors -I $(LIB) -I "/usr/local/cuda-$(CUDA_VER)/include"
 
 ifeq ($(PLATFORM), TESLA)
 	LIBS:= -L "$(TENSORRT_INSTALL_DIR)/lib" -lnvinfer -lnvinfer_plugin -Wl,-rpath="$(TENSORRT_INSTALL_DIR)/lib" \
@@ -55,7 +55,7 @@ ifeq ($(PLATFORM), TEGRA)
 	LIBS:= -L "/usr/lib/aarch64-linux-gnu" -lnvinfer -lnvinfer_plugin -Wl,-rpath="/usr/lib/aarch64-linux-gnu" \
 	       -L "/usr/local/cuda-$(CUDA_VER)/lib64" -lcudart -lcublas -lcurand -Wl,-rpath="/usr/local/cuda-$(CUDA_VER)/lib64" \
 		   -L "/usr/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_dnn -Wl,-rpath="/usr/lib" \
-		   -L "usr/lib/aarch64-linux-gnu/ -lgflags
+		   -L "usr/lib/aarch64-linux-gnu/" -lgflags
 endif
 
 .PHONY: all deps install clean clean_models clean_detections reinstall
