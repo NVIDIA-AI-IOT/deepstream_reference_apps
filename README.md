@@ -119,3 +119,5 @@ Following steps describe how to run the YOLO plugin in the deepstream-app
 1. If you are using the plugin with deepstream-app (located at `/usr/bin/deepstream-app`), register the yolo plugin as dsexample. To do so, replace line 671 in `gstyoloplugin.cpp` with `return gst_element_register(plugin, "dsexample", GST_RANK_PRIMARY, GST_TYPE_YOLOPLUGIN);`
 
 This registers the plugin with the name `dsexample` so that the deepstream-app can pick it up and add to it's pipeline. Now go to `sources/gst-yoloplugin/` and run `make && sudo make install` to build and install the plugin.
+
+2. Tegra users working with Deepstream 1.5 and Jetpack 3.3 will have to regenerate the `.cache` files to use the standard caffe models available in the SDK. This can be done by deleting all the `.cache` files in `/home/nvidia/Model` directory and all its subdirectories and then running the nvgstiva-app using the default config file.
