@@ -1,5 +1,5 @@
 
-# YOLO Plugin for DeepStream SDK #
+# YOLO Implementation on Nvidia GPU - for TensorRT and DeepStream SDK #
 
 ## Installing Pre-requisites: ##
 
