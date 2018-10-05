@@ -11,6 +11,8 @@ Install GStreamer pre-requisites using:
 Install Google flags using:
    `sudo apt-get install libgflags-dev`
 
+To use just the stand alone trt-yolo-app, Deepstream Installation can be skipped. However CUDA 9.2 and TensorRT 4.x should be installed.
+
 ## Setup ##
 
 Update all the parameters in `Makefile.config` file present in the root directory
