@@ -46,7 +46,7 @@ DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) 
     m_ImageName()
 {
     m_ImageName = std::experimental::filesystem::path(path).stem().string();
-    m_OrigImage = cv::imread(path, CV_LOAD_IMAGE_COLOR);
+    m_OrigImage = cv::imread(path, cv::IMREAD_COLOR);
 
     if (!m_OrigImage.data || m_OrigImage.cols <= 0 || m_OrigImage.rows <= 0)
     {
@@ -91,7 +91,7 @@ DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) 
     m_LetterboxImage.convertTo(m_LetterboxImage, CV_32FC3, 1 / 255.0);
     cv::threshold(m_LetterboxImage, m_LetterboxImage, 1.0, 1.0, cv::ThresholdTypes::THRESH_TRUNC);
     // converting to RGB
-    cv::cvtColor(m_LetterboxImage, m_LetterboxImage, CV_BGR2RGB);
+    cv::cvtColor(m_LetterboxImage, m_LetterboxImage, cv::COLOR_BGR2RGB);
 }
 
 void DsImage::addBBox(BBoxInfo box, const std::string& labelName)
@@ -109,7 +109,7 @@ void DsImage::addBBox(BBoxInfo box, const std::string& labelName)
         = cv::getTextSize(labelName, cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, 1, nullptr);
     cv::rectangle(m_MarkedImage, cv::Rect(x, y, tsize.width + 3, tsize.height + 4), color, -1);
     cv::putText(m_MarkedImage, labelName.c_str(), cv::Point(x, y + tsize.height),
-                cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, CV_AA);
+                cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
 }
 
 void DsImage::showImage() const
