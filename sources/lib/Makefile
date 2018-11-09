@@ -81,7 +81,7 @@ dirs:
 
 deps: $(DEPS) $(OBJS)
 
-$(BUILD_PATH)%.o: %.cpp %.h
+$(BUILD_PATH)%.o: %.cpp %.h network_config.h network_config.cpp
 	$(CXX) $(INCS) -c -o $@ $(CXXFLAGS) $<
 
 $(BUILD_PATH)%.o: %.cu
