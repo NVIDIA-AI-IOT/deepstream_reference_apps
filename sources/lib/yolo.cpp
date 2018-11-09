@@ -110,7 +110,7 @@ Yolo::Yolo(uint batchSize) :
 
 Yolo::~Yolo()
 {
-    for (auto buffer : m_TrtOutputBuffers) delete[] buffer;
+    for (auto buffer : m_TrtOutputBuffers) NV_CUDA_CHECK(cudaFreeHost(buffer));
     for (auto binding : m_Bindings) NV_CUDA_CHECK(cudaFree(binding));
     cudaStreamDestroy(m_CudaStream);
     if (m_Context)

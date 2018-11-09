@@ -62,9 +62,12 @@ YoloV3::YoloV3(uint batchSize) :
         cudaMalloc(&m_Bindings.at(m_OutputIndex2), m_BatchSize * m_OutputSize2 * sizeof(float)));
     NV_CUDA_CHECK(
         cudaMalloc(&m_Bindings.at(m_OutputIndex3), m_BatchSize * m_OutputSize3 * sizeof(float)));
-    m_TrtOutputBuffers.at(0) = new float[m_OutputSize1 * m_BatchSize];
-    m_TrtOutputBuffers.at(1) = new float[m_OutputSize2 * m_BatchSize];
-    m_TrtOutputBuffers.at(2) = new float[m_OutputSize3 * m_BatchSize];
+    NV_CUDA_CHECK(
+        cudaMallocHost(&m_TrtOutputBuffers[0], m_OutputSize1 * m_BatchSize * sizeof(float)));
+    NV_CUDA_CHECK(
+        cudaMallocHost(&m_TrtOutputBuffers[1], m_OutputSize2 * m_BatchSize * sizeof(float)));
+    NV_CUDA_CHECK(
+        cudaMallocHost(&m_TrtOutputBuffers[2], m_OutputSize3 * m_BatchSize * sizeof(float)));
 };
 
 void YoloV3::doInference(const unsigned char* input)

@@ -42,7 +42,8 @@ YoloV2Tiny::YoloV2Tiny(uint batchSize) :
         cudaMalloc(&m_Bindings.at(m_InputIndex), m_BatchSize * m_InputSize * sizeof(float)));
     NV_CUDA_CHECK(
         cudaMalloc(&m_Bindings.at(m_OutputIndex), m_BatchSize * m_OutputSize * sizeof(float)));
-    m_TrtOutputBuffers.front() = new float[m_OutputSize * m_BatchSize];
+    NV_CUDA_CHECK(
+        cudaMallocHost(&m_TrtOutputBuffers[0], m_OutputSize * m_BatchSize * sizeof(float)));
 };
 
 void YoloV2Tiny::doInference(const unsigned char* input)
