@@ -42,7 +42,12 @@ ifeq ($(PLATFORM),)
 $(error "PLATFORM variable is not set in Makefile.config")
 endif
 
-CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors -I $(LIB) -I "/usr/local/cuda-$(CUDA_VER)/include"
+CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors 
+
+INCS:= -I $(LIB) \
+       -I "$(TENSORRT_INSTALL_DIR)/include" \
+       -I "/usr/local/cuda-$(CUDA_VER)/include" \
+	   -I "$(OPENCV_INSTALL_DIR)/include"
 
 ifeq ($(PLATFORM), TESLA)
 	LIBS:= -L "$(TENSORRT_INSTALL_DIR)/lib" -lnvinfer -lnvinfer_plugin -Wl,-rpath="$(TENSORRT_INSTALL_DIR)/lib" \
@@ -64,7 +69,7 @@ all: $(APP)
 
 $(APP): deps
 	@echo Building $(APP)
-	$(CXX) -o $(APP) trt-yolo-app.cpp $(OBJS) $(CXXFLAGS) $(LIBS) 
+	$(CXX) -o $(APP) trt-yolo-app.cpp $(OBJS) $(CXXFLAGS) $(INCS) $(LIBS) 
 
 deps: $(DEPS)
 	@echo "Building lib"

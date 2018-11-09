@@ -66,7 +66,7 @@ ifeq ($(PLATFORM), TEGRA)
 		   -L "/usr/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_dnn -Wl,-rpath="/usr/lib"
 endif
 
-CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -fPIC -Wall -Wunused-function -Wunused-variable -Wfatal-errors `pkg-config --cflags glib-2.0`
+CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -ldl -fPIC -Wall -Wunused-function -Wunused-variable -Wfatal-errors $(shell pkg-config --cflags glib-2.0)
 
 .PHONY: all dirs clean deps
 
@@ -94,4 +94,4 @@ clean_models:
 	rm -rf ./models/*
 
 clean_detections:
-	rm -rf ./detections/*
+	rm -rf ../../data/detections/*

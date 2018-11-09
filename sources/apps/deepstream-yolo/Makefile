@@ -55,23 +55,23 @@ ifeq (' $(DEEPSTREAM_INSTALL_DIR)', ' /path/to/DeepStream_Release_2.0')
 $(error DEEPSTREAM_INSTALL_DIR variable is not set in Makefile.config)
 endif
 
-CXXFLAGS:= -I $(DEEPSTREAM_INSTALL_DIR)/sources/includes \
-		   -I /usr/include/gstreamer-1.0	
+INCS += -I $(DEEPSTREAM_INSTALL_DIR)/sources/includes \
+	    -I /usr/include/gstreamer-1.0
 
-CXXFLAGS+= -std=c++11 -Wunused-variable -Wfatal-errors `pkg-config --cflags $(PKGS)`
+CXXFLAGS+= -std=c++11 -Wunused-variable -Wfatal-errors $(shell pkg-config --cflags $(PKGS)) 
 
-LIBS:= `pkg-config --libs $(PKGS)`
+LIBS:= $(shell pkg-config --libs $(PKGS))
 
 .PHONY: all install clean clean_models reinstall
 
 all: $(APP)
 
-.o: .cpp $(INCS) Makefile
-	$(CXX) -c $@ $(CXXFLAGS) $<
+%.o: %.cpp Makefile
+	$(CXX) -c -o $@ $(CXXFLAGS) $< $(INCS)
 
 $(APP): $(OBJS) Makefile
 	@echo Building $(APP)
-	$(CXX) -o $(APP) $(OBJS) $(CXXFLAGS) $(LIBS) 
+	$(CXX) -o $(APP) $(OBJS) $(CXXFLAGS) $(LIBS) $(INCS)
 
 install: $(APP)
 	@echo Installing $(APP)
