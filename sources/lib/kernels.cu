@@ -31,7 +31,7 @@ SOFTWARE.
 
 inline __device__ float sigmoidGPU(const float& x) { return 1.0f / (1.0f + __expf(-x)); }
 
-__global__ void gpuYoloLayerV3(float* input, const uint gridSize, const uint numOutputClasses,
+__global__ void gpuYoloLayerV3(const float* input, float* output, const uint gridSize, const uint numOutputClasses,
                                const uint numBBoxes)
 {
     uint x_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -46,29 +46,29 @@ __global__ void gpuYoloLayerV3(float* input, const uint gridSize, const uint num
     const int numGridCells = gridSize * gridSize;
     const int bbindex = y_id * gridSize + x_id;
 
-    input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 0)]
+    output[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 0)]
         = sigmoidGPU(input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 0)]);
 
-    input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 1)]
+    output[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 1)]
         = sigmoidGPU(input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 1)]);
 
-    input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 2)]
+    output[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 2)]
         = __expf(input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 2)]);
 
-    input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 3)]
+    output[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 3)]
         = __expf(input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 3)]);
 
-    input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 4)]
+    output[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 4)]
         = sigmoidGPU(input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + 4)]);
 
     for (uint i = 0; i < numOutputClasses; ++i)
     {
-        input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + (5 + i))]
+        output[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + (5 + i))]
             = sigmoidGPU(input[bbindex + numGridCells * (z_id * (5 + numOutputClasses) + (5 + i))]);
     }
 }
 
-cudaError_t cudaYoloLayerV3(void* input, const uint& batchSize, const uint& gridSize,
+cudaError_t cudaYoloLayerV3(const void* input, void* output, const uint& batchSize, const uint& gridSize,
                             const uint& numOutputClasses, const uint& numBBoxes,
                             uint64_t outputSize, cudaStream_t stream)
 {
@@ -79,7 +79,8 @@ cudaError_t cudaYoloLayerV3(void* input, const uint& batchSize, const uint& grid
     for (int batch = 0; batch < batchSize; ++batch)
     {
         gpuYoloLayerV3<<<number_of_blocks, threads_per_block, 0, stream>>>(
-            reinterpret_cast<float*>(input) + (batch * outputSize), gridSize, numOutputClasses,
+            reinterpret_cast<const float*>(input) + (batch * outputSize),
+            reinterpret_cast<float*>(output) + (batch * outputSize), gridSize, numOutputClasses,
             numBBoxes);
     }
     return cudaGetLastError();

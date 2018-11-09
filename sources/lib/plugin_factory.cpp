@@ -69,7 +69,7 @@ nvinfer1::IPlugin* PluginFactory::createPlugin(const char* layerName, const void
     }
     else
     {
-        std::cout << "Unrecognised layer : " << layerName << std::endl;
+        std::cerr << "ERROR: Unrecognised layer : " << layerName << std::endl;
         assert(0);
         return nullptr;
     }
@@ -151,10 +151,8 @@ size_t YoloLayerV3::getWorkspaceSize(int maxBatchSize) const { return 0; }
 int YoloLayerV3::enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace,
                          cudaStream_t stream)
 {
-    NV_CUDA_CHECK(cudaMemcpy(outputs[0], inputs[0], batchSize * m_OutputSize * sizeof(float),
-                             cudaMemcpyDefault));
-    NV_CUDA_CHECK(cudaYoloLayerV3(outputs[0], batchSize, m_GridSize, m_NumClasses, m_NumBoxes,
-                                  m_OutputSize, stream));
+    NV_CUDA_CHECK(cudaYoloLayerV3(inputs[0], outputs[0], batchSize, m_GridSize, m_NumClasses,
+                                  m_NumBoxes, m_OutputSize, stream));
     return 0;
 }
 

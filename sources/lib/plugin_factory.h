@@ -45,9 +45,9 @@ SOFTWARE.
     }
 
 // Forward declaration of cuda kernels
-cudaError_t cudaYoloLayerV3(void* input, const uint& batchSize, const uint& gridSize,
-                            const uint& numOutputClasses, const uint& numBBoxes,
-                            uint64_t outputSize, cudaStream_t stream);
+cudaError_t cudaYoloLayerV3(const void* input, void* output, const uint& batchSize,
+                            const uint& gridSize, const uint& numOutputClasses,
+                            const uint& numBBoxes, uint64_t outputSize, cudaStream_t stream);
 
 class PluginFactory : public nvinfer1::IPluginFactory
 {
