@@ -86,7 +86,7 @@ static void dsPreProcessBatchInput(const std::vector<cv::Mat*>& cvmats, cv::Mat&
         cvmats.size(), cv::Mat(cv::Size(processingWidth, processingHeight), CV_8UC3));
     for (uint i = 0; i < cvmats.size(); ++i)
     {
-        cv::Mat imageResize, imageBorder, imageFloat, inputImage;
+        cv::Mat imageResize, imageBorder, inputImage;
         inputImage = *cvmats.at(i);
         int maxBorder = std::max(inputImage.size().width, inputImage.size().height);
 
@@ -100,8 +100,7 @@ static void dsPreProcessBatchInput(const std::vector<cv::Mat*>& cvmats, cv::Mat&
         cv::copyMakeBorder(inputImage, imageBorder, yOffset, yOffset, xOffset, xOffset,
                            cv::BORDER_CONSTANT, cv::Scalar(127.5, 127.5, 127.5));
         cv::resize(imageBorder, imageResize, cv::Size(inputW, inputH), 0, 0, cv::INTER_CUBIC);
-        imageResize.convertTo(imageFloat, CV_32FC3, 1 / 255.0);
-        batch_images.at(i) = imageFloat;
+        batch_images.at(i) = imageResize;
     }
 
     batchBlob = cv::dnn::blobFromImages(batch_images, 1.0, cv::Size(inputW, inputH),

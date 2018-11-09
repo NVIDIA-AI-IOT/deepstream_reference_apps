@@ -87,9 +87,6 @@ DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) 
     // letterboxing
     cv::copyMakeBorder(m_LetterboxImage, m_LetterboxImage, m_YOffset, m_YOffset, m_XOffset,
                        m_XOffset, cv::BORDER_CONSTANT, cv::Scalar(128, 128, 128));
-
-    m_LetterboxImage.convertTo(m_LetterboxImage, CV_32FC3, 1 / 255.0);
-    cv::threshold(m_LetterboxImage, m_LetterboxImage, 1.0, 1.0, cv::ThresholdTypes::THRESH_TRUNC);
     // converting to RGB
     cv::cvtColor(m_LetterboxImage, m_LetterboxImage, CV_BGR2RGB);
 }

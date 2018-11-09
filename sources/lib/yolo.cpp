@@ -154,7 +154,25 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
                                                 nvinfer1::DimsCHW{static_cast<int>(m_InputC),
                                                                   static_cast<int>(m_InputH),
                                                                   static_cast<int>(m_InputW)});
-    nvinfer1::ITensor* previous = data;
+    assert(data != nullptr);
+    // Add elementwise layer to normalize pixel values 0-1
+    nvinfer1::Dims divDims{
+        3,
+        {static_cast<int>(m_InputC), static_cast<int>(m_InputH), static_cast<int>(m_InputW)},
+        {nvinfer1::DimensionType::kCHANNEL, nvinfer1::DimensionType::kSPATIAL,
+         nvinfer1::DimensionType::kSPATIAL}};
+    nvinfer1::Weights divWeights{nvinfer1::DataType::kFLOAT, nullptr,
+                                 static_cast<int64_t>(m_InputSize)};
+    float* divWt = new float[m_InputSize];
+    for (uint w = 0; w < m_InputSize; ++w) divWt[w] = 255.0;
+    divWeights.values = divWt;
+    nvinfer1::IConstantLayer* constDivide = network->addConstant(divDims, divWeights);
+    assert(constDivide != nullptr);
+    nvinfer1::IElementWiseLayer* elementDivide = network->addElementWise(
+        *data, *constDivide->getOutput(0), nvinfer1::ElementWiseOperation::kDIV);
+    assert(elementDivide != nullptr);
+
+    nvinfer1::ITensor* previous = elementDivide->getOutput(0);
     std::vector<nvinfer1::ITensor*> tensorOutputs;
     std::vector<nvinfer1::ITensor*> outputLayers;
 
@@ -427,4 +445,5 @@ void Yolo::createYOLOEngine(const int batchSize, const std::string yoloConfigPat
     {
         free(const_cast<void*>(trtWeights[i].values));
     }
+    delete divWt;
 }

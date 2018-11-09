@@ -37,6 +37,7 @@ public:
     int getImageHeight() const { return m_Height; }
     int getImageWidth() const { return m_Width; }
     cv::Mat getLetterBoxedImage() const { return m_LetterboxImage; }
+    cv::Mat getOriginalImage() const { return m_OrigImage; }
     std::string getImageName() const { return m_ImageName; }
     void addBBox(BBoxInfo box, const std::string& labelName);
     void showImage() const;
