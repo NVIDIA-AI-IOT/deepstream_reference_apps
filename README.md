@@ -1,17 +1,17 @@
 
-# YOLO Implementation on Nvidia GPU - for TensorRT and DeepStream SDK #
+# YOLO Implementation on Nvidia GPU - for TensorRT 5 and DeepStream SDK 3.0 #
 
 ## Installing Pre-requisites: ##
 
-If the target platform is a dGPU, download and install DeepStream 2.0. For Tegra platforms, flash your device with Jetpack 3.3 and install Deepstream 1.5.
+If the target platform is a dGPU, download and install DeepStream 3.0. For Tegra platforms, flash your device with Jetpack 3.3 and install Deepstream 1.5.
 
-Install GStreamer pre-requisites using:
+Install GStreamer pre-requisites using:   
    `sudo apt-get install libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev`
 
-Install Google flags using:
+Install Google flags using:   
    `sudo apt-get install libgflags-dev`
 
-To use just the stand alone trt-yolo-app, Deepstream Installation can be skipped. However CUDA 9.2 and TensorRT 4.x should be installed.
+To use just the stand alone trt-yolo-app, Deepstream Installation can be skipped. However CUDA 10.0 and TensorRT 5 should be installed. See [Note](https://github.com/vat-nvidia/deepstream-plugins#note) for additional installation caveats.
 
 ## Setup ##
 
@@ -21,20 +21,20 @@ Update all the parameters in `Makefile.config` file present in the root director
 
 1. Go to the `data` directory and add your yolo .cfg and .weights file.
 
-    For yolo v2,
-    Download the config file from the darknet repo located at `https://github.com/pjreddie/darknet/blob/master/cfg/yolov2.cfg`
+    For yolo v2,   
+    Download the config file from the darknet repo located at `https://github.com/pjreddie/darknet/blob/master/cfg/yolov2.cfg`   
     Download the weights file by running the command `wget https://pjreddie.com/media/files/yolov2.weights`
 
-    For yolo v2 tiny,
-    Download the config file from the darknet repo located at `https://github.com/pjreddie/darknet/blob/master/cfg/yolov2-tiny.cfg`
+    For yolo v2 tiny,   
+    Download the config file from the darknet repo located at `https://github.com/pjreddie/darknet/blob/master/cfg/yolov2-tiny.cfg`   
     Download the weights file by running the command `wget https://pjreddie.com/media/files/yolov2-tiny.weights`
 
     For yolo v3,    
-    Download the config file from the darknet repo located at `https://github.com/pjreddie/darknet/blob/master/cfg/yolov3.cfg`
+    Download the config file from the darknet repo located at `https://github.com/pjreddie/darknet/blob/master/cfg/yolov3.cfg`   
     Download the weights file by running the command `wget https://pjreddie.com/media/files/yolov3.weights`
 
-    For yolo v3 tiny,
-    Download the config file from the darknet repo located at `https://github.com/pjreddie/darknet/blob/master/cfg/yolov3-tiny.cfg`
+    For yolo v3 tiny,   
+    Download the config file from the darknet repo located at `https://github.com/pjreddie/darknet/blob/master/cfg/yolov3-tiny.cfg`   
     Download the weights file by running the command `wget https://pjreddie.com/media/files/yolov3-tiny.weights`
 
 4. Set the right macro in the `network_config.h` file to choose a model architecture
@@ -123,3 +123,5 @@ Following steps describe how to run the YOLO plugin in the deepstream-app
 This registers the plugin with the name `dsexample` so that the deepstream-app can pick it up and add to it's pipeline. Now go to `sources/gst-yoloplugin/` and run `make && sudo make install` to build and install the plugin.
 
 2. Tegra users working with Deepstream 1.5 and Jetpack 3.3 will have to regenerate the `.cache` files to use the standard caffe models available in the SDK. This can be done by deleting all the `.cache` files in `/home/nvidia/Model` directory and all its subdirectories and then running the nvgstiva-app using the default config file.
+
+3. Tesla users working with Deepstream 2.0/TensorRT 4.x/CUDA 9.2, checkout the [DS2 version](https://github.com/vat-nvidia/deepstream-plugins/releases/tag/DS2) of this repo to avoid any build conflicts.
