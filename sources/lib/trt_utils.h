@@ -82,7 +82,7 @@ private:
 
     nvinfer1::DimsHW compute(nvinfer1::DimsHW inputDims, nvinfer1::DimsHW kernelSize,
                              nvinfer1::DimsHW stride, nvinfer1::DimsHW padding,
-                             nvinfer1::DimsHW dilation, const char* layerName) override
+                             nvinfer1::DimsHW dilation, const char* layerName) const override
     {
         assert(inputDims.d[0] == inputDims.d[1]);
         assert(kernelSize.d[0] == kernelSize.d[1]);
