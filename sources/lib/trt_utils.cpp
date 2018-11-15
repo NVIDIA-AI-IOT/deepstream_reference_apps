@@ -548,17 +548,18 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
                                  nvinfer1::ITensor* input, nvinfer1::INetworkDefinition* network)
 {
     assert(block.at("type") == "upsample");
-    assert(block.at("stride") == "2");
     nvinfer1::Dims inpDims = input->getDimensions();
     assert(inpDims.nbDims == 3);
+    assert(inpDims.d[1] == inpDims.d[2]);
     int h = inpDims.d[1];
     int w = inpDims.d[2];
+    int stride = std::stoi(block.at("stride"));
     // add pre multiply matrix as a constant
     nvinfer1::Dims preDims{3,
-                           {1, 2 * h, w},
+                           {1, stride * h, w},
                            {nvinfer1::DimensionType::kCHANNEL, nvinfer1::DimensionType::kSPATIAL,
                             nvinfer1::DimensionType::kSPATIAL}};
-    int size = 2 * h * w;
+    int size = stride * h * w;
     nvinfer1::Weights pre{nvinfer1::DataType::kFLOAT, nullptr, size};
     float* preWt = new float[size];
     /* (2*h * w)
@@ -573,13 +574,12 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     */
     for (int i = 0, idx = 0; i < h; ++i)
     {
-        for (int j = 0; j < w; ++j, ++idx)
+        for (int s = 0; s < stride; ++s)
         {
-            preWt[idx] = (i == j) ? 1.0 : 0.0;
-        }
-        for (int j = 0; j < w; ++j, ++idx)
-        {
-            preWt[idx] = (i == j) ? 1.0 : 0.0;
+            for (int j = 0; j < w; ++j, ++idx)
+            {
+                preWt[idx] = (i == j) ? 1.0 : 0.0;
+            }
         }
     }
     pre.values = preWt;
@@ -589,10 +589,10 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     preM->setName(preLayerName.c_str());
     // add post multiply matrix as a constant
     nvinfer1::Dims postDims{3,
-                            {1, h, 2 * w},
+                            {1, h, stride * w},
                             {nvinfer1::DimensionType::kCHANNEL, nvinfer1::DimensionType::kSPATIAL,
                              nvinfer1::DimensionType::kSPATIAL}};
-    size = 2 * h * w;
+    size = stride * h * w;
     nvinfer1::Weights post{nvinfer1::DataType::kFLOAT, nullptr, size};
     float* postWt = new float[size];
     /* (h * 2*w)
@@ -604,9 +604,9 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     */
     for (int i = 0, idx = 0; i < h; ++i)
     {
-        for (int j = 0; j < 2 * w; ++j, ++idx)
+        for (int j = 0; j < stride * w; ++j, ++idx)
         {
-            postWt[idx] = (j / 2 == i) ? 1.0 : 0.0;
+            postWt[idx] = (j / stride == i) ? 1.0 : 0.0;
         }
     }
     post.values = postWt;
@@ -616,27 +616,18 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     post_m->setName(postLayerName.c_str());
     // add matrix multiply layers for upsampling
     nvinfer1::IMatrixMultiplyLayer* mm1
-        = network->addMatrixMultiply(*preM->getOutput(0), false, *input, false);
+        = network->addMatrixMultiply(*preM->getOutput(0), nvinfer1::MatrixOperation::kNONE, *input,
+                                     nvinfer1::MatrixOperation::kNONE);
     assert(mm1 != nullptr);
     std::string mm1LayerName = "mm1_" + std::to_string(layerIdx);
     mm1->setName(mm1LayerName.c_str());
     nvinfer1::IMatrixMultiplyLayer* mm2
-        = network->addMatrixMultiply(*mm1->getOutput(0), false, *post_m->getOutput(0), false);
+        = network->addMatrixMultiply(*mm1->getOutput(0), nvinfer1::MatrixOperation::kNONE,
+                                     *post_m->getOutput(0), nvinfer1::MatrixOperation::kNONE);
     assert(mm2 != nullptr);
     std::string mm2LayerName = "mm2_" + std::to_string(layerIdx);
     mm2->setName(mm2LayerName.c_str());
-    // switch dimension **types** from kSPATIAL, kCHANNEL, kSPATIAL to kCHANNEL, kSPATIAL, kSPATIAL
-    nvinfer1::Dims outDims{3,
-                           {inputChannels, 2 * h, 2 * w},
-                           {nvinfer1::DimensionType::kCHANNEL, nvinfer1::DimensionType::kSPATIAL,
-                            nvinfer1::DimensionType::kSPATIAL}};
-    nvinfer1::IShuffleLayer* reshape = network->addShuffle(*mm2->getOutput(0));
-    assert(reshape != nullptr);
-    std::string reshapeLayerName = "upsample_" + std::to_string(layerIdx);
-    reshape->setName(reshapeLayerName.c_str());
-    reshape->setReshapeDimensions(outDims);
-
-    return reshape;
+    return mm2;
 }
 
 void printLayerInfo(std::string layerIndex, std::string layerName, std::string layerInput,
