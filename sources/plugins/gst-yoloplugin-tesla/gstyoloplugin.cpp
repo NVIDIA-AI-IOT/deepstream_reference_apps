@@ -55,6 +55,27 @@ enum
 #define DEFAULT_PROCESS_FULL_FRAME TRUE
 #define DEFAULT_GPU_ID 0
 
+#define RGB_BYTES_PER_PIXEL 3
+#define RGBA_BYTES_PER_PIXEL 4
+#define Y_BYTES_PER_PIXEL 1
+#define UV_BYTES_PER_PIXEL 2
+
+#define CHECK_NPP_STATUS(npp_status,error_str) do { \
+  if ((npp_status) != NPP_SUCCESS) { \
+    g_print ("Error: %s in %s at line %d: NPP Error %d\n", \
+        error_str, __FILE__, __LINE__, npp_status); \
+    goto error; \
+  } \
+} while (0)
+
+#define CHECK_CUDA_STATUS(cuda_status,error_str) do { \
+  if ((cuda_status) != cudaSuccess) { \
+    g_print ("Error: %s in %s at line %d (%s)\n", \
+        error_str, __FILE__, __LINE__, cudaGetErrorName(cuda_status)); \
+    goto error; \
+  } \
+} while (0)
+
 /* By default NVIDIA Hardware allocated memory flows through the pipeline. We
  * will be processing on this type of memory only. */
 #define GST_CAPS_FEATURE_MEMORY_NVMM "memory:NVMM"
@@ -259,7 +280,6 @@ gst_yoloplugin_start (GstBaseTransform * btrans)
 
   GstQuery *queryparams = NULL;
   guint batch_size = 1;
-  cudaError_t CUerr = cudaSuccess;
 
   yoloplugin->batch_size = 1;
   queryparams = gst_nvquery_batch_size_new ();
@@ -278,20 +298,16 @@ gst_yoloplugin_start (GstBaseTransform * btrans)
       YoloPluginCtxInit (&init_params, yoloplugin->batch_size);
 
   GST_DEBUG_OBJECT (yoloplugin, "ctx lib %p \n", yoloplugin->yolopluginlib_ctx);
-  CUerr = cudaSetDevice (yoloplugin->gpu_id);
-  if (CUerr != cudaSuccess) {
-    g_print ("\n *** Unable to set device in %s Line %d\n", __func__, __LINE__);
-    goto error;
-  }
+  CHECK_CUDA_STATUS (cudaSetDevice (yoloplugin->gpu_id),
+      "Unable to set cuda device");
 
   cudaStreamCreate (&yoloplugin->npp_stream);
 
   // Create host memory for conversion/scaling
-  CUerr = cudaMallocHost (&yoloplugin->hconv_buf,
-      yoloplugin->processing_width * yoloplugin->processing_height * 4);
-  if (CUerr != cudaSuccess) {
-    goto error;
-  }
+  CHECK_CUDA_STATUS (cudaMallocHost (&yoloplugin->hconv_buf,
+          yoloplugin->processing_width * yoloplugin->processing_height *
+          RGBA_BYTES_PER_PIXEL), "Could not allocate cuda host buffer");
+
   GST_DEBUG_OBJECT (yoloplugin, "allocated cuda buffer %p \n",
       yoloplugin->hconv_buf);
 
@@ -359,7 +375,13 @@ gst_yoloplugin_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   /* Save the input video information, since this will be required later. */
   gst_video_info_from_caps (&yoloplugin->video_info, incaps);
 
+  CHECK_CUDA_STATUS (cudaSetDevice (yoloplugin->gpu_id),
+      "Unable to set cuda device");
+
   return TRUE;
+
+error:
+  return FALSE;
 }
 
 /**
@@ -374,13 +396,11 @@ get_converted_mat_dgpu (GstYoloPlugin * yoloplugin, void *input_buf,
     NvOSD_RectParams * crop_rect_params, cv::Mat & out_mat,
     gdouble & ratio, gint input_width, gint input_height)
 {
-  GstFlowReturn flow_ret = GST_FLOW_OK;
   cv::Mat in_mat;
   gint src_left = (crop_rect_params->left);
   gint src_top = (crop_rect_params->top);
   gint src_width = (crop_rect_params->width);
   gint src_height = (crop_rect_params->height);
-  NppStatus nppError;
 
   // size of source
   NppiSize oSrcSize = { input_width, input_height };
@@ -401,35 +421,39 @@ get_converted_mat_dgpu (GstYoloPlugin * yoloplugin, void *input_buf,
       1.0 * yoloplugin->processing_height / crop_rect_params->height);
 
   if ((crop_rect_params->width == 0) || (crop_rect_params->height == 0)) {
-    flow_ret = GST_FLOW_ERROR;
-    goto done;
+    return GST_FLOW_ERROR;
   }
   // Memset the memory
-  cudaMemset (yoloplugin->hconv_buf, 0,
-      yoloplugin->processing_width * 4 * yoloplugin->processing_height);
+  CHECK_CUDA_STATUS (cudaMemset (yoloplugin->hconv_buf, 0,
+          yoloplugin->processing_width * RGBA_BYTES_PER_PIXEL *
+          yoloplugin->processing_height), "Failed to memset cuda buffer");
 
   nppSetStream (yoloplugin->npp_stream);
 
   // Perform cropping and resizing
-  nppError = nppiResizeSqrPixel_8u_C4R (
-      (const Npp8u *) input_buf + (src_left + src_top * input_width) * 4,
-      oSrcSize, input_width * 4, oSrcROI, (Npp8u *) yoloplugin->hconv_buf,
-      yoloplugin->processing_width * 4, DstROI, ratio, ratio, 0, 0,
-      NPPI_INTER_LINEAR);
-  if (nppError != NPP_SUCCESS) {
-    flow_ret = GST_FLOW_ERROR;
-    goto done;
-  }
-  cudaStreamSynchronize (yoloplugin->npp_stream);
+  CHECK_NPP_STATUS (nppiResizeSqrPixel_8u_C4R (
+          (const Npp8u *) input_buf + (src_left +
+              src_top * input_width) * RGBA_BYTES_PER_PIXEL, oSrcSize,
+          input_width * RGBA_BYTES_PER_PIXEL, oSrcROI,
+          (Npp8u *) yoloplugin->hconv_buf,
+          yoloplugin->processing_width * RGBA_BYTES_PER_PIXEL, DstROI, ratio,
+          ratio, 0, 0, NPPI_INTER_LINEAR), "Failed to scale RGBA frame");
+
+  CHECK_CUDA_STATUS (cudaStreamSynchronize (yoloplugin->npp_stream),
+      "Failed to synchronize cuda stream");
 
   // Use openCV to remove padding and convert RGBA to RGB. Can be skipped if
   // algorithm can handle padded RGBA data.
   in_mat =
       cv::Mat (yoloplugin->processing_height, yoloplugin->processing_width,
-      CV_8UC4, yoloplugin->hconv_buf, yoloplugin->processing_width * 4);
+      CV_8UC4, yoloplugin->hconv_buf,
+      yoloplugin->processing_width * RGBA_BYTES_PER_PIXEL);
   cv::cvtColor (in_mat, out_mat, CV_RGBA2BGR);
-done:
-  return flow_ret;
+
+  return GST_FLOW_OK;
+
+error:
+  return GST_FLOW_ERROR;
 }
 
 /**
@@ -444,7 +468,6 @@ gst_yoloplugin_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
   gdouble scale_ratio;
   std::vector < YoloPluginOutput * >outputs (yoloplugin->batch_size, nullptr);
 
-  cudaError_t CUerr = cudaSuccess;
   NvBufSurface *surface = NULL;
   guint batch_size = yoloplugin->batch_size;
   GstNvStreamMeta *streamMeta = NULL;
@@ -452,27 +475,27 @@ gst_yoloplugin_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
   cv::Mat in_mat;
 
   yoloplugin->frame_num++;
-  CUerr = cudaSetDevice (yoloplugin->gpu_id);
-  if (CUerr != cudaSuccess) {
-    g_print ("\n *** Unable to set device in %s Line %d\n", __func__, __LINE__);
-    goto done;
-  }
+  CHECK_CUDA_STATUS (cudaSetDevice (yoloplugin->gpu_id),
+      "Unable to set cuda device");
 
   memset (&in_map_info, 0, sizeof (in_map_info));
   if (!gst_buffer_map (inbuf, &in_map_info, GST_MAP_READ)) {
-    flow_ret = GST_FLOW_ERROR;
-    goto done;
+    g_print ("Error: Failed to map gst buffer\n");
+    goto error;
   }
 
-  surface = *((NvBufSurface **) in_map_info.data);
+  surface = (NvBufSurface *) in_map_info.data;
   GST_DEBUG_OBJECT (yoloplugin,
       "Processing Frame %" G_GUINT64_FORMAT " Surface %p\n",
       yoloplugin->frame_num, surface);
 
+  if (CHECK_NVDS_MEMORY_AND_GPUID (yoloplugin, surface))
+    goto error;
+
   /* Stream meta for batched mode */
   streamMeta = gst_buffer_get_nvstream_meta (inbuf);
-  if (streamMeta && streamMeta->num_filled < yoloplugin->batch_size) {
-    batch_size = streamMeta->num_filled;
+  if (streamMeta) {
+    batch_size = MIN (streamMeta->num_filled, batch_size);
   }
   if (yoloplugin->process_full_frame) {
     for (guint i = 0; i < batch_size; i++) {
@@ -489,8 +512,7 @@ gst_yoloplugin_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
               &rect_params, *yoloplugin->cvmats.at (i), scale_ratio,
               yoloplugin->video_info.width, yoloplugin->video_info.height)
           != GST_FLOW_OK) {
-        flow_ret = GST_FLOW_ERROR;
-        goto done;
+        goto error;
       }
     }
     // Process to get the outputs
@@ -562,7 +584,9 @@ gst_yoloplugin_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
     }
   }
 
-done:
+  flow_ret = GST_FLOW_OK;
+
+error:
   gst_buffer_unmap (inbuf, &in_map_info);
   return flow_ret;
 }
