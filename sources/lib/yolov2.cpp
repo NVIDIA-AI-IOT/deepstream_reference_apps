@@ -109,7 +109,7 @@ std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& i
                 if (maxProb > m_ProbThresh)
                 {
                     BBoxInfo bbi;
-                    bbi.box = convertBBox(bx, by, bw, bh, m_Stride);
+                    bbi.box = convertBBox(bx, by, bw, bh, m_Stride, m_InputW, m_InputH);
 
                     // Undo Letterbox
                     float xCorrection = (m_InputW - scalingFactor * imageW) / 2;
@@ -124,11 +124,6 @@ std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& i
                     bbi.box.x2 /= scalingFactor;
                     bbi.box.y1 /= scalingFactor;
                     bbi.box.y2 /= scalingFactor;
-
-                    bbi.box.x1 = clamp(bbi.box.x1, 0, imageW);
-                    bbi.box.x2 = clamp(bbi.box.x2, 0, imageW);
-                    bbi.box.y1 = clamp(bbi.box.y1, 0, imageH);
-                    bbi.box.y2 = clamp(bbi.box.y2, 0, imageH);
 
                     bbi.label = maxIndex;
                     bbi.prob = maxProb;

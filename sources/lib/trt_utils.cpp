@@ -75,7 +75,7 @@ bool fileExists(const std::string fileName)
 }
 
 BBox convertBBox(const float& bx, const float& by, const float& bw, const float& bh,
-                 const int& stride)
+                 const uint& stride, const uint& netW, const uint& netH)
 {
     BBox b;
     // Restore coordinates to network input resolution
@@ -87,6 +87,11 @@ BBox convertBBox(const float& bx, const float& by, const float& bw, const float&
 
     b.y1 = y - bh / 2;
     b.y2 = y + bh / 2;
+
+    b.x1 = clamp(b.x1, 0, netW);
+    b.x2 = clamp(b.x2, 0, netW);
+    b.y1 = clamp(b.y1, 0, netH);
+    b.y2 = clamp(b.y2, 0, netH);
 
     return b;
 }

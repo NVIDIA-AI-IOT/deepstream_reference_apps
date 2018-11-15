@@ -140,7 +140,7 @@ std::vector<BBoxInfo> YoloV3Tiny::decodeTensor(const int& imageH, const int& ima
                 if (maxProb > m_ProbThresh)
                 {
                     BBoxInfo bbi;
-                    bbi.box = convertBBox(bx, by, bw, bh, stride);
+                    bbi.box = convertBBox(bx, by, bw, bh, stride, m_InputW, m_InputH);
 
                     // Undo Letterbox
                     float x_correction = (m_InputW - scalingFactor * imageW) / 2;
@@ -155,11 +155,6 @@ std::vector<BBoxInfo> YoloV3Tiny::decodeTensor(const int& imageH, const int& ima
                     bbi.box.x2 /= scalingFactor;
                     bbi.box.y1 /= scalingFactor;
                     bbi.box.y2 /= scalingFactor;
-
-                    bbi.box.x1 = clamp(bbi.box.x1, 0, imageW);
-                    bbi.box.x2 = clamp(bbi.box.x2, 0, imageW);
-                    bbi.box.y1 = clamp(bbi.box.y1, 0, imageH);
-                    bbi.box.y2 = clamp(bbi.box.y2, 0, imageH);
 
                     bbi.label = maxIndex;
                     bbi.prob = maxProb;

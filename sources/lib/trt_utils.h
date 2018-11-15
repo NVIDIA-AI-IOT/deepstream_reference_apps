@@ -116,7 +116,7 @@ std::string trim(std::string s);
 float clamp(const float val, const float minVal, const float maxVal);
 bool fileExists(const std::string fileName);
 BBox convertBBox(const float& bx, const float& by, const float& bw, const float& bh,
-                 const int& stride);
+                 const uint& stride, const uint& netW, const uint& netH);
 void printPredictions(const BBoxInfo& info, const std::string& className);
 std::vector<std::string> loadImageList(const std::string filename);
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo);
