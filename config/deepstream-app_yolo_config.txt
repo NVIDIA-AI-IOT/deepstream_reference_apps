@@ -23,7 +23,6 @@
 [application]
 enable-perf-measurement=1
 perf-measurement-interval-sec=5
-flow-original-resolution=1
 #gie-kitti-output-dir=streamscl
 
 [tiled-display]
@@ -33,14 +32,22 @@ columns=1
 width=1280
 height=720
 gpu-id=0
+# 0 - cuda pinned/host memory
+# 1 - cuda device memory
+# 2 - cuda unified memory
+cuda-memory-type=1
 
 [source0]
 enable=1
 #Type - 1=CameraV4L2 2=URI 3=MultiURI
 type=3
-uri=file://relative/path/to/source/video
+uri=file://path/to/source/video
 num-sources=1
 gpu-id=0
+# 0 - cuda pinned/host memory
+# 1 - cuda device memory
+# 2 - cuda unified memory
+cuda-memory-type=1
 
 [sink0]
 enable=1
@@ -49,11 +56,11 @@ type=2
 sync=1
 source-id=0
 gpu-id=0
+cuda-memory-type=1
 
 [osd]
 enable=1
 gpu-id=0
-osd-mode=1
 border-width=1
 text-size=15
 text-color=1;1;1;1;
@@ -64,9 +71,23 @@ clock-x-offset=800
 clock-y-offset=820
 clock-text-size=12
 clock-color=1;0;0;0
+cuda-memory-type=1
 
-[tests]
-file-loop=0
+[streammux]
+gpu-id=0
+##Boolean property to inform muxer that sources are live
+live-source=0
+batch-size=1
+##time out in usec, to wait after the first buffer is available
+##to push the batch even if the complete batch is not formed
+batched-push-timeout=40000
+## Set muxer output width and height
+width=1280
+height=720
+##Enable to maintain aspect ratio wrt source, and allow black borders, works
+##along with width, height properties
+enable-padding=0
+cuda-memory-type=1
 
 [ds-example]
 enable=1
@@ -74,3 +95,7 @@ processing-width=1280
 processing-height=720
 full-frame=1
 unique-id=15
+gpu-id=0
+
+[tests]
+file-loop=0
