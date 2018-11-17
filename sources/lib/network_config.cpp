@@ -61,21 +61,22 @@ const std::vector<std::string> kCLASS_NAMES
        "microwave",     "oven",          "toaster",       "sink",
        "refrigerator",  "book",          "clock",         "vase",
        "scissors",      "teddy bear",    "hair drier",    "toothbrush"};
-const std::string kDS_LIB_PATH = "sources/lib/";
-const std::string kMODELS_PATH = kDS_LIB_PATH + "models/";
-const std::string kDETECTION_RESULTS_PATH = "data/detections/";
-const std::string kCALIBRATION_SET = "data/calibration_images.txt";
-const std::string kTEST_IMAGES = "data/test_images.txt";
+const std::string kYOLO_DATA_PATH = "data/yolo/";
+const std::string kYOLO_LIB_PATH = "sources/lib/";
+const std::string kMODELS_PATH = kYOLO_LIB_PATH + "models/";
+const std::string kDETECTION_RESULTS_PATH = kYOLO_DATA_PATH + "detections/";
+const std::string kCALIBRATION_SET = kYOLO_DATA_PATH + "calibration_images.txt";
+const std::string kTEST_IMAGES = kYOLO_DATA_PATH + "test_images.txt";
 
 // Model V2 specific common global vars
 #ifdef MODEL_V2
 
 const float kPROB_THRESH = 0.5f;
 const float kNMS_THRESH = 0.5f;
-const std::string kYOLO_CONFIG_PATH = "data/yolov2.cfg";
-const std::string kTRAINED_WEIGHTS_PATH = "data/yolov2.weights";
+const std::string kYOLO_CONFIG_PATH = kYOLO_DATA_PATH + "yolov2.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = kYOLO_DATA_PATH + "yolov2.weights";
 const std::string kNETWORK_TYPE = "yolov2";
-const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov2-calibration.table";
+const std::string kCALIB_TABLE_PATH = kYOLO_LIB_PATH + "calibration/yolov2-calibration.table";
 const uint kBBOXES = 5;
 // Anchors have been converted to network input resolution {0.57273, 0.677385, 1.87446,
 // 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828} x 32 (stride)
@@ -97,10 +98,10 @@ const std::string kOUTPUT_BLOB_NAME = "region_32";
 
 const float kPROB_THRESH = 0.5f;
 const float kNMS_THRESH = 0.5f;
-const std::string kYOLO_CONFIG_PATH = "data/yolov2-tiny.cfg";
-const std::string kTRAINED_WEIGHTS_PATH = "data/yolov2-tiny.weights";
+const std::string kYOLO_CONFIG_PATH = kYOLO_DATA_PATH + "yolov2-tiny.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = kYOLO_DATA_PATH + "yolov2-tiny.weights";
 const std::string kNETWORK_TYPE = "yolov2-tiny";
-const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov2-tiny-calibration.table";
+const std::string kCALIB_TABLE_PATH = kYOLO_LIB_PATH + "calibration/yolov2-tiny-calibration.table";
 const uint kBBOXES = 5;
 // Anchors have been converted to network input resolution {0.57273, 0.677385, 1.87446,
 // 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828} x 32 (stride)
@@ -121,10 +122,10 @@ const std::string kOUTPUT_BLOB_NAME = "region_16";
 
 const float kPROB_THRESH = 0.7f;
 const float kNMS_THRESH = 0.5f;
-const std::string kYOLO_CONFIG_PATH = "data/yolov3.cfg";
-const std::string kTRAINED_WEIGHTS_PATH = "data/yolov3.weights";
+const std::string kYOLO_CONFIG_PATH = kYOLO_DATA_PATH + "yolov3.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = kYOLO_DATA_PATH + "yolov3.weights";
 const std::string kNETWORK_TYPE = "yolov3";
-const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov3-calibration.table";
+const std::string kCALIB_TABLE_PATH = kYOLO_LIB_PATH + "calibration/yolov3-calibration.table";
 const uint kBBOXES = 3;
 const std::vector<float> kANCHORS = {10.0, 13.0, 16.0,  30.0,  33.0, 23.0,  30.0,  61.0,  62.0,
                                      45.0, 59.0, 119.0, 116.0, 90.0, 156.0, 198.0, 373.0, 326.0};
@@ -155,10 +156,10 @@ const std::string kOUTPUT_BLOB_NAME_3 = "yolo_107";
 
 const float kPROB_THRESH = 0.5f;
 const float kNMS_THRESH = 0.5f;
-const std::string kYOLO_CONFIG_PATH = "data/yolov3-tiny.cfg";
-const std::string kTRAINED_WEIGHTS_PATH = "data/yolov3-tiny.weights";
+const std::string kYOLO_CONFIG_PATH = kYOLO_DATA_PATH + "yolov3-tiny.cfg";
+const std::string kTRAINED_WEIGHTS_PATH = kYOLO_DATA_PATH + "yolov3-tiny.weights";
 const std::string kNETWORK_TYPE = "yolov3-tiny";
-const std::string kCALIB_TABLE_PATH = kDS_LIB_PATH + "calibration/yolov3-tiny-calibration.table";
+const std::string kCALIB_TABLE_PATH = kYOLO_LIB_PATH + "calibration/yolov3-tiny-calibration.table";
 const uint kBBOXES = 3;
 const std::vector<float> kANCHORS
     = {10.0, 14.0, 23.0, 27.0, 37.0, 58.0, 81.0, 82.0, 135.0, 169.0, 344.0, 319.0};

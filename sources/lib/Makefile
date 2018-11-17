@@ -77,7 +77,7 @@ dirs:
 	if [ ! -d "models" ]; then mkdir -p models; fi
 	if [ ! -d "calibration" ]; then mkdir -p calibration; fi
 	if [ ! -d "build" ]; then mkdir -p build; fi
-	if [ ! -d "../../../data/detections" ]; then mkdir -p ./../../data/detections; fi
+	if [ ! -d "../../../data/yolo/detections" ]; then mkdir -p ./../../data/yolo/detections; fi
 
 deps: $(DEPS) $(OBJS)
 
@@ -94,4 +94,4 @@ clean_models:
 	rm -rf ./models/*
 
 clean_detections:
-	rm -rf ../../data/detections/*
+	rm -rf ../../data/yolo/detections/*

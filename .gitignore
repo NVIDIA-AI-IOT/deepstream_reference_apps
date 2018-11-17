@@ -32,3 +32,6 @@ data/**/*.weights
 data/**/*.mp4
 data/**/*.h264
 data/**/*.jpeg
+data/**/*.caffemodel
+data/**/*.binaryproto
+data/**/*.engine
