@@ -45,7 +45,8 @@ enum
   PROP_PROCESSING_WIDTH,
   PROP_PROCESSING_HEIGHT,
   PROP_PROCESS_FULL_FRAME,
-  PROP_GPU_DEVICE_ID
+  PROP_GPU_DEVICE_ID,
+  PROP_CONFIG_FILE_PATH
 };
 
 /* Default values for properties */
@@ -54,6 +55,7 @@ enum
 #define DEFAULT_PROCESSING_HEIGHT 480
 #define DEFAULT_PROCESS_FULL_FRAME TRUE
 #define DEFAULT_GPU_ID 0
+#define DEFAULT_CONFIG_FILE_PATH ""
 
 #define RGB_BYTES_PER_PIXEL 3
 #define RGBA_BYTES_PER_PIXEL 4
@@ -171,6 +173,13 @@ gst_yoloplugin_class_init (GstYoloPluginClass * klass)
           G_MAXUINT, 0,
           GParamFlags (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               GST_PARAM_MUTABLE_READY)));
+
+  g_object_class_install_property (gobject_class, PROP_CONFIG_FILE_PATH,
+      g_param_spec_string ("config-file-path", "Plugin config file path",
+          "Set plugin config file path",
+          DEFAULT_CONFIG_FILE_PATH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   /* Set sink and src pad capabilities */
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_yoloplugin_src_template));
@@ -200,6 +209,7 @@ gst_yoloplugin_init (GstYoloPlugin * yoloplugin)
   yoloplugin->processing_height = DEFAULT_PROCESSING_HEIGHT;
   yoloplugin->process_full_frame = DEFAULT_PROCESS_FULL_FRAME;
   yoloplugin->gpu_id = DEFAULT_GPU_ID;
+  yoloplugin->config_file_path = g_strdup (DEFAULT_CONFIG_FILE_PATH);
   /* This quark is required to identify NvDsMeta when iterating through
    * the buffer metadatas */
   if (!_dsmeta_quark)
@@ -228,6 +238,12 @@ gst_yoloplugin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_GPU_DEVICE_ID:
       yoloplugin->gpu_id = g_value_get_uint (value);
+      break;
+    case PROP_CONFIG_FILE_PATH:
+      if (g_value_get_string (value)) {
+        g_free (yoloplugin->config_file_path);
+        yoloplugin->config_file_path = g_value_dup_string (value);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -260,6 +276,9 @@ gst_yoloplugin_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_GPU_DEVICE_ID:
       g_value_set_uint (value, yoloplugin->gpu_id);
       break;
+    case PROP_CONFIG_FILE_PATH:
+      g_value_set_string (value, yoloplugin->config_file_path);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -275,11 +294,17 @@ gst_yoloplugin_start (GstBaseTransform * btrans)
   GstYoloPlugin *yoloplugin = GST_YOLOPLUGIN (btrans);
   YoloPluginInitParams init_params =
       { yoloplugin->processing_width, yoloplugin->processing_height,
-    yoloplugin->process_full_frame
+    yoloplugin->process_full_frame, yoloplugin->config_file_path
   };
 
   GstQuery *queryparams = NULL;
   guint batch_size = 1;
+
+  if ((!yoloplugin->config_file_path)
+      || (strlen (yoloplugin->config_file_path) == 0)) {
+    g_print ("ERROR: Yolo plugin config file path not set \n");
+    goto error;
+  }
 
   yoloplugin->batch_size = 1;
   queryparams = gst_nvquery_batch_size_new ();
@@ -297,6 +322,8 @@ gst_yoloplugin_start (GstBaseTransform * btrans)
   yoloplugin->yolopluginlib_ctx =
       YoloPluginCtxInit (&init_params, yoloplugin->batch_size);
 
+  g_assert (yoloplugin->yolopluginlib_ctx
+      && "Unable to create yolo plugin lib ctx \n ");
   GST_DEBUG_OBJECT (yoloplugin, "ctx lib %p \n", yoloplugin->yolopluginlib_ctx);
   CHECK_CUDA_STATUS (cudaSetDevice (yoloplugin->gpu_id),
       "Unable to set cuda device");

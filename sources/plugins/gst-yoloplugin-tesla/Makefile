@@ -62,7 +62,8 @@ LIBS := -shared -Wl,-no-undefined \
   -L$(OPENCV_INSTALL_DIR)/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_dnn -lopencv_imgcodecs -Wl,-rpath="$(OPENCV_INSTALL_DIR)/lib"\
   -L/usr/local/cuda-$(CUDA_VER)/lib64/ -lcudart -lnppc -lnppig -lnpps -Wl,-rpath="/usr/local/cuda-$(CUDA_VER)/lib64"\
   -L/usr/local/deepstream/ -lnvdsgst_helper -lnvdsgst_meta -Wl,-rpath,/usr/local/deepstream/ \
-  -L $(TENSORRT_INSTALL_DIR)/lib -lnvinfer -lnvinfer_plugin -Wl,-rpath="$(TENSORRT_INSTALL_DIR)/lib"
+  -L $(TENSORRT_INSTALL_DIR)/lib -lnvinfer -lnvinfer_plugin -Wl,-rpath="$(TENSORRT_INSTALL_DIR)/lib" \
+  -L "/usr/lib/x86_64-linux-gnu" -lgflags
 
 OBJS:= $(SRCS:.cpp=.o)
 

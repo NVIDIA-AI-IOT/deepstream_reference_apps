@@ -103,6 +103,9 @@ struct _GstYoloPlugin
 
   // Boolean indicating if entire frame or cropped objects should be processed
   gboolean process_full_frame;
+
+  //plugin config file path
+  gchar *config_file_path;
 };
 
 // Boiler plate stuff
