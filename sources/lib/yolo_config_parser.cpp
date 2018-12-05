@@ -55,7 +55,7 @@ DEFINE_string(calibration_images, "data/yolo/calibration_images.txt",
 DEFINE_uint64(batch_size, 1, "[OPTIONAL] Batch size for the inference engine.");
 DEFINE_double(prob_thresh, 0.5, "[OPTIONAL] Probability threshold for detected objects");
 DEFINE_double(nms_thresh, 0.5, "[OPTIONAL] IOU threshold for bounding box candidates");
-DEFINE_bool(save_detections, true,
+DEFINE_bool(save_detections, false,
             "[OPTIONAL] Flag to save images overlayed with objects detected.");
 DEFINE_bool(view_detections, false,
             "[OPTIONAL] Flag to view images overlayed with objects detected.");

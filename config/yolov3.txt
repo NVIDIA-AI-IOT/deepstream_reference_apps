@@ -69,6 +69,7 @@
 --test_images=data/yolo/test_images.txt
 #--batch_size=4 
 #--view_detections=true
+#--save_detections=true
 #--save_detections_path=data/yolo/detections/
 #--decode=false
 #--seed
