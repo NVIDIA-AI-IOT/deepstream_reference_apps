@@ -22,75 +22,71 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *
 */
-
 #include "ds_image.h"
-#include "network_config.h"
 #include "trt_utils.h"
 #include "yolo.h"
-
-#ifdef MODEL_V2
+#include "yolo_config_parser.h"
 #include "yolov2.h"
-#endif
-
-#ifdef MODEL_V2_TINY
-#include "yolov2-tiny.h"
-#endif
-
-#ifdef MODEL_V3
 #include "yolov3.h"
-#endif
-
-#ifdef MODEL_V3_TINY
-#include "yolov3-tiny.h"
-#endif
 
 #include <experimental/filesystem>
-#include <gflags/gflags.h>
 #include <string>
 #include <sys/time.h>
 
-DEFINE_bool(decode, true, "Decode the detections");
-DEFINE_int32(batch_size, 1, "Batch size for the inference engine.");
-DEFINE_uint64(seed, std::time(0), "Seed for the random number generator");
-
 int main(int argc, char** argv)
 {
-    srand(unsigned(FLAGS_seed));
-    ::google::ParseCommandLineFlags(&argc, &argv, true);
+    // parse config params
+    gflags::SetUsageMessage("Usage : trt-yolo-app --flagfile=/path/to/config_file.txt");
+    yoloConfigParserInit(argc, argv);
+    NetworkInfo yoloInfo = getYoloNetworkInfo();
+    InferParams yoloInferParams = getYoloInferParams();
+    uint64_t seed = getSeed();
+    std::string networkType = getNetworkType();
+    std::string precision = getPrecision();
+    std::string testImages = getTestImages();
+    bool decode = getDecode();
+    bool viewDetections = getViewDetections();
+    bool saveDetections = getSaveDetections();
+    std::string saveDetectionsPath = getSaveDetectionsPath();
+    uint batchSize = getBatchSize();
+
+    srand(unsigned(seed));
 
     std::unique_ptr<Yolo> inferNet{nullptr};
+    if ((networkType == "yolov2") || (networkType == "yolov2-tiny"))
+    {
+        inferNet = std::unique_ptr<Yolo>{new YoloV2(batchSize, yoloInfo, yoloInferParams)};
+    }
+    else if ((networkType == "yolov3") || (networkType == "yolov3-tiny"))
+    {
+        inferNet = std::unique_ptr<Yolo>{new YoloV3(batchSize, yoloInfo, yoloInferParams)};
+    }
+    else
+    {
+        assert(false && "Unrecognised network_type. Network Type has to be one among the following : yolov2, yolov2-tiny, yolov3 and yolov3-tiny");
+    }
 
-#ifdef MODEL_V2
-    inferNet = std::unique_ptr<Yolo>{new YoloV2(FLAGS_batch_size)};
-#endif
+    if (testImages.empty())
+    {
+        std::cout << "Enter a valid file path for test_images config param" << std::endl;
+        return -1;
+    }
 
-#ifdef MODEL_V2_TINY
-    inferNet = std::unique_ptr<Yolo>(new YoloV2Tiny(FLAGS_batch_size));
-#endif
-
-#ifdef MODEL_V3
-    inferNet = std::unique_ptr<Yolo>{new YoloV3(FLAGS_batch_size)};
-#endif
-
-#ifdef MODEL_V3_TINY
-    inferNet = std::unique_ptr<Yolo>{new YoloV3Tiny(FLAGS_batch_size)};
-#endif
-
-    std::vector<std::string> imageList = loadImageList(config::kTEST_IMAGES);
-    imageList.resize(static_cast<int>(imageList.size() / FLAGS_batch_size) * FLAGS_batch_size);
+    std::vector<std::string> imageList = loadListFromTextFile(testImages);
+    imageList.resize(static_cast<int>(imageList.size() / batchSize) * batchSize);
     std::random_shuffle(imageList.begin(), imageList.end(), [](int i) { return rand() % i; });
     std::cout << "Total number of images used for inference : " << imageList.size() << std::endl;
 
-    std::vector<DsImage> dsImages(FLAGS_batch_size);
+    std::vector<DsImage> dsImages(batchSize);
     const int barWidth = 70;
     double inferElapsed = 0;
-    int batchCount = imageList.size() / FLAGS_batch_size;
+    int batchCount = imageList.size() / batchSize;
 
     // Batched inference loop
-    for (uint loopIdx = 0; loopIdx < imageList.size(); loopIdx += FLAGS_batch_size)
+    for (uint loopIdx = 0; loopIdx < imageList.size(); loopIdx += batchSize)
     {
         // Load a new batch
-        for (uint imageIdx = loopIdx; imageIdx < (loopIdx + FLAGS_batch_size); ++imageIdx)
+        for (uint imageIdx = loopIdx; imageIdx < (loopIdx + batchSize); ++imageIdx)
         {
             dsImages.at(imageIdx - loopIdx)
                 = DsImage(imageList.at(imageIdx), inferNet->getInputH(), inferNet->getInputW());
@@ -103,11 +99,11 @@ int main(int argc, char** argv)
         gettimeofday(&inferEnd, NULL);
         inferElapsed += ((inferEnd.tv_sec - inferStart.tv_sec)
                          + (inferEnd.tv_usec - inferStart.tv_usec) / 1000000.0)
-            * 1000 / FLAGS_batch_size;
+            * 1000 / batchSize;
 
-        if (FLAGS_decode)
+        if (decode)
         {
-            for (int imageIdx = 0; imageIdx < FLAGS_batch_size; ++imageIdx)
+            for (uint imageIdx = 0; imageIdx < batchSize; ++imageIdx)
             {
                 auto curImage = dsImages.at(imageIdx);
                 auto binfo = inferNet->decodeDetections(imageIdx, curImage.getImageHeight(),
@@ -122,15 +118,20 @@ int main(int argc, char** argv)
                     curImage.addBBox(b, inferNet->getClassName(b.label));
                 }
 
-                if (config::kSAVE_DETECTIONS)
+                if (saveDetections)
                 {
-                    curImage.saveImageJPEG(config::kDETECTION_RESULTS_PATH);
+                    curImage.saveImageJPEG(saveDetectionsPath);
+                }
+
+                if (viewDetections)
+                {
+                    curImage.showImage();
                 }
             }
         }
 
         std::cout << "[";
-        int progress = ((loopIdx + FLAGS_batch_size) * 100) / imageList.size();
+        int progress = ((loopIdx + batchSize) * 100) / imageList.size();
         progress = progress > 100 ? 100 : progress;
         int pos = (barWidth * progress) / 100;
         for (int i = 0; i < pos; ++i)
@@ -146,8 +147,8 @@ int main(int argc, char** argv)
         std::cout.flush();
     }
     std::cout << std::endl
-              << "Network Type : " << inferNet->getNetworkType()
-              << "Precision : " << config::kPRECISION << " Batch Size : " << FLAGS_batch_size
+              << "Network Type : " << inferNet->getNetworkType() << "Precision : " << precision
+              << " Batch Size : " << batchSize
               << " Inference time per image : " << inferElapsed / batchCount << " ms" << std::endl;
     return 0;
 }

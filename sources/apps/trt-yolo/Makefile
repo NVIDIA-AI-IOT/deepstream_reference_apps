@@ -42,7 +42,7 @@ ifeq ($(PLATFORM),)
 $(error "PLATFORM variable is not set in Makefile.config")
 endif
 
-CXXFLAGS:= -O2 -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors 
+CXXFLAGS:= -O2 -std=c++11 -g -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors 
 
 INCS:= -I $(LIB) \
        -I "$(TENSORRT_INSTALL_DIR)/include" \
