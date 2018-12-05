@@ -74,8 +74,8 @@ bool fileExists(const std::string fileName)
     return true;
 }
 
-BBox convertBBox(const float& bx, const float& by, const float& bw, const float& bh,
-                 const uint& stride, const uint& netW, const uint& netH)
+BBox convertBBoxNetRes(const float& bx, const float& by, const float& bw, const float& bh,
+                       const uint& stride, const uint& netW, const uint& netH)
 {
     BBox b;
     // Restore coordinates to network input resolution
@@ -96,6 +96,22 @@ BBox convertBBox(const float& bx, const float& by, const float& bw, const float&
     return b;
 }
 
+void convertBBoxImgRes(const float scalingFactor, const float& xOffset, const float& yOffset,
+                       BBox& bbox)
+{
+    // Undo Letterbox
+    bbox.x1 -= xOffset;
+    bbox.x2 -= xOffset;
+    bbox.y1 -= yOffset;
+    bbox.y2 -= yOffset;
+
+    // Restore to input resolution
+    bbox.x1 /= scalingFactor;
+    bbox.x2 /= scalingFactor;
+    bbox.y1 /= scalingFactor;
+    bbox.y2 /= scalingFactor;
+}
+
 void printPredictions(const BBoxInfo& b, const std::string& className)
 {
     std::cout << " label:" << b.label << "(" << className << ")"
@@ -103,10 +119,10 @@ void printPredictions(const BBoxInfo& b, const std::string& className)
               << " xmax:" << b.box.x2 << " ymax:" << b.box.y2 << std::endl;
 }
 
-std::vector<std::string> loadImageList(const std::string filename)
+std::vector<std::string> loadListFromTextFile(const std::string filename)
 {
     assert(fileExists(filename));
-    std::vector<std::string> labelInfo;
+    std::vector<std::string> list;
 
     FILE* f = fopen(filename.c_str(), "r");
     if (!f)
@@ -126,10 +142,10 @@ std::vector<std::string> loadImageList(const std::string filename)
                 break;
             }
         }
-        labelInfo.push_back(str);
+        list.push_back(str);
     }
     fclose(f);
-    return labelInfo;
+    return list;
 }
 
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo)
@@ -203,61 +219,9 @@ nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFacto
     return engine;
 }
 
-std::vector<std::map<std::string, std::string>> parseConfig(const std::string cfgFilePath)
-{
-    std::ifstream file(cfgFilePath);
-    assert(file.good());
-    std::string line;
-    std::vector<std::map<std::string, std::string>> blocks;
-    std::map<std::string, std::string> block;
-
-    while (getline(file, line))
-    {
-        if (line.size() == 0) continue;
-        if (line.front() == '#') continue;
-        line = trim(line);
-        if (line.front() == '[')
-        {
-            if (block.size() > 0)
-            {
-                blocks.push_back(block);
-                block.clear();
-            }
-            std::string key = "type";
-            std::string value = trim(line.substr(1, line.size() - 2));
-            block.insert(std::pair<std::string, std::string>(key, value));
-        }
-        else
-        {
-            int cpos = line.find('=');
-            std::string key = trim(line.substr(0, cpos));
-            std::string value = trim(line.substr(cpos + 1));
-            block.insert(std::pair<std::string, std::string>(key, value));
-        }
-    }
-    blocks.push_back(block);
-
-    return blocks;
-}
-
-void displayConfig(const std::vector<std::map<std::string, std::string>>& blocks)
-{
-    for (uint i = 0; i < blocks.size(); ++i)
-    {
-        std::map<std::string, std::string> block = blocks.at(i);
-        std::cout << "--------------------------------" << std::endl;
-        std::cout << "[ " << block.at("type") << " ]" << std::endl;
-        for (auto& it : block)
-        {
-            if (it.first == "type") continue;
-            std::cout << it.first << " --> " << it.second << std::endl;
-        }
-        std::cout << std::endl;
-    }
-}
-
 std::vector<float> loadWeights(const std::string weightsFilePath, const std::string& networkType)
 {
+    assert(fileExists(weightsFilePath));
     std::cout << "Loading pre-trained weights..." << std::endl;
     std::ifstream file(weightsFilePath, std::ios_base::binary);
     assert(file.good());
@@ -331,6 +295,12 @@ int getNumChannels(nvinfer1::ITensor* t)
     assert(d.nbDims == 3);
 
     return d.d[0];
+}
+
+uint64_t get3DTensorVolume(nvinfer1::Dims inputDims)
+{
+    assert(inputDims.nbDims == 3);
+    return inputDims.d[0] * inputDims.d[1] * inputDims.d[2];
 }
 
 nvinfer1::ILayer* netAddMaxpool(int layerIdx, std::map<std::string, std::string>& block,

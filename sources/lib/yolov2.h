@@ -35,17 +35,11 @@ SOFTWARE.
 class YoloV2 : public Yolo
 {
 public:
-    explicit YoloV2(const uint batchSize);
-    void doInference(const unsigned char* input) override;
-    std::vector<BBoxInfo> decodeDetections(const int& imageIdx, const int& imageH,
-                                           const int& imageW) override;
+    YoloV2(const uint batchSize, const NetworkInfo& networkInfo, const InferParams& inferParams);
 
 private:
-    const uint m_Stride;
-    const uint m_GridSize;
-    int m_OutputIndex;
-    const uint64_t m_OutputSize;
-    const std::string m_OutputBlobName;
+    std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH, const int imageW,
+                                       const TensorInfo& tensor) override;
 };
 
 #endif // _YOLO_V2_

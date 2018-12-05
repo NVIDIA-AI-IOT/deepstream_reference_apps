@@ -47,16 +47,20 @@ typedef struct
     int processingHeight;
     // Flag to indicate whether operating on crops of full frame
     int fullFrame;
+    // Plugin config file
+    std::string configFilePath;
 } YoloPluginInitParams;
 
 struct YoloPluginCtx
 {
     YoloPluginInitParams initParams;
+    NetworkInfo networkInfo;
+    InferParams inferParams;
     Yolo* inferenceNetwork;
 
     // perf vars
     float inferTime = 0.0, preTime = 0.0, postTime = 0.0;
-    int batchCount = 0, batchSize = 0;
+    uint batchCount = 0, batchSize = 0;
 };
 
 // Detected/Labelled object structure, stores bounding box info along with label

@@ -24,78 +24,52 @@ SOFTWARE.
 */
 
 #include "yolov2.h"
-#include "network_config.h"
+#include <algorithm>
 
-YoloV2::YoloV2(uint batchSize) :
-    Yolo(batchSize),
-    m_Stride(config::yoloV2::kSTRIDE),
-    m_GridSize(config::yoloV2::kGRID_SIZE),
-    m_OutputIndex(-1),
-    m_OutputSize(config::yoloV2::kOUTPUT_SIZE),
-    m_OutputBlobName(config::yoloV2::kOUTPUT_BLOB_NAME)
+YoloV2::YoloV2(const uint batchSize, const NetworkInfo& networkInfo,
+               const InferParams& inferParams) :
+    Yolo(batchSize, networkInfo, inferParams){};
+
+std::vector<BBoxInfo> YoloV2::decodeTensor(const int imageIdx, const int imageH, const int imageW,
+                                           const TensorInfo& tensor)
 {
-    assert(m_NetworkType == "yolov2");
-    // Allocate Buffers
-    m_OutputIndex = m_Engine->getBindingIndex(m_OutputBlobName.c_str());
-    assert(m_OutputIndex != -1);
-    NV_CUDA_CHECK(
-        cudaMalloc(&m_Bindings.at(m_InputIndex), m_BatchSize * m_InputSize * sizeof(float)));
-    NV_CUDA_CHECK(
-        cudaMalloc(&m_Bindings.at(m_OutputIndex), m_BatchSize * m_OutputSize * sizeof(float)));
-    NV_CUDA_CHECK(
-        cudaMallocHost(&m_TrtOutputBuffers[0], m_OutputSize * m_BatchSize * sizeof(float)));
-};
-
-void YoloV2::doInference(const unsigned char* input)
-{
-    NV_CUDA_CHECK(cudaMemcpyAsync(m_Bindings.at(m_InputIndex), input,
-                                  m_BatchSize * m_InputSize * sizeof(float), cudaMemcpyHostToDevice,
-                                  m_CudaStream));
-
-    m_Context->enqueue(m_BatchSize, m_Bindings.data(), m_CudaStream, nullptr);
-
-    NV_CUDA_CHECK(cudaMemcpyAsync(m_TrtOutputBuffers.at(0), m_Bindings.at(m_OutputIndex),
-                                  m_BatchSize * m_OutputSize * sizeof(float),
-                                  cudaMemcpyDeviceToHost, m_CudaStream));
-    cudaStreamSynchronize(m_CudaStream);
-}
-
-std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& imageH,
-                                               const int& imageW)
-{
-    std::vector<BBoxInfo> binfo;
-    const float* detections = &m_TrtOutputBuffers.at(0)[imageIdx * m_OutputSize];
     float scalingFactor
         = std::min(static_cast<float>(m_InputW) / imageW, static_cast<float>(m_InputH) / imageH);
-    for (uint y = 0; y < m_GridSize; y++)
+    float xOffset = (m_InputW - scalingFactor * imageW) / 2;
+    float yOffset = (m_InputH - scalingFactor * imageH) / 2;
+
+    float* detections = &tensor.hostBuffer[imageIdx * tensor.volume];
+
+    std::vector<BBoxInfo> binfo;
+    for (uint y = 0; y < tensor.gridSize; y++)
     {
-        for (uint x = 0; x < m_GridSize; x++)
+        for (uint x = 0; x < tensor.gridSize; x++)
         {
-            for (uint b = 0; b < m_NumBBoxes; b++)
+            for (uint b = 0; b < tensor.numBBoxes; b++)
             {
-                const float pw = m_Anchors[2 * b];
-                const float ph = m_Anchors[2 * b + 1];
-                const int numGridCells = m_GridSize * m_GridSize;
-                const int bbindex = y * m_GridSize + x;
+                const float pw = tensor.anchors[2 * b];
+                const float ph = tensor.anchors[2 * b + 1];
+                const int numGridCells = tensor.gridSize * tensor.gridSize;
+                const int bbindex = y * tensor.gridSize + x;
                 const float bx
-                    = x + detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 0)];
+                    = x + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 0)];
                 const float by
-                    = y + detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 1)];
+                    = y + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 1)];
                 const float bw = pw
-                    * exp(detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 2)]);
+                    * exp(detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 2)]);
                 const float bh = ph
-                    * exp(detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 3)]);
+                    * exp(detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 3)]);
 
                 const float objectness
-                    = detections[bbindex + numGridCells * (b * (5 + m_NumOutputClasses) + 4)];
+                    = detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 4)];
                 float maxProb = 0.0f;
                 int maxIndex = -1;
 
-                for (uint i = 0; i < m_NumOutputClasses; i++)
+                for (uint i = 0; i < tensor.numClasses; i++)
                 {
                     float prob
                         = detections[bbindex
-                                     + numGridCells * (b * (5 + m_NumOutputClasses) + (5 + i))];
+                                     + numGridCells * (b * (5 + tensor.numClasses) + (5 + i))];
 
                     if (prob > maxProb)
                     {
@@ -109,22 +83,8 @@ std::vector<BBoxInfo> YoloV2::decodeDetections(const int& imageIdx, const int& i
                 if (maxProb > m_ProbThresh)
                 {
                     BBoxInfo bbi;
-                    bbi.box = convertBBox(bx, by, bw, bh, m_Stride, m_InputW, m_InputH);
-
-                    // Undo Letterbox
-                    float xCorrection = (m_InputW - scalingFactor * imageW) / 2;
-                    float yCorrection = (m_InputH - scalingFactor * imageH) / 2;
-                    bbi.box.x1 -= xCorrection;
-                    bbi.box.x2 -= xCorrection;
-                    bbi.box.y1 -= yCorrection;
-                    bbi.box.y2 -= yCorrection;
-
-                    // Restore to input image resolution
-                    bbi.box.x1 /= scalingFactor;
-                    bbi.box.x2 /= scalingFactor;
-                    bbi.box.y1 /= scalingFactor;
-                    bbi.box.y2 /= scalingFactor;
-
+                    bbi.box = convertBBoxNetRes(bx, by, bw, bh, tensor.stride, m_InputW, m_InputH);
+                    convertBBoxImgRes(scalingFactor, xOffset, yOffset, bbi.box);
                     bbi.label = maxIndex;
                     bbi.prob = maxProb;
 

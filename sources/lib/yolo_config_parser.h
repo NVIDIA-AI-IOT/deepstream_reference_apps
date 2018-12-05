@@ -23,35 +23,27 @@ SOFTWARE.
 *
 */
 
-#ifndef _YOLO_V3_TINY_
-#define _YOLO_V3_TINY_
+#ifndef _YOLO_CONFIG_PARSER_
+#define _YOLO_CONFIG_PARSER_
 
 #include "yolo.h"
 
-class YoloV3Tiny : public Yolo
-{
-public:
-    explicit YoloV3Tiny(const uint batchSize);
-    void doInference(const unsigned char* input) override;
-    std::vector<BBoxInfo> decodeDetections(const int& imageIdx, const int& imageH,
-                                           const int& imageW) override;
+#include <ctime>
+#include <gflags/gflags.h>
 
-private:
-    std::vector<BBoxInfo> decodeTensor(const int& imageH, const int& imageW,
-                                       const float* dectections, std::vector<int> mask,
-                                       const uint gridSize, const uint stride);
-    const uint m_Stride1;
-    const uint m_Stride2;
-    const uint m_GridSize1;
-    const uint m_GridSize2;
-    int m_OutputIndex1;
-    int m_OutputIndex2;
-    const uint64_t m_OutputSize1;
-    const uint64_t m_OutputSize2;
-    const std::vector<int> m_Mask1;
-    const std::vector<int> m_Mask2;
-    const std::string m_OutputBlobName1;
-    const std::string m_OutputBlobName2;
-};
+// Init to be called at the very beginning to verify all config params are valid
+void yoloConfigParserInit(int argc, char** argv);
 
-#endif // _YOLO_V3_TINY_
+NetworkInfo getYoloNetworkInfo();
+InferParams getYoloInferParams();
+uint64_t getSeed();
+std::string getNetworkType();
+std::string getPrecision();
+std::string getTestImages();
+bool getDecode();
+bool getViewDetections();
+bool getSaveDetections();
+std::string getSaveDetectionsPath();
+uint getBatchSize();
+
+#endif //_YOLO_CONFIG_PARSER_

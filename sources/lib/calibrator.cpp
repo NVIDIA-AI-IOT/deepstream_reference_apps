@@ -42,7 +42,7 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const uint& batchSize,
     m_CalibTableFilePath(calibTableFilePath),
     m_ImageIndex(0)
 {
-    m_ImageList = loadImageList(calibrationSetPath);
+    m_ImageList = loadListFromTextFile(calibrationSetPath);
     m_ImageList.resize(static_cast<int>(m_ImageList.size() / m_BatchSize) * m_BatchSize);
     std::random_shuffle(m_ImageList.begin(), m_ImageList.end(), [](int i) { return rand() % i; });
     NV_CUDA_CHECK(cudaMalloc(&m_DeviceInput, m_InputCount * sizeof(float)));

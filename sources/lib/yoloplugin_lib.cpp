@@ -24,30 +24,16 @@ SOFTWARE.
 */
 
 #include "yoloplugin_lib.h"
-#include "network_config.h"
-
-#ifdef MODEL_V2
+#include "yolo_config_parser.h"
 #include "yolov2.h"
-#endif
-
-#ifdef MODEL_V2_TINY
-#include "yolov2-tiny.h"
-#endif
-
-#ifdef MODEL_V3
 #include "yolov3.h"
-#endif
-
-#ifdef MODEL_V3_TINY
-#include "yolov3-tiny.h"
-#endif
 
 #include <iomanip>
 #include <sys/time.h>
 
 static void decodeBatchDetections(const YoloPluginCtx* ctx, std::vector<YoloPluginOutput*>& outputs)
 {
-    for (int p = 0; p < ctx->batchSize; ++p)
+    for (uint p = 0; p < ctx->batchSize; ++p)
     {
         YoloPluginOutput* out = new YoloPluginOutput;
         std::vector<BBoxInfo> binfo = ctx->inferenceNetwork->decodeDetections(
@@ -68,7 +54,7 @@ static void decodeBatchDetections(const YoloPluginCtx* ctx, std::vector<YoloPlug
             strcpy(obj.label, ctx->inferenceNetwork->getClassName(b.label).c_str());
             out->object[j] = obj;
 
-            if (ctx->inferenceNetwork->isPrintPredictions())
+            if (ctx->inferParams.printPredictionInfo)
             {
                 printPredictions(b, ctx->inferenceNetwork->getClassName(b.label));
             }
@@ -109,27 +95,40 @@ static void dsPreProcessBatchInput(const std::vector<cv::Mat*>& cvmats, cv::Mat&
 
 YoloPluginCtx* YoloPluginCtxInit(YoloPluginInitParams* initParams, size_t batchSize)
 {
+    char** gArgV = new char*[2];
+    gArgV[0] = new char[64];
+    gArgV[1] = new char[512];
+    strcpy(gArgV[0], "yolo_plugin_ctx");
+    strcpy(gArgV[1], std::string("--flagfile=" + initParams->configFilePath).c_str());
+    yoloConfigParserInit(2, gArgV);
+
     YoloPluginCtx* ctx = new YoloPluginCtx;
     ctx->initParams = *initParams;
     ctx->batchSize = batchSize;
-    assert(ctx->batchSize > 0);
+    ctx->networkInfo = getYoloNetworkInfo();
+    ctx->inferParams = getYoloInferParams();
 
-#ifdef MODEL_V2
-    ctx->inferenceNetwork = new YoloV2(batchSize);
-#endif
+    if ((ctx->networkInfo.networkType == "yolov2")
+        || (ctx->networkInfo.networkType == "yolov2-tiny"))
+    {
+        ctx->inferenceNetwork = new YoloV2(batchSize, ctx->networkInfo, ctx->inferParams);
+    }
+    else if ((ctx->networkInfo.networkType == "yolov3")
+             || (ctx->networkInfo.networkType == "yolov3-tiny"))
+    {
+        ctx->inferenceNetwork = new YoloV3(batchSize, ctx->networkInfo, ctx->inferParams);
+    }
+    else
+    {
+        std::cerr << "ERROR: Unrecognized network type " << ctx->networkInfo.networkType
+                  << std::endl;
+        std::cerr << "Network Type has to be one among the following : yolov2, yolov2-tiny, yolov3 "
+                     "and yolov3-tiny"
+                  << std::endl;
+        return nullptr;
+    }
 
-#ifdef MODEL_V2_TINY
-    ctx->inferenceNetwork = new YoloV2Tiny(batchSize);
-#endif
-
-#ifdef MODEL_V3
-    ctx->inferenceNetwork = new YoloV3(batchSize);
-#endif
-
-#ifdef MODEL_V3_TINY
-    ctx->inferenceNetwork = new YoloV3Tiny(batchSize);
-#endif
-
+    delete[] gArgV;
     return ctx;
 }
 
@@ -158,7 +157,7 @@ std::vector<YoloPluginOutput*> YoloPluginProcess(YoloPluginCtx* ctx, std::vector
     }
 
     // Perf calc
-    if (ctx->inferenceNetwork->isPrintPerfInfo())
+    if (ctx->inferParams.printPerfInfo)
     {
         preElapsed
             = ((preEnd.tv_sec - preStart.tv_sec) + (preEnd.tv_usec - preStart.tv_usec) / 1000000.0)
@@ -180,9 +179,9 @@ std::vector<YoloPluginOutput*> YoloPluginProcess(YoloPluginCtx* ctx, std::vector
 
 void YoloPluginCtxDeinit(YoloPluginCtx* ctx)
 {
-    if (ctx->inferenceNetwork->isPrintPerfInfo())
+    if (ctx->inferParams.printPerfInfo)
     {
-        std::cout << "DS Example Perf Summary " << std::endl;
+        std::cout << "Yolo Plugin Perf Summary " << std::endl;
         std::cout << "Batch Size : " << ctx->batchSize << std::endl;
         std::cout << std::fixed << std::setprecision(4)
                   << "PreProcess : " << ctx->preTime / ctx->batchCount

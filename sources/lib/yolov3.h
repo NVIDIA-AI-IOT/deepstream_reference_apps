@@ -35,33 +35,11 @@ SOFTWARE.
 class YoloV3 : public Yolo
 {
 public:
-    explicit YoloV3(const uint batchSize);
-    void doInference(const unsigned char* input) override;
-    std::vector<BBoxInfo> decodeDetections(const int& imageIdx, const int& imageH,
-                                           const int& imageW) override;
+    YoloV3(const uint batchSize, const NetworkInfo& networkInfo, const InferParams& inferParams);
 
 private:
-    std::vector<BBoxInfo> decodeTensor(const int& imageH, const int& imageW,
-                                       const float* dectections, std::vector<int> mask,
-                                       const uint gridSize, const uint stride);
-    const uint m_Stride1;
-    const uint m_Stride2;
-    const uint m_Stride3;
-    const uint m_GridSize1;
-    const uint m_GridSize2;
-    const uint m_GridSize3;
-    int m_OutputIndex1;
-    int m_OutputIndex2;
-    int m_OutputIndex3;
-    const uint64_t m_OutputSize1;
-    const uint64_t m_OutputSize2;
-    const uint64_t m_OutputSize3;
-    const std::vector<int> m_Mask1;
-    const std::vector<int> m_Mask2;
-    const std::vector<int> m_Mask3;
-    const std::string m_OutputBlobName1;
-    const std::string m_OutputBlobName2;
-    const std::string m_OutputBlobName3;
+    std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH, const int imageW,
+                                       const TensorInfo& tensor) override;
 };
 
 #endif // _YOLO_V3_
