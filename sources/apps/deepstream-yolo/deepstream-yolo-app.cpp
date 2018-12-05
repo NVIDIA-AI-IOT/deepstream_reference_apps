@@ -148,8 +148,8 @@ main (int argc, char *argv[])
   GstPad *osd_sink_pad = NULL;
 
   /* Check input arguments */
-  if (argc != 2) {
-    g_printerr ("Usage: %s <H264 filename>\n", argv[0]);
+  if (argc != 3) {
+    g_printerr ("Usage: %s <H264 filename> <yolo-plugin config file> \n", argv[0]);
     return -1;
   }
 
@@ -195,6 +195,7 @@ main (int argc, char *argv[])
 
   /* we set the input filename to the source element */
   g_object_set (G_OBJECT (source), "location", argv[1], NULL);
+  g_object_set(G_OBJECT(yolo), "config-file-path", argv[2], NULL);
 
   /* we set the osd properties here */
   g_object_set (G_OBJECT (nvosd), "font-size", 15, NULL);
