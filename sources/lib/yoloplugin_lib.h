@@ -60,7 +60,8 @@ struct YoloPluginCtx
 
     // perf vars
     float inferTime = 0.0, preTime = 0.0, postTime = 0.0;
-    uint batchCount = 0, batchSize = 0;
+    uint batchSize = 0;
+    uint64_t imageCount = 0;
 };
 
 // Detected/Labelled object structure, stores bounding box info along with label

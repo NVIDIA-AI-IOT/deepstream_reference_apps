@@ -42,6 +42,7 @@ public:
     void addBBox(BBoxInfo box, const std::string& labelName);
     void showImage() const;
     void saveImageJPEG(const std::string& dirPath) const;
+    std::string exportJson() const;
 
 private:
     int m_Height;

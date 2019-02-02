@@ -30,13 +30,17 @@ SOFTWARE.
 #include "yolov3.h"
 
 #include <experimental/filesystem>
+#include <fstream>
 #include <string>
 #include <sys/time.h>
 
 int main(int argc, char** argv)
 {
+    // Flag set in the command line overrides the value in the flagfile
+    gflags::SetUsageMessage(
+        "Usage : trt-yolo-app --flagfile=</path/to/config_file.txt> --<flag>=value ...");
+
     // parse config params
-    gflags::SetUsageMessage("Usage : trt-yolo-app --flagfile=/path/to/config_file.txt");
     yoloConfigParserInit(argc, argv);
     NetworkInfo yoloInfo = getYoloNetworkInfo();
     InferParams yoloInferParams = getYoloInferParams();
@@ -44,11 +48,14 @@ int main(int argc, char** argv)
     std::string networkType = getNetworkType();
     std::string precision = getPrecision();
     std::string testImages = getTestImages();
+    std::string testImagesPath = getTestImagesPath();
     bool decode = getDecode();
+    bool doBenchmark = getDoBenchmark();
     bool viewDetections = getViewDetections();
     bool saveDetections = getSaveDetections();
     std::string saveDetectionsPath = getSaveDetectionsPath();
     uint batchSize = getBatchSize();
+    bool shuffleTestSet = getShuffleTestSet();
 
     srand(unsigned(seed));
 
@@ -72,43 +79,57 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    std::vector<std::string> imageList = loadListFromTextFile(testImages);
-    imageList.resize(static_cast<int>(imageList.size() / batchSize) * batchSize);
-    std::random_shuffle(imageList.begin(), imageList.end(), [](int i) { return rand() % i; });
+    std::vector<std::string> imageList = loadImageList(testImages, testImagesPath);
     std::cout << "Total number of images used for inference : " << imageList.size() << std::endl;
 
-    std::vector<DsImage> dsImages(batchSize);
+    if (shuffleTestSet)
+    {
+        std::random_shuffle(imageList.begin(), imageList.end(), [](int i) { return rand() % i; });
+    }
+    std::vector<DsImage> dsImages;
     const int barWidth = 70;
     double inferElapsed = 0;
-    int batchCount = imageList.size() / batchSize;
 
+    std::ofstream fout;
+    bool written = false;
+    if (doBenchmark)
+    {
+        size_t extIndex = testImages.find_last_of(".txt");
+        fout.open(testImages.substr(0, extIndex - 3) + "_" + networkType + "_" + precision
+                  + "_results.json");
+        fout << "[";
+    }
     // Batched inference loop
     for (uint loopIdx = 0; loopIdx < imageList.size(); loopIdx += batchSize)
     {
         // Load a new batch
-        for (uint imageIdx = loopIdx; imageIdx < (loopIdx + batchSize); ++imageIdx)
+        dsImages.clear();
+        for (uint imageIdx = loopIdx;
+             imageIdx < std::min((loopIdx + batchSize), static_cast<uint>(imageList.size()));
+             ++imageIdx)
         {
-            dsImages.at(imageIdx - loopIdx)
-                = DsImage(imageList.at(imageIdx), inferNet->getInputH(), inferNet->getInputW());
+            dsImages.emplace_back(imageList.at(imageIdx), inferNet->getInputH(),
+                                  inferNet->getInputW());
         }
 
         cv::Mat trtInput = blobFromDsImages(dsImages, inferNet->getInputH(), inferNet->getInputW());
         struct timeval inferStart, inferEnd;
         gettimeofday(&inferStart, NULL);
-        inferNet->doInference(trtInput.data);
+        inferNet->doInference(trtInput.data, dsImages.size());
         gettimeofday(&inferEnd, NULL);
         inferElapsed += ((inferEnd.tv_sec - inferStart.tv_sec)
                          + (inferEnd.tv_usec - inferStart.tv_usec) / 1000000.0)
-            * 1000 / batchSize;
+            * 1000;
 
         if (decode)
         {
-            for (uint imageIdx = 0; imageIdx < batchSize; ++imageIdx)
+            for (uint imageIdx = 0; imageIdx < dsImages.size(); ++imageIdx)
             {
                 auto curImage = dsImages.at(imageIdx);
                 auto binfo = inferNet->decodeDetections(imageIdx, curImage.getImageHeight(),
                                                         curImage.getImageWidth());
-                auto remaining = nonMaximumSuppression(inferNet->getNMSThresh(), binfo);
+                auto remaining
+                    = nmsAllClasses(inferNet->getNMSThresh(), binfo, inferNet->getNumClasses());
                 for (auto b : remaining)
                 {
                     if (inferNet->isPrintPredictions())
@@ -127,11 +148,22 @@ int main(int argc, char** argv)
                 {
                     curImage.showImage();
                 }
+
+                if (doBenchmark)
+                {
+                    std::string jsonString = curImage.exportJson();
+                    if (jsonString == "") continue;
+                    if (written)
+                        fout << "," << jsonString;
+                    else
+                        fout << jsonString;
+                    written = true;
+                }
             }
         }
 
         std::cout << "[";
-        int progress = ((loopIdx + batchSize) * 100) / imageList.size();
+        int progress = ((loopIdx + dsImages.size()) * 100) / imageList.size();
         progress = progress > 100 ? 100 : progress;
         int pos = (barWidth * progress) / 100;
         for (int i = 0; i < pos; ++i)
@@ -146,9 +178,17 @@ int main(int argc, char** argv)
         std::cout << "] " << progress << " %\r";
         std::cout.flush();
     }
+    if (doBenchmark)
+    {
+        fout << std::endl << "]";
+        fout.close();
+        std::cout << std::endl;
+    }
     std::cout << std::endl
-              << "Network Type : " << inferNet->getNetworkType() << "Precision : " << precision
+              << "Network Type : " << inferNet->getNetworkType() << " Precision : " << precision
               << " Batch Size : " << batchSize
-              << " Inference time per image : " << inferElapsed / batchCount << " ms" << std::endl;
+              << " Inference time per image : " << inferElapsed / imageList.size() << " ms"
+              << std::endl;
+
     return 0;
 }

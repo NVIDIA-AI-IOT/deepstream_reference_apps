@@ -28,8 +28,8 @@ SOFTWARE.
 #include <iostream>
 #include <iterator>
 
-Int8EntropyCalibrator::Int8EntropyCalibrator(const uint& batchSize,
-                                             const std::string& calibrationSetPath,
+Int8EntropyCalibrator::Int8EntropyCalibrator(const uint& batchSize, const std::string& calibImages,
+                                             const std::string& calibImagesPath,
                                              const std::string& calibTableFilePath,
                                              const uint64_t& inputSize, const uint& inputH,
                                              const uint& inputW, const std::string& inputBlobName) :
@@ -38,15 +38,22 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const uint& batchSize,
     m_InputW(inputW),
     m_InputSize(inputSize),
     m_InputCount(batchSize * inputSize),
-    m_InputBlobName(inputBlobName.c_str()),
+    m_InputBlobName(inputBlobName),
     m_CalibTableFilePath(calibTableFilePath),
     m_ImageIndex(0)
 {
-    m_ImageList = loadListFromTextFile(calibrationSetPath);
-    m_ImageList.resize(static_cast<int>(m_ImageList.size() / m_BatchSize) * m_BatchSize);
-    std::random_shuffle(m_ImageList.begin(), m_ImageList.end(), [](int i) { return rand() % i; });
+    if (!fileExists(m_CalibTableFilePath, false))
+    {
+        m_ImageList = loadImageList(calibImages, calibImagesPath);
+        m_ImageList.resize(static_cast<int>(m_ImageList.size() / m_BatchSize) * m_BatchSize);
+        std::random_shuffle(m_ImageList.begin(), m_ImageList.end(),
+                            [](int i) { return rand() % i; });
+    }
+
     NV_CUDA_CHECK(cudaMalloc(&m_DeviceInput, m_InputCount * sizeof(float)));
 }
+
+Int8EntropyCalibrator::~Int8EntropyCalibrator() { NV_CUDA_CHECK(cudaFree(m_DeviceInput)); }
 
 bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int nbBindings)
 {
@@ -64,7 +71,7 @@ bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int 
 
     NV_CUDA_CHECK(cudaMemcpy(m_DeviceInput, trtInput.ptr<float>(0), m_InputCount * sizeof(float),
                              cudaMemcpyHostToDevice));
-    assert(!strcmp(names[0], m_InputBlobName));
+    assert(!strcmp(names[0], m_InputBlobName.c_str()));
     bindings[0] = m_DeviceInput;
     return true;
 }

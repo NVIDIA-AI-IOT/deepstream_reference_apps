@@ -67,9 +67,11 @@
 
 #Uncomment the lines below to use a specific config param
 --test_images=data/yolo/test_images.txt
-#--batch_size=4 
+#--batch_size=4
+#--do_benchmark=true 
 #--view_detections=true
 #--save_detections=true
 #--save_detections_path=data/yolo/detections/
 #--decode=false
 #--seed
+#--shuffle_test_set=false

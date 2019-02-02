@@ -64,11 +64,11 @@ float clamp(const float val, const float minVal, const float maxVal)
     return std::min(maxVal, std::max(minVal, val));
 }
 
-bool fileExists(const std::string fileName)
+bool fileExists(const std::string fileName, bool verbose)
 {
     if (!std::experimental::filesystem::exists(std::experimental::filesystem::path(fileName)))
     {
-        std::cout << "File does not exist : " << fileName << std::endl;
+        if (verbose) std::cout << "File does not exist : " << fileName << std::endl;
         return false;
     }
     return true;
@@ -124,28 +124,63 @@ std::vector<std::string> loadListFromTextFile(const std::string filename)
     assert(fileExists(filename));
     std::vector<std::string> list;
 
-    FILE* f = fopen(filename.c_str(), "r");
+    std::ifstream f(filename);
     if (!f)
     {
         std::cout << "failed to open " << filename;
         assert(0);
     }
 
-    char str[512];
-    while (fgets(str, 512, f) != NULL)
+    std::string line;
+    while (std::getline(f, line))
     {
-        for (int i = 0; str[i] != '\0'; ++i)
-        {
-            if (str[i] == '\n')
-            {
-                str[i] = '\0';
-                break;
-            }
-        }
-        list.push_back(str);
+        if (line.empty())
+            continue;
+
+        else
+            list.push_back(trim(line));
     }
-    fclose(f);
+
     return list;
+}
+
+std::vector<std::string> loadImageList(const std::string filename, const std::string prefix)
+{
+    std::vector<std::string> fileList = loadListFromTextFile(filename);
+    for (auto& file : fileList)
+    {
+        if (fileExists(file, false))
+            continue;
+        else
+        {
+            std::string prefixed = prefix + file;
+            if (fileExists(prefixed, false))
+                file = prefixed;
+            else
+                std::cerr << "WARNING: couldn't find: " << prefixed
+                          << " while loading: " << filename << std::endl;
+        }
+    }
+    return fileList;
+}
+
+std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh, std::vector<BBoxInfo>& binfo,
+                                    const uint numClasses)
+{
+    std::vector<BBoxInfo> result;
+    std::vector<std::vector<BBoxInfo>> splitBoxes(numClasses);
+    for (auto& box : binfo)
+    {
+        splitBoxes.at(box.label).push_back(box);
+    }
+
+    for (auto& boxes : splitBoxes)
+    {
+        boxes = nonMaximumSuppression(nmsThresh, boxes);
+        result.insert(result.end(), boxes.begin(), boxes.end());
+    }
+
+    return result;
 }
 
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo)
@@ -171,10 +206,10 @@ std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<B
     std::stable_sort(binfo.begin(), binfo.end(),
                      [](const BBoxInfo& b1, const BBoxInfo& b2) { return b1.prob > b2.prob; });
     std::vector<BBoxInfo> out;
-    for (auto i : binfo)
+    for (auto& i : binfo)
     {
         bool keep = true;
-        for (auto j : out)
+        for (auto& j : out)
         {
             if (keep)
             {
@@ -519,7 +554,8 @@ nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::str
 }
 
 nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string>& block,
-                                 std::vector<float>& weights, int& inputChannels,
+                                 std::vector<float>& weights,
+                                 std::vector<nvinfer1::Weights>& trtWeights, int& inputChannels,
                                  nvinfer1::ITensor* input, nvinfer1::INetworkDefinition* network)
 {
     assert(block.at("type") == "upsample");
@@ -535,7 +571,7 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
                            {nvinfer1::DimensionType::kCHANNEL, nvinfer1::DimensionType::kSPATIAL,
                             nvinfer1::DimensionType::kSPATIAL}};
     int size = stride * h * w;
-    nvinfer1::Weights pre{nvinfer1::DataType::kFLOAT, nullptr, size};
+    nvinfer1::Weights preMul{nvinfer1::DataType::kFLOAT, nullptr, size};
     float* preWt = new float[size];
     /* (2*h * w)
     [ [1, 0, ..., 0],
@@ -557,10 +593,11 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
             }
         }
     }
-    pre.values = preWt;
-    nvinfer1::IConstantLayer* preM = network->addConstant(preDims, pre);
+    preMul.values = preWt;
+    trtWeights.push_back(preMul);
+    nvinfer1::IConstantLayer* preM = network->addConstant(preDims, preMul);
     assert(preM != nullptr);
-    std::string preLayerName = "pre_" + std::to_string(layerIdx);
+    std::string preLayerName = "preMul_" + std::to_string(layerIdx);
     preM->setName(preLayerName.c_str());
     // add post multiply matrix as a constant
     nvinfer1::Dims postDims{3,
@@ -568,7 +605,7 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
                             {nvinfer1::DimensionType::kCHANNEL, nvinfer1::DimensionType::kSPATIAL,
                              nvinfer1::DimensionType::kSPATIAL}};
     size = stride * h * w;
-    nvinfer1::Weights post{nvinfer1::DataType::kFLOAT, nullptr, size};
+    nvinfer1::Weights postMul{nvinfer1::DataType::kFLOAT, nullptr, size};
     float* postWt = new float[size];
     /* (h * 2*w)
     [ [1, 1, 0, 0, ..., 0, 0],
@@ -584,10 +621,11 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
             postWt[idx] = (j / stride == i) ? 1.0 : 0.0;
         }
     }
-    post.values = postWt;
-    nvinfer1::IConstantLayer* post_m = network->addConstant(postDims, post);
+    postMul.values = postWt;
+    trtWeights.push_back(postMul);
+    nvinfer1::IConstantLayer* post_m = network->addConstant(postDims, postMul);
     assert(post_m != nullptr);
-    std::string postLayerName = "post_" + std::to_string(layerIdx);
+    std::string postLayerName = "postMul_" + std::to_string(layerIdx);
     post_m->setName(postLayerName.c_str());
     // add matrix multiply layers for upsampling
     nvinfer1::IMatrixMultiplyLayer* mm1

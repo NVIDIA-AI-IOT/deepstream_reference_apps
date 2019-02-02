@@ -38,9 +38,8 @@ static void decodeBatchDetections(const YoloPluginCtx* ctx, std::vector<YoloPlug
         YoloPluginOutput* out = new YoloPluginOutput;
         std::vector<BBoxInfo> binfo = ctx->inferenceNetwork->decodeDetections(
             p, ctx->initParams.processingHeight, ctx->initParams.processingWidth);
-
-        std::vector<BBoxInfo> remaining
-            = nonMaximumSuppression(ctx->inferenceNetwork->getNMSThresh(), binfo);
+        std::vector<BBoxInfo> remaining = nmsAllClasses(
+            ctx->inferenceNetwork->getNMSThresh(), binfo, ctx->inferenceNetwork->getNumClasses());
         out->numObjects = remaining.size();
         assert(out->numObjects <= MAX_OBJECTS_PER_FRAME);
         for (uint j = 0; j < remaining.size(); ++j)
@@ -134,6 +133,7 @@ YoloPluginCtx* YoloPluginCtxInit(YoloPluginInitParams* initParams, size_t batchS
 
 std::vector<YoloPluginOutput*> YoloPluginProcess(YoloPluginCtx* ctx, std::vector<cv::Mat*>& cvmats)
 {
+    assert((cvmats.size() <= ctx->batchSize) && "Image batch size exceeds TRT engines batch size");
     std::vector<YoloPluginOutput*> outputs = std::vector<YoloPluginOutput*>(cvmats.size(), nullptr);
     cv::Mat preprocessedImages;
     struct timeval preStart, preEnd, inferStart, inferEnd, postStart, postEnd;
@@ -148,7 +148,7 @@ std::vector<YoloPluginOutput*> YoloPluginProcess(YoloPluginCtx* ctx, std::vector
         gettimeofday(&preEnd, NULL);
 
         gettimeofday(&inferStart, NULL);
-        ctx->inferenceNetwork->doInference(preprocessedImages.data);
+        ctx->inferenceNetwork->doInference(preprocessedImages.data, cvmats.size());
         gettimeofday(&inferEnd, NULL);
 
         gettimeofday(&postStart, NULL);
@@ -161,18 +161,18 @@ std::vector<YoloPluginOutput*> YoloPluginProcess(YoloPluginCtx* ctx, std::vector
     {
         preElapsed
             = ((preEnd.tv_sec - preStart.tv_sec) + (preEnd.tv_usec - preStart.tv_usec) / 1000000.0)
-            * (1000 / ctx->batchSize);
+            * 1000;
         inferElapsed = ((inferEnd.tv_sec - inferStart.tv_sec)
                         + (inferEnd.tv_usec - inferStart.tv_usec) / 1000000.0)
-            * (1000 / ctx->batchSize);
+            * 1000;
         postElapsed = ((postEnd.tv_sec - postStart.tv_sec)
                        + (postEnd.tv_usec - postStart.tv_usec) / 1000000.0)
-            * (1000 / ctx->batchSize);
+            * 1000;
 
         ctx->inferTime += inferElapsed;
         ctx->preTime += preElapsed;
         ctx->postTime += postElapsed;
-        ++ctx->batchCount;
+        ctx->imageCount += cvmats.size();
     }
     return outputs;
 }
@@ -184,10 +184,10 @@ void YoloPluginCtxDeinit(YoloPluginCtx* ctx)
         std::cout << "Yolo Plugin Perf Summary " << std::endl;
         std::cout << "Batch Size : " << ctx->batchSize << std::endl;
         std::cout << std::fixed << std::setprecision(4)
-                  << "PreProcess : " << ctx->preTime / ctx->batchCount
-                  << " ms Inference : " << ctx->inferTime / ctx->batchCount
-                  << " ms PostProcess : " << ctx->postTime / ctx->batchCount << " ms Total : "
-                  << (ctx->preTime + ctx->postTime + ctx->inferTime) / ctx->batchCount
+                  << "PreProcess : " << ctx->preTime / ctx->imageCount
+                  << " ms Inference : " << ctx->inferTime / ctx->imageCount
+                  << " ms PostProcess : " << ctx->postTime / ctx->imageCount << " ms Total : "
+                  << (ctx->preTime + ctx->postTime + ctx->inferTime) / ctx->imageCount
                   << " ms per Image" << std::endl;
     }
 

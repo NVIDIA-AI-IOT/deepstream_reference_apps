@@ -51,6 +51,7 @@ struct BBoxInfo
 {
     BBox box;
     int label;
+    int classId; // For coco benchmarking
     float prob;
 };
 
@@ -112,13 +113,16 @@ cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages, const int& inp
                          const int& inputW);
 std::string trim(std::string s);
 float clamp(const float val, const float minVal, const float maxVal);
-bool fileExists(const std::string fileName);
+bool fileExists(const std::string fileName, bool verbose = true);
 BBox convertBBoxNetRes(const float& bx, const float& by, const float& bw, const float& bh,
                        const uint& stride, const uint& netW, const uint& netH);
 void convertBBoxImgRes(const float scalingFactor, const float& xOffset, const float& yOffset,
                        BBox& bbox);
 void printPredictions(const BBoxInfo& info, const std::string& className);
 std::vector<std::string> loadListFromTextFile(const std::string filename);
+std::vector<std::string> loadImageList(const std::string filename, const std::string prefix);
+std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh, std::vector<BBoxInfo>& binfo,
+                                    const uint numClasses);
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo);
 nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFactory* pluginFactory,
                                      Logger& logger);
@@ -142,7 +146,8 @@ nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::str
                                     int& inputChannels, nvinfer1::ITensor* input,
                                     nvinfer1::INetworkDefinition* network);
 nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string>& block,
-                                 std::vector<float>& weights, int& inputChannels,
+                                 std::vector<float>& weights,
+                                 std::vector<nvinfer1::Weights>& trtWeights, int& inputChannels,
                                  nvinfer1::ITensor* input, nvinfer1::INetworkDefinition* network);
 void printLayerInfo(std::string layerIndex, std::string layerName, std::string layerInput,
                     std::string layerOutput, std::string weightPtr);

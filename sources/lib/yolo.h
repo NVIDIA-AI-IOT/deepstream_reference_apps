@@ -58,7 +58,8 @@ struct InferParams
 {
     bool printPerfInfo;
     bool printPredictionInfo;
-    std::string calibrationImages;
+    std::string calibImages;
+    std::string calibImagesPath;
     float probThresh;
     float nmsThresh;
 };
@@ -86,16 +87,16 @@ public:
     std::string getNetworkType() const { return m_NetworkType; }
     float getNMSThresh() const { return m_NMSThresh; }
     std::string getClassName(const int& label) const { return m_ClassNames.at(label); }
-    int getInputH() const { return m_InputH; }
-    int getInputW() const { return m_InputW; }
+    int getClassId(const int& label) const { return m_ClassIds.at(label); }
+    uint getInputH() const { return m_InputH; }
+    uint getInputW() const { return m_InputW; }
+    uint getNumClasses() const { return m_ClassNames.size(); }
     bool isPrintPredictions() const { return m_PrintPredictions; }
     bool isPrintPerfInfo() const { return m_PrintPerfInfo; }
-    void doInference(const unsigned char* input);
+    void doInference(const unsigned char* input, const uint batchSize);
     std::vector<BBoxInfo> decodeDetections(const int& imageIdx, const int& imageH,
                                            const int& imageW);
-    virtual std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH,
-                                               const int imageW, const TensorInfo& tensor)
-        = 0;
+
     virtual ~Yolo();
 
 protected:
@@ -106,6 +107,7 @@ protected:
     const std::string m_WtsFilePath;
     const std::string m_LabelsFilePath;
     const std::string m_Precision;
+    const std::string m_CalibImages;
     const std::string m_CalibImagesFilePath;
     std::string m_CalibTableFilePath;
     const std::string m_InputBlobName;
@@ -118,12 +120,21 @@ protected:
     const float m_ProbThresh;
     const float m_NMSThresh;
     std::vector<std::string> m_ClassNames;
+    // Class ids for coco benchmarking
+    const std::vector<int> m_ClassIds{
+        1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+        22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+        46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65,
+        67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90};
     const bool m_PrintPerfInfo;
     const bool m_PrintPredictions;
     Logger m_Logger;
 
     // TRT specific members
     const uint m_BatchSize;
+    nvinfer1::INetworkDefinition* m_Network;
+    nvinfer1::IBuilder* m_Builder;
+    nvinfer1::IHostMemory* m_ModelStream;
     nvinfer1::ICudaEngine* m_Engine;
     nvinfer1::IExecutionContext* m_Context;
     std::vector<void*> m_DeviceBuffers;
@@ -132,6 +143,28 @@ protected:
     PluginFactory* m_PluginFactory;
     std::unique_ptr<YoloTinyMaxpoolPaddingFormula> m_TinyMaxpoolPaddingFormula;
 
+    virtual std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH,
+                                               const int imageW, const TensorInfo& tensor)
+        = 0;
+
+    inline void addBBoxProposal(const float bx, const float by, const float bw, const float bh,
+                                const uint stride, const float scalingFactor, const float xOffset,
+                                const float yOffset, const int maxIndex, const float maxProb,
+                                std::vector<BBoxInfo>& binfo)
+    {
+        BBoxInfo bbi;
+        bbi.box = convertBBoxNetRes(bx, by, bw, bh, stride, m_InputW, m_InputH);
+        if ((bbi.box.x1 > bbi.box.x2) || (bbi.box.y1 > bbi.box.y2))
+        {
+            return;
+        }
+        convertBBoxImgRes(scalingFactor, xOffset, yOffset, bbi.box);
+        bbi.label = maxIndex;
+        bbi.prob = maxProb;
+        bbi.classId = getClassId(maxIndex);
+        binfo.push_back(bbi);
+    };
+
 private:
     void createYOLOEngine(const nvinfer1::DataType dataType = nvinfer1::DataType::kFLOAT,
                           Int8EntropyCalibrator* calibrator = nullptr);
@@ -139,6 +172,8 @@ private:
     void parseConfigBlocks();
     void allocateBuffers();
     bool verifyYoloEngine();
+    void destroyNetworkUtils(std::vector<nvinfer1::Weights>& trtWeights);
+    void writePlanFileToDisk();
 };
 
 #endif // _YOLO_H_

@@ -40,10 +40,13 @@ uint64_t getSeed();
 std::string getNetworkType();
 std::string getPrecision();
 std::string getTestImages();
+std::string getTestImagesPath();
 bool getDecode();
+bool getDoBenchmark();
 bool getViewDetections();
 bool getSaveDetections();
 std::string getSaveDetectionsPath();
 uint getBatchSize();
+bool getShuffleTestSet();
 
 #endif //_YOLO_CONFIG_PARSER_

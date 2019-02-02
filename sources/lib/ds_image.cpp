@@ -120,3 +120,26 @@ void DsImage::saveImageJPEG(const std::string& dirPath) const
 {
     cv::imwrite(dirPath + m_ImageName + ".jpeg", m_MarkedImage);
 }
+std::string DsImage::exportJson() const
+{
+    if (m_Bboxes.size() == 0) return "";
+    std::stringstream json;
+    json.precision(2);
+    json << std::fixed;
+    for (uint i = 0; i < m_Bboxes.size(); ++i)
+    {
+        json << "\n{\n";
+        json << "  \"image_id\"         : " << std::stoi(m_ImageName) << ",\n";
+        json << "  \"category_id\"      : " << m_Bboxes.at(i).classId << ",\n";
+        json << "  \"bbox\"             : ";
+        json << "[" << m_Bboxes.at(i).box.x1 << ", " << m_Bboxes.at(i).box.y1 << ", ";
+        json << m_Bboxes.at(i).box.x2 - m_Bboxes.at(i).box.x1 << ", "
+             << m_Bboxes.at(i).box.y2 - m_Bboxes.at(i).box.y1 << "],\n";
+        json << "  \"score\"            : " << m_Bboxes.at(i).prob << "\n";
+        if (i != m_Bboxes.size() - 1)
+            json << "},";
+        else
+            json << "}";
+    }
+    return json.str();
+}
