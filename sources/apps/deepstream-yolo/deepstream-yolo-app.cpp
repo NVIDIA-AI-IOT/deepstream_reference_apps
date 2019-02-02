@@ -148,8 +148,10 @@ main (int argc, char *argv[])
   GstPad *osd_sink_pad = NULL;
 
   /* Check input arguments */
-  if (argc != 3) {
-    g_printerr ("Usage: %s <H264 filename> <yolo-plugin config file> \n", argv[0]);
+  if (argc != 4) {
+    g_printerr
+        ("Usage: %s <Platform-Telsa/Tegra> <H264 filename> <yolo-plugin config file> \n",
+        argv[0]);
     return -1;
   }
 
@@ -159,7 +161,7 @@ main (int argc, char *argv[])
 
   /* Create gstreamer elements */
   /* Create Pipeline element that will form a connection of other elements */
-  pipeline = gst_pipeline_new ("dstest1-pipeline");
+  pipeline = gst_pipeline_new ("ds-yolo-pipeline");
 
   /* Source element for reading from the file */
   source = gst_element_factory_make ("filesrc", "file-source");
@@ -168,8 +170,15 @@ main (int argc, char *argv[])
    * we need a h264parser */
   h264parser = gst_element_factory_make ("h264parse", "h264-parser");
 
-  /* Use nvdec_h264 for hardware accelerated decode on GPU */
-  decoder = gst_element_factory_make ("nvdec_h264", "nvh264-decoder");
+  /* Use nvdec_h264/omxh264dec for hardware accelerated decode on GPU */
+  if (!g_strcmp0 ("Tesla", argv[1])) {
+    decoder = gst_element_factory_make ("nvdec_h264", "nvh264-decoder");
+  } else if (!g_strcmp0 ("Tegra", argv[1])) {
+    decoder = gst_element_factory_make ("omxh264dec", "openmax-decoder");
+  } else {
+    g_printerr ("Incorrect platform. Choose between Telsa/Tegra. Exiting.\n");
+    return -1;
+  }
 
   /* Use convertor to convert from NV12 to RGBA as required by nvosd and yolo plugins */
   nvvidconv = gst_element_factory_make ("nvvidconv", "nvvideo-converter");
@@ -181,8 +190,14 @@ main (int argc, char *argv[])
   nvosd = gst_element_factory_make ("nvosd", "nv-onscreendisplay");
 
   /* Finally render the osd output */
-  sink = gst_element_factory_make ("nveglglessink", "nvvideo-renderer");
-
+  if (!g_strcmp0 ("Tesla", argv[1])) {
+    sink = gst_element_factory_make ("nveglglessink", "nvvideo-renderer");
+  } else if (!g_strcmp0 ("Tegra", argv[1])) {
+    sink = gst_element_factory_make ("nvoverlaysink", "nvvideo-renderer");
+  } else {
+    g_printerr ("Incorrect platform. Choose between Telsa/Tegra. Exiting.\n");
+    return -1;
+  }
   /* caps filter for nvvidconv to convert NV12 to RGBA as nvosd expects input
    * in RGBA format */
   filter1 = gst_element_factory_make ("capsfilter", "filter1");
@@ -194,8 +209,8 @@ main (int argc, char *argv[])
   }
 
   /* we set the input filename to the source element */
-  g_object_set (G_OBJECT (source), "location", argv[1], NULL);
-  g_object_set(G_OBJECT(yolo), "config-file-path", argv[2], NULL);
+  g_object_set (G_OBJECT (source), "location", argv[2], NULL);
+  g_object_set (G_OBJECT (yolo), "config-file-path", argv[3], NULL);
 
   /* we set the osd properties here */
   g_object_set (G_OBJECT (nvosd), "font-size", 15, NULL);
@@ -233,7 +248,7 @@ main (int argc, char *argv[])
         osd_sink_pad_buffer_probe, NULL, NULL);
 
   /* Set the pipeline to "playing" state */
-  g_print ("Now playing: %s\n", argv[1]);
+  g_print ("Now playing: %s\n", argv[2]);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* Wait till pipeline encounters an error or EOS */
