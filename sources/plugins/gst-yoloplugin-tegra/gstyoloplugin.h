@@ -28,15 +28,19 @@ SOFTWARE.
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
+/* OpenCV headers */
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
-#include "gstnvivameta_api.h"
 #include "nvbuf_utils.h"
+#include "nvbuffer.h"
+#include "gst-nvquery.h"
+#include "gstnvstreammeta.h"
+#include "gstnvdsmeta.h"
 #include "yoloplugin_lib.h"
 
 /* Package and library details required for plugin_init */
-#define PACKAGE "nvyolo"
+#define PACKAGE "yolo"
 #define VERSION "1.0"
 #define LICENSE "Proprietary"
 #define DESCRIPTION "NVIDIA example plugin for integration with DeepStream on Jetson"
@@ -90,8 +94,8 @@ struct _GstYoloPlugin
   // Boolean indicating if entire frame or cropped objects should be processed
   gboolean process_full_frame;
 
-  // Boolean signalling EOS has been recieved by the element.
-  gboolean got_eos;
+  //plugin config file path
+  gchar *config_file_path;
 };
 
 // Boiler plate stuff

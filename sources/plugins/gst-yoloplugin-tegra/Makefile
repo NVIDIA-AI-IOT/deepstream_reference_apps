@@ -42,8 +42,8 @@ ifneq ($(PLATFORM), TEGRA)
 $(error "This plugin is developed for TEGRA platform. Check PLATFORM variable in Makefile.config")
 endif
 
-ifeq (' $(NVGSTIVA_APP_INSTALL_DIR)', ' /path/to/nvgstiva-app_sources')
-$(error NVGSTIVA_APP_INSTALL_DIR variable is not set in Makefile.config)
+ifeq (' $(DEEPSTREAM_INSTALL_DIR)', ' /path/to/DeepStream_Release_3.0')
+$(error DEEPSTREAM_INSTALL_DIR variable is not set in Makefile.config)
 endif
 
 SUBDIR :=../../lib
@@ -53,13 +53,13 @@ DEP_FILES+=$(wildcard $(SUBDIR)/*.h)
 
 CXXFLAGS := -O2 -fPIC -std=c++11 -lstdc++fs -Wall -Wunused-function -Wunused-variable -Wfatal-errors
 INCS:= -I "/usr/local/cuda-$(CUDA_VER)/include" \
-	   -I "$(NVGSTIVA_APP_INSTALL_DIR)/nvgstiva-app/includes" \
+	   -I "$(DEEPSTREAM_INSTALL_DIR)/sources/includes" \
        -I "/usr/include/aarch64-linux-gnu" \
 	   -I "$(SUBDIR)/"
 
 LIBS := -shared -Wl,-no-undefined \
-  -L/usr/lib/aarch64-linux-gnu/tegra -lnvbuf_utils -lgstnvivameta -Wl,-rpath="/usr/lib/aarch64-linux-gnu/tegra" \
-  -L/usr/lib/aarch64-linux-gnu -lnvinfer -lnvinfer_plugin -lEGL -Wl,-rpath="/usr/lib/aarch64-linux-gnu" \
+  -L/usr/lib/aarch64-linux-gnu/tegra -lnvbuf_utils -lgstnvquery -Wl,-rpath="/usr/lib/aarch64-linux-gnu/tegra" \
+  -L/usr/lib/aarch64-linux-gnu -lnvinfer -lnvinfer_plugin -lgstnvdsmeta -lgflags -lEGL -Wl,-rpath="/usr/lib/aarch64-linux-gnu" \
   -L $(SUBDIR) -lyoloplugin -Wl,-rpath=$(SUBDIR) \
   -L/usr/local/cuda-$(CUDA_VER)/lib64/ -lcudart -lnppc -lnppig -lnpps -Wl,-rpath="/usr/local/cuda-$(CUDA_VER)/lib64"
 
