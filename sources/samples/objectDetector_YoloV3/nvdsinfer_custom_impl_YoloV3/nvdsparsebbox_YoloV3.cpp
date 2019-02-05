@@ -61,6 +61,18 @@ NvDsInferParseObjectInfo convertBBox(const float& bx, const float& by, const flo
     return b;
 }
 
+void addBBoxProposal(const float bx, const float by, const float bw, const float bh,
+                     const uint stride, const uint& netW, const uint& netH, const int maxIndex,
+                     const float maxProb, std::vector<NvDsInferParseObjectInfo>& binfo)
+{
+    NvDsInferParseObjectInfo bbi = convertBBox(bx, by, bw, bh, stride, netW, netH);
+    if (((bbi.left + bbi.width) > netW) || ((bbi.top + bbi.height) > netH)) return;
+
+    bbi.detectionConfidence = maxProb;
+    bbi.classId = maxIndex;
+    binfo.push_back(bbi);
+}
+
 std::vector<NvDsInferParseObjectInfo>
 nonMaximumSuppression(const float nmsThresh, std::vector<NvDsInferParseObjectInfo> binfo)
 {
@@ -106,6 +118,25 @@ nonMaximumSuppression(const float nmsThresh, std::vector<NvDsInferParseObjectInf
         if (keep) out.push_back(i);
     }
     return out;
+}
+
+std::vector<NvDsInferParseObjectInfo> nmsAllClasses(const float nmsThresh,
+                                                    std::vector<NvDsInferParseObjectInfo>& binfo,
+                                                    const uint numClasses)
+{
+    std::vector<NvDsInferParseObjectInfo> result;
+    std::vector<std::vector<NvDsInferParseObjectInfo>> splitBoxes(numClasses);
+    for (auto& box : binfo)
+    {
+        splitBoxes.at(box.classId).push_back(box);
+    }
+
+    for (auto& boxes : splitBoxes)
+    {
+        boxes = nonMaximumSuppression(nmsThresh, boxes);
+        result.insert(result.end(), boxes.begin(), boxes.end());
+    }
+    return result;
 }
 
 std::vector<NvDsInferParseObjectInfo>
@@ -157,11 +188,7 @@ decodeTensor(const float* detections, const std::vector<int> mask, const std::ve
 
                 if (maxProb > probThresh)
                 {
-                    NvDsInferParseObjectInfo bbi = convertBBox(bx, by, bw, bh, stride, netW, netH);
-
-                    bbi.detectionConfidence = maxProb;
-                    bbi.classId = maxIndex;
-                    binfo.push_back(bbi);
+                    addBBoxProposal(bx, by, bw, bh, stride, netW, netH, maxIndex, maxProb, binfo);
                 }
             }
         }
@@ -282,7 +309,7 @@ extern "C" bool NvDsInferParseCustomYoloV3(std::vector<NvDsInferLayerInfo> const
     objects.insert(objects.end(), objects2.begin(), objects2.end());
     objects.insert(objects.end(), objects3.begin(), objects3.end());
     objectList.clear();
-    objectList = nonMaximumSuppression(kNMS_THRESH, objects);
+    objectList = nmsAllClasses(kNMS_THRESH, objects, NUM_CLASSES_YOLO_V3);
 
     return true;
 }

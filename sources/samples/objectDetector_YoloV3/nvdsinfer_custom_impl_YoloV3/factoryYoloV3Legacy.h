@@ -52,14 +52,14 @@ cudaError_t cudaYoloLayerV3(const void* input, void* output, const uint& batchSi
 class YoloPluginFactoryLegacy : public nvinfer1::IPluginFactory
 {
 
-  public:
+public:
     YoloPluginFactoryLegacy();
-    nvinfer1::IPlugin *createPlugin(const char *layerName, const void *serialData,
+    nvinfer1::IPlugin* createPlugin(const char* layerName, const void* serialData,
                                     size_t serialLength) override;
-    bool isPlugin(const char *name);
+    bool isPlugin(const char* name);
     void destroy();
 
-  private:
+private:
     static const int m_MaxLeakyLayers = 72;
     static const int m_ReorgStride = 2;
     static constexpr float m_LeakyNegSlope = 0.1;
@@ -74,7 +74,7 @@ class YoloPluginFactoryLegacy : public nvinfer1::IPluginFactory
 
     struct INvPluginDeleter
     {
-        void operator()(nvinfer1::plugin::INvPlugin *ptr)
+        void operator()(nvinfer1::plugin::INvPlugin* ptr)
         {
             if (ptr)
             {
@@ -84,7 +84,7 @@ class YoloPluginFactoryLegacy : public nvinfer1::IPluginFactory
     };
     struct IPluginDeleter
     {
-        void operator()(nvinfer1::IPlugin *ptr)
+        void operator()(nvinfer1::IPlugin* ptr)
         {
             if (ptr)
             {

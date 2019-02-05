@@ -42,7 +42,7 @@ ifneq ($(PLATFORM), TESLA)
 $(error This plugin is developed for TESLA platform)
 endif
 
-ifeq (' $(DEEPSTREAM_INSTALL_DIR)', ' /path/to/DeepStream_Release_2.0')
+ifeq (' $(DEEPSTREAM_INSTALL_DIR)', ' /path/to/DeepStream_Release_3.0')
 $(error DEEPSTREAM_INSTALL_DIR variable is not set in Makefile.config)
 endif
 

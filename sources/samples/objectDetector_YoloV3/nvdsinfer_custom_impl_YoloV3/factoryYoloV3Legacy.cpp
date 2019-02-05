@@ -23,18 +23,19 @@ SOFTWARE.
 *
 */
 
-#include <memory>
-#include <iostream>
-#include <cassert>
-#include "NvInferPlugin.h"
 #include "factoryYoloV3Legacy.h"
+#include "NvInferPlugin.h"
+#include <cassert>
+#include <iostream>
+#include <memory>
 
 YoloPluginFactoryLegacy::YoloPluginFactoryLegacy() : m_ReorgLayer{nullptr}, m_RegionLayer{nullptr}
 {
     for (int i = 0; i < m_MaxLeakyLayers; ++i) m_LeakyReLULayers[i] = nullptr;
 }
 
-nvinfer1::IPlugin *YoloPluginFactoryLegacy::createPlugin(const char *layerName, const void *serialData,
+nvinfer1::IPlugin* YoloPluginFactoryLegacy::createPlugin(const char* layerName,
+                                                         const void* serialData,
                                                          size_t serialLength)
 {
     assert(isPlugin(layerName));
@@ -78,7 +79,7 @@ nvinfer1::IPlugin *YoloPluginFactoryLegacy::createPlugin(const char *layerName, 
     }
 }
 
-bool YoloPluginFactoryLegacy::isPlugin(const char *name)
+bool YoloPluginFactoryLegacy::isPlugin(const char* name)
 {
     return ((std::string(name).find("leaky") != std::string::npos)
             || (std::string(name).find("reorg") != std::string::npos)
@@ -105,9 +106,9 @@ void YoloPluginFactoryLegacy::destroy()
     m_YoloLayerCount = 0;
 }
 
-YoloLayerV3::YoloLayerV3(const void *data, size_t length)
+YoloLayerV3::YoloLayerV3(const void* data, size_t length)
 {
-    const char *d = static_cast<const char *>(data), *a = d;
+    const char *d = static_cast<const char*>(data), *a = d;
     read(d, m_NumBoxes);
     read(d, m_NumClasses);
     read(d, m_GridSize);
@@ -152,8 +153,8 @@ size_t YoloLayerV3::getWorkspaceSize(int maxBatchSize) const { return 0; }
 int YoloLayerV3::enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace,
                          cudaStream_t stream)
 {
-    CHECK(cudaYoloLayerV3(inputs[0], outputs[0], batchSize, m_GridSize, m_NumClasses,
-                                  m_NumBoxes, m_OutputSize, stream));
+    CHECK(cudaYoloLayerV3(inputs[0], outputs[0], batchSize, m_GridSize, m_NumClasses, m_NumBoxes,
+                          m_OutputSize, stream));
     return 0;
 }
 
