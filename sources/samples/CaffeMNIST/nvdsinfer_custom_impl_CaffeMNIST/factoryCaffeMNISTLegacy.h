@@ -34,6 +34,7 @@ SOFTWARE.
 #include <iostream>
 #include <memory>
 
+#include "NvCaffeParser.h"
 #include "NvInferPlugin.h"
 #include "fp16.h"
 
