@@ -38,10 +38,6 @@ ifeq ($(PLATFORM),)
 $(error PLATFORM variable is not set in Makefile.config)
 endif
 
-ifneq ($(PLATFORM), TESLA)
-$(error This app is developed for TESLA platform)
-endif
-
 ifeq (' $(DEEPSTREAM_INSTALL_DIR)', ' /path/to/DeepStream_Release_3.0')
 $(error DEEPSTREAM_INSTALL_DIR variable is not set in Makefile.config)
 endif
