@@ -106,6 +106,21 @@ YoloPluginCtx* YoloPluginCtxInit(YoloPluginInitParams* initParams, size_t batchS
     ctx->batchSize = batchSize;
     ctx->networkInfo = getYoloNetworkInfo();
     ctx->inferParams = getYoloInferParams();
+    uint configBatchSize = getBatchSize();
+
+    // Check if config batchsize matches buffer batch size in the pipeline
+    if (ctx->batchSize != configBatchSize)
+    {
+        std::cerr
+            << "WARNING: Batchsize set in config file overriden by pipeline. New batchsize is "
+            << ctx->batchSize << std::endl;
+        int npos = ctx->networkInfo.wtsFilePath.find(".weights");
+        assert(npos != std::string::npos
+               && "wts file file not recognised. File needs to be of '.weights' format");
+        std::string dataPath = ctx->networkInfo.wtsFilePath.substr(0, npos);
+        ctx->networkInfo.enginePath = dataPath + "-" + ctx->networkInfo.precision + "-batch"
+            + std::to_string(ctx->batchSize) + ".engine";
+    }
 
     if ((ctx->networkInfo.networkType == "yolov2")
         || (ctx->networkInfo.networkType == "yolov2-tiny"))
