@@ -1,3 +1,4 @@
+# /**
 # MIT License
 
 # Copyright (c) 2018 NVIDIA CORPORATION. All rights reserved.
@@ -19,25 +20,20 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+# *
+# */
 
-.vscode/
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+file(GLOB CXX_SRCS *.cpp)
+file(GLOB CU_SRCS *.cu)
 
-**/*.mp4
-**/*.h264
-**/*.caffemodel
-**/*.binaryproto
-**/*.engine
-**/*.weights
-**/*.o
-**/*.a
-**/*.so
+find_package(PkgConfig)
+pkg_check_modules(GLIB REQUIRED glib-2.0)
 
-CaffeMNIST/**/build/
+include_directories(${CUDA_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${TRT_INCLUDE_DIR} ${GLIB_INCLUDE_DIRS} ${GLFAGS_INCLUDE_DIRS} )
+link_directories(${CUDA_TOOLKIT_ROOT_DIR}/lib64)
 
-yolo/apps/**/deepstream-yolo-app
-yolo/apps/**/deepstream-yolo-msgbroker-app
-yolo/apps/**/trt-yolo-app
-yolo/data/**/*.cfg
-yolo/data/**/*.jpeg
-yolo/data/**/*.png
-yolo/**/build/
+CUDA_COMPILE(CU_OBJS ${CU_SRCS})
+add_library(yolo-lib STATIC ${CXX_SRCS} ${CU_OBJS})
+
+target_link_libraries(yolo-lib cudart cudnn cublas ${OpenCV_LIBRARIES} ${TRT_LIBRARY_INFER} ${TRT_LIBRARY_INFER_PLUGIN} gflags stdc++fs dl)

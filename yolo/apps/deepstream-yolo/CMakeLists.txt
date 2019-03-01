@@ -1,3 +1,4 @@
+# /**
 # MIT License
 
 # Copyright (c) 2018 NVIDIA CORPORATION. All rights reserved.
@@ -19,25 +20,24 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+# *
+# */
 
-.vscode/
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+project(deepstream-yolo-app LANGUAGES CXX)
 
-**/*.mp4
-**/*.h264
-**/*.caffemodel
-**/*.binaryproto
-**/*.engine
-**/*.weights
-**/*.o
-**/*.a
-**/*.so
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wunused-function -Wunused-variable -Wfatal-errors")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
-CaffeMNIST/**/build/
+set(DS_SDK_ROOT "" CACHE PATH "NVIDIA Deepstream SDK root path")
 
-yolo/apps/**/deepstream-yolo-app
-yolo/apps/**/deepstream-yolo-msgbroker-app
-yolo/apps/**/trt-yolo-app
-yolo/data/**/*.cfg
-yolo/data/**/*.jpeg
-yolo/data/**/*.png
-yolo/**/build/
+find_package(PkgConfig)
+pkg_check_modules(GST REQUIRED gstreamer-1.0>=1.8 gstreamer-video-1.0>=1.8 gstreamer-base-1.0>=1.8)
+
+include_directories(${GST_INCLUDE_DIRS} ${DS_SDK_ROOT}/sources/includes)
+add_executable(deepstream-yolo-app deepstream-yolo-app.cpp)
+target_link_libraries(deepstream-yolo-app ${GST_LIBRARIES})
+
+#Install app
+install(TARGETS deepstream-yolo-app RUNTIME DESTINATION bin CONFIGURATIONS Release Debug)
