@@ -39,7 +39,7 @@ To use the stand alone trt-se-resnet50-app,
 
   5. We can use the sample script from tensorpack to obtain checkpoints for senet.
 
-          `$ python /path/to/tensorpack-0.8.9/tensorpack/examples/ResNet/imagenet-resnet.py --data [/path/to/ImageNet_dataset] --load [/path/to/ResNet50-SE.npz] -d 50 --eval --mode se`
+      `$ python /path/to/tensorpack-0.8.9/tensorpack/examples/ResNet/imagenet-resnet.py --data [/path/to/ImageNet_dataset] --load [/path/to/ResNet50-SE.npz] -d 50 --eval --mode se`
 
     The checkpoints will be stored in the `SE-ResNet50-ckpt` folder
     under the same directory (senet/Revised_Scrpits)
