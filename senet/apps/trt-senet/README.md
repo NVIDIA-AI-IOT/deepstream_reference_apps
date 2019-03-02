@@ -31,7 +31,7 @@ To use the stand alone trt-se-resnet50-app,
 
   4. You can find the revised `base_revised.py` script in the `senet/Revised_Scrpits` directory. Then replace the content of the original `base.py` in `tensorpack/tensorpack/predict/`.
 
-     Note (The difference between base_revised.py and base.py) :
+     * Note (The difference between base_revised.py and base.py) :
 
      In order to obtain the Checkpoints and Tensorboard from the Tensorpack (TensorFlow re-implementation),
      we added an tf.train.Saver() object and an tf.summary.FileWriter() object in the OfflinePredictor class
@@ -48,7 +48,7 @@ To use the stand alone trt-se-resnet50-app,
       `$ cd SE-ResNet50-ckpt`   
       `$ python ../dumpTFWts_revised.py -m se-resnet50.ckpt -1 true -o SE-ResNet50 `
 
-     Note (The difference between dumpTFWts_revised.py and dumpTFWts.py) :
+     * Note (The difference between dumpTFWts_revised.py and dumpTFWts.py) :
 
      In order to extract the weights from the generated checkpoints, we use the Python script `dumpTFWts.py` provided in the `tensorrt/samples/common/` directory.
 
