@@ -26,7 +26,7 @@ NvYolo is an inference plugin similar nvinfer in the DeepStream SDK. We make use
 For dGPU's,   
     Set the DS_SDK_ROOT variable to point to your DeepStream SDK Root. There is also an option of using custom build paths for TensorRT(-D TRT_SDK_ROOT)and OpenCV(-D OPENCV_ROOT). These are optional and not required if the libraries have already been installed.
 
-   `$ cd yolo/plugins/gst-yoloplugin-tesla`   
+   `$ cd plugins/gst-yoloplugin-tesla`   
    `$ mkdir build && cd build`   
    `$ cmake -D DS_SDK_ROOT=<DS SDK Root> -D CMAKE_BUILD_TYPE=Release ..`   
    `$ make && sudo make install`
@@ -34,7 +34,7 @@ For dGPU's,
 For jetson,   
     Set the DS_SDK_ROOT variable to point to your DeepStream SDK Root.
 
-   `$ cd yolo/plugins/gst-yoloplugin-tegra`   
+   `$ cd plugins/gst-yoloplugin-tegra`   
    `$ mkdir build && cd build`   
    `$ cmake -D DS_SDK_ROOT=<DS SDK Root> -D CMAKE_BUILD_TYPE=Release ..`   
    `$ make && sudo make install`
@@ -47,29 +47,29 @@ There are multiple apps that can be used to perform object detection in deepstre
 
 ### deepstream-yolo-app ###
 
-The deepStream-yolo-app located at `yolo/apps/deepstream_yolo` is a sample app similar to the Test-1 & Test-2 apps available in the DeepStream SDK. Using the yolo app we build a sample gstreamer pipeline using various components like H264 parser, Decoder, Video Converter, OSD and Yolo plugin to run inference on an elementary h264 video stream.
+The deepStream-yolo-app located at `apps/deepstream_yolo` is a sample app similar to the Test-1 & Test-2 apps available in the DeepStream SDK. Using the yolo app we build a sample gstreamer pipeline using various components like H264 parser, Decoder, Video Converter, OSD and Yolo plugin to run inference on an elementary h264 video stream.
 
-`$ cd yolo/apps/deepstream-yolo`   
+`$ cd apps/deepstream-yolo`   
 `$ mkdir build && cd build`   
 `$ cmake -D DS_SDK_ROOT=<DS SDK Root> -D CMAKE_BUILD_TYPE=Release ..`   
 `$ make && sudo make install`   
-`$ cd ../../../../`   
+`$ cd ../../../`   
 `$ deepstream-yolo-app <Platform-Telsa/Tegra> <H264 filename> <yolo-plugin config file>`
 
-Refer to sample config files `yolov2.txt`, `yolov2-tiny.txt`, `yolov3.txt` and `yolov3-tiny.txt` in `yolo/config/` directory.
+Refer to sample config files `yolov2.txt`, `yolov2-tiny.txt`, `yolov3.txt` and `yolov3-tiny.txt` in `config/` directory.
 
 ### trt-yolo-app ###
 
-The trt-yolo-app located at `yolo/apps/trt-yolo` is a sample standalone app, which can be used to run inference on test images. This app does not have any deepstream dependencies and can be built independently. There is also an option of using custom build paths for TensorRT(-D TRT_SDK_ROOT)and OpenCV(-D OPENCV_ROOT). These are optional and not required if the libraries have already been installed.
+The trt-yolo-app located at `apps/trt-yolo` is a sample standalone app, which can be used to run inference on test images. This app does not have any deepstream dependencies and can be built independently. There is also an option of using custom build paths for TensorRT(-D TRT_SDK_ROOT)and OpenCV(-D OPENCV_ROOT). These are optional and not required if the libraries have already been installed.
 
-`$ cd yolo/apps/trt-yolo`    
+`$ cd apps/trt-yolo`    
 `$ mkdir build &&cd build`   
 `$ cmake -D CMAKE_BUILD_TYPE=Release ..`
 `$ make && sudo make install`   
 `$ cd ../../../../`   
 `$ trt-yolo-app --flagfile=/path/to/config-file.txt`
 
-Refer to sample config files `yolov2.txt`, `yolov2-tiny.txt`, `yolov3.txt` and `yolov3-tiny.txt` in `yolo/config/` directory.    
+Refer to sample config files `yolov2.txt`, `yolov2-tiny.txt`, `yolov3.txt` and `yolov3-tiny.txt` in `config/` directory.    
 Test images for inference are to be added in the `test_images.txt` file in `data/`directory. Additionally run `$ trt-yolo-app --help` for a complete list of config parameters.
 
 #### Note ####

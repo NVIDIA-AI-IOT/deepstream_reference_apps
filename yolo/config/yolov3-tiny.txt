@@ -31,9 +31,9 @@
 # labels_file_path : Text file with a list of object class labels
 
 --network_type=yolov3-tiny
---config_file_path=yolo/data/yolov3-tiny.cfg
---wts_file_path=yolo/data/yolov3-tiny.weights
---labels_file_path=yolo/data/labels.txt
+--config_file_path=data/yolov3-tiny.cfg
+--wts_file_path=data/yolov3-tiny.weights
+--labels_file_path=data/labels.txt
 
 #Optional config params
 # precision : Inference precision of the network
@@ -48,7 +48,7 @@
 
 #Uncomment the lines below to use a specific config param
 #--precision=kINT8
-#--calibration_table_path=yolo/data/calibration/yolov3-tiny-calibration.table
+#--calibration_table_path=data/calibration/yolov3-tiny-calibration.table
 #--engine_file_path=
 #--print_prediction_info=true
 #--print_perf_info=true
@@ -56,7 +56,7 @@
 
 ### Config params trt-yolo-app only
 
-# test_images : [REQUIRED] Text file containing absolute paths of all the images to be used for inference. Default value is yolo/data/test_images.txt.
+# test_images : [REQUIRED] Text file containing absolute paths of all the images to be used for inference. Default value is data/test_images.txt.
 # batch_size : Set batch size for inference engine. Default value is 1.
 # view_detections : Flag to view images overlayed with objects detected. Default value is false.
 # save_detections : Flag to save images overlayed with objects detected. Default value is true.
@@ -66,12 +66,12 @@
 
 
 #Uncomment the lines below to use a specific config param
---test_images=yolo/data/test_images.txt
+--test_images=data/test_images.txt
 #--batch_size=4
 #--do_benchmark=true
 #--view_detections=true
 #--save_detections=true
-#--save_detections_path=yolo/data/detections/
+#--save_detections_path=data/detections/
 #--decode=false
 #--seed
 #--shuffle_test_set=false
