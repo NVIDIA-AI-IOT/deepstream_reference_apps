@@ -13,23 +13,24 @@ To use the stand alone trt-se-resnet50-app,
 - Download Tensorpack 0.8.9 code to working directory
   Note that later versions might not work,
 
-   1. cd path/to/your_working_directory/
-   2. wget https://github.com/tensorpack/tensorpack/archive/0.8.9.tar.gz
-   3. tar -xvzf 0.8.9.tar.gz
+   1. `$ cd path/to/your_working_directory/`
+   2. `$ wget https://github.com/tensorpack/tensorpack/archive/0.8.9.tar.gz`
+   3. `$ tar -xvzf 0.8.9.tar.gz`
    4. Add line to ~/.bashrc
 
       export PYTHONPATH=$PYTHONPATH:/path/to/tensorpack-0.8.9
 
-   5. source ~/.bashrc
+   5. `$ source ~/.bashrc`
 
 ## Preparing .wts file for TensorRT Inference ##
   1. Clone this repository
-  2. cd senet/Revised_Scripts
+  2. `$ cd senet/Revised_Scripts`
   3. Download the `ImageNet-ResNet50-SE.npz` file from the ResNet50-SE model by running the following command:
 
           wget http://models.tensorpack.com/ResNet/ImageNet-ResNet50-SE.npz
 
   4. You can find the revised `base_revised.py` script in the `senet/Revised_Scrpits` directory. Then replace the content of the original `base.py` in `tensorpack/tensorpack/predict/`.
+
     - Note (The difference between base_revised.py and base.py) :
 
       In order to obtain the Checkpoints and Tensorboard from the Tensorpack (TensorFlow re-implementation),
@@ -47,15 +48,8 @@ To use the stand alone trt-se-resnet50-app,
 
   6. You can find the revised `dumpTFWts_revised.py` script in the `Revised_Scripts` directory.
 
-
-    cd `SE-ResNet50-ckpt`
-
-
-    Then, run the following command:
-
-
-        python ../dumpTFWts_revised.py -m se-resnet50.ckpt -1 true -o SE-ResNet50
-
+      `$ cd SE-ResNet50-ckpt`   
+      `$ python ../dumpTFWts_revised.py -m se-resnet50.ckpt -1 true -o SE-ResNet50 `
 
     - Note (The difference between dumpTFWts_revised.py and dumpTFWts.py) :
 
