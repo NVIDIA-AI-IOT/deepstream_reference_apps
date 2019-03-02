@@ -51,8 +51,11 @@ To use the stand alone trt-se-resnet50-app,
     * Note (The difference between dumpTFWts_revised.py and dumpTFWts.py) :
 
       In order to extract the weights from the generated checkpoints, we use the Python script `dumpTFWts.py` provided in the `tensorrt/samples/common/` directory.
+
       This project manually loads the V1 format .wts file. However, in TensorFlow, convolutional weight tensors are in the order of [filter_height, filter_width, input_depth, output_depth], see the [TensorFlow documentation](https://www.tensorflow.org/guide/extend/model_files#weight_formats).
+
       Similarly, weight tensors of fully-connected layer are in the order of [input_depth, output_depth] while TensorRT reads in the order of [output_depth, input_depth].
+
       Therefore, it is necessary to transpose the weight tensors to the correct order before dumping the weights.
 
   7. `Move your .wts file to senet/data`
@@ -72,14 +75,15 @@ To use the stand alone trt-se-resnet50-app,
 
   2. The trt-senet-app located at `senet/apps/trt-senet` is a standalone app, which does inference on test images listed in the eval.txt file in the ImageNet dataset directory.
 
-    This app has two important parameters--kBATCHSIZE and kPRECISION present in the `network_config.cpp` file that can set the batch size and precision respectively.
-    To use different batch size, set the kBATCHSIZE parameter to the desired value. The default value is 1.
-    To use the INT8 mode, set the kPRECISION parameter to "kINT8". The default value is "kFLOAT".
+  This app has two important parameters--kBATCHSIZE and kPRECISION present in the `network_config.cpp` file that can set the batch size and precision respectively.
 
-    Execute the trt-se-resnet50-app by running the following command from the `senet/apps/trt-senet` directory
+  To use different batch size, set the kBATCHSIZE parameter to the desired value. The default value is 1.
+  To use the INT8 mode, set the kPRECISION parameter to "kINT8". The default value is "kFLOAT".
+
+  Execute the trt-se-resnet50-app by running the following command from the `senet/apps/trt-senet` directory
 
             `$ ./trt-se-resnet50-app`
-            
+
   3. After running the app successfully, TensorRT engine file will be stored under `senet/data/SE-ResNet50-Engines` by default.
   We can use this TensorRT engine file to do inference using Deepstream later.
 
