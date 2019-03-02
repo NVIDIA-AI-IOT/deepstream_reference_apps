@@ -72,13 +72,14 @@ To use the stand alone trt-se-resnet50-app,
 
   2. The trt-senet-app located at `senet/apps/trt-senet` is a standalone app, which does inference on test images listed in the eval.txt file in the ImageNet dataset directory.
 
-  This app has two important parameters--kBATCHSIZE and kPRECISION present in the `network_config.cpp` file that can set the batch size and precision respectively.
-  To use different batch size, set the kBATCHSIZE parameter to the desired value. The default value is 1.
-  To use the INT8 mode, set the kPRECISION parameter to "kINT8". The default value is "kFLOAT".
+    This app has two important parameters--kBATCHSIZE and kPRECISION present in the `network_config.cpp` file that can set the batch size and precision respectively.
+    To use different batch size, set the kBATCHSIZE parameter to the desired value. The default value is 1.
+    To use the INT8 mode, set the kPRECISION parameter to "kINT8". The default value is "kFLOAT".
 
-  Execute the trt-se-resnet50-app by running the following command from the `senet/apps/trt-senet` directory
+    Execute the trt-se-resnet50-app by running the following command from the `senet/apps/trt-senet` directory
 
-          ./trt-se-resnet50-app
+            `$ ./trt-se-resnet50-app`
+            
   3. After running the app successfully, TensorRT engine file will be stored under `senet/data/SE-ResNet50-Engines` by default.
   We can use this TensorRT engine file to do inference using Deepstream later.
 
