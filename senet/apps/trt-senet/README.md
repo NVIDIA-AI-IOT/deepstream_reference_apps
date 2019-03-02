@@ -33,9 +33,9 @@ To use the stand alone trt-se-resnet50-app,
 
      * Note (The difference between base_revised.py and base.py) :
 
-     In order to obtain the Checkpoints and Tensorboard from the Tensorpack (TensorFlow re-implementation),
-     we added an tf.train.Saver() object and an tf.summary.FileWriter() object in the OfflinePredictor class
-     in the `tensorpack/tensorpack/predict/base.py`
+         In order to obtain the Checkpoints and Tensorboard from the Tensorpack (TensorFlow re-implementation),
+         we added an tf.train.Saver() object and an tf.summary.FileWriter() object in the OfflinePredictor class
+         in the `tensorpack/tensorpack/predict/base.py`
 
   5. We can use the sample script from tensorpack to obtain checkpoints for senet.
 
@@ -50,14 +50,14 @@ To use the stand alone trt-se-resnet50-app,
 
      * Note (The difference between dumpTFWts_revised.py and dumpTFWts.py) :
 
-     In order to extract the weights from the generated checkpoints, we use the Python script `dumpTFWts.py` provided in the `tensorrt/samples/common/` directory.
+       In order to extract the weights from the generated checkpoints, we use the Python script `dumpTFWts.py` provided in the `tensorrt/samples/common/` directory.
 
-     This project manually loads the V1 format .wts file.
-     However, in TensorFlow, convolutional weight tensors are in the order of [filter_height, filter_width, input_depth, output_depth],
-     see the [TensorFlow documentation](https://www.tensorflow.org/guide/extend/model_files#weight_formats).
-     Similarly, weight tensors of fully-connected layer are in the order of [input_depth, output_depth]
-     while TensorRT reads in the order of [output_depth, input_depth].
-     Therefore, it is necessary to transpose the weight tensors to the correct order before dumping the weights.
+       This project manually loads the V1 format .wts file.
+       However, in TensorFlow, convolutional weight tensors are in the order of [filter_height, filter_width, input_depth, output_depth],
+       see the [TensorFlow documentation](https://www.tensorflow.org/guide/extend/model_files#weight_formats).
+       Similarly, weight tensors of fully-connected layer are in the order of [input_depth, output_depth]
+       while TensorRT reads in the order of [output_depth, input_depth].
+       Therefore, it is necessary to transpose the weight tensors to the correct order before dumping the weights.
 
   7. `Move your .wts file to senet/data`
 
