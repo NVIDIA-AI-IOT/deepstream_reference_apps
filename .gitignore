@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 .vscode/
+tests/
 
 **/*.mp4
 **/*.h264
