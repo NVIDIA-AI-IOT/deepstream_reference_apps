@@ -46,6 +46,7 @@ struct NetworkInfo
     std::string wtsFilePath;
     std::string labelsFilePath;
     std::string precision;
+    std::string deviceType;
     std::string calibrationTablePath;
     std::string enginePath;
     std::string inputBlobName;
@@ -107,6 +108,7 @@ protected:
     const std::string m_WtsFilePath;
     const std::string m_LabelsFilePath;
     const std::string m_Precision;
+    const std::string m_DeviceType;
     const std::string m_CalibImages;
     const std::string m_CalibImagesFilePath;
     std::string m_CalibTableFilePath;

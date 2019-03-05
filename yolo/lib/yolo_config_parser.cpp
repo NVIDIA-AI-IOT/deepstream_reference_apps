@@ -47,14 +47,14 @@ DEFINE_string(input_blob_name, "data",
 DEFINE_bool(print_perf_info, false, "[OPTIONAl] Print performance info on the console");
 DEFINE_bool(print_prediction_info, false, "[OPTIONAL] Print detection info on the console");
 DEFINE_string(
-    test_images, "yolo/data/test_images.txt",
+    test_images, "data/test_images.txt",
     "[REQUIRED] Text file containing absolute paths or filenames of all the images to be "
     "used for inference. If only filenames are provided, their corresponding source directory "
     "has to be provided through 'test_images_path' flag");
 DEFINE_string(test_images_path, "not-specified",
               "[OPTIONAL] absolute source directory path of the list of images supplied through "
               "'test_images' flag");
-DEFINE_string(calibration_images, "yolo/data/calibration_images.txt",
+DEFINE_string(calibration_images, "data/calibration_images.txt",
               "[OPTIONAL] Text file containing absolute paths or filenames of calibration images. "
               "Flag required if precision is kINT8 and there is not pre-generated calibration "
               "table. If only filenames are provided, their corresponding source directory has to "

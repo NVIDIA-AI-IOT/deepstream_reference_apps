@@ -34,6 +34,7 @@ Yolo::Yolo(const uint batchSize, const NetworkInfo& networkInfo, const InferPara
     m_WtsFilePath(networkInfo.wtsFilePath),
     m_LabelsFilePath(networkInfo.labelsFilePath),
     m_Precision(networkInfo.precision),
+    m_DeviceType(networkInfo.deviceType),
     m_CalibImages(inferParams.calibImages),
     m_CalibImagesFilePath(inferParams.calibImagesPath),
     m_CalibTableFilePath(networkInfo.calibrationTablePath),
@@ -434,6 +435,22 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
     {
         m_Builder->setHalf2Mode(true);
     }
+
+    m_Builder->allowGPUFallback(true);
+    int nbLayers = m_Network->getNbLayers();
+    int layersOnDLA = 0;
+    std::cout << "Total number of layers: " << nbLayers << std::endl;
+    for (uint i = 0; i < nbLayers; i++)
+    {
+        nvinfer1::ILayer* curLayer = m_Network->getLayer(i);
+        if (m_DeviceType == "kDLA" && m_Builder->canRunOnDLA(curLayer))
+        {
+            m_Builder->setDeviceType(curLayer, nvinfer1::DeviceType::kDLA);
+            layersOnDLA++;
+            std::cout << "Set layer " << curLayer->getName() << " to run on DLA" << std::endl;
+        }
+    }
+    std::cout << "Total number of layers on DLA: " << layersOnDLA << std::endl;
 
     // Build the engine
     std::cout << "Building the TensorRT Engine..." << std::endl;
