@@ -36,6 +36,8 @@ DEFINE_string(wts_file_path, "not-specified", "[REQUIRED] Darknet weights file")
 DEFINE_string(labels_file_path, "not-specified", "[REQUIRED] Object class labels file");
 DEFINE_string(precision, "kFLOAT",
               "[OPTIONAL] Inference precision. Choose from kFLOAT, kHALF and kINT8.");
+DEFINE_string(deviceType, "kGPU",
+              "[OPTIONAL] The device that this layer/network will execute on. Choose from kGPU and kDLA(only for kHALF).");
 DEFINE_string(calibration_table_path, "not-specified",
               "[OPTIONAL] Path to pre-generated calibration table. If flag is not set, a new calib "
               "table <network-type>-<precision>-calibration.table will be generated");
@@ -140,7 +142,7 @@ void yoloConfigParserInit(int argc, char** argv)
         assert(npos != std::string::npos
                && "wts file file not recognised. File needs to be of '.weights' format");
         std::string dataPath = FLAGS_wts_file_path.substr(0, npos);
-        FLAGS_engine_file_path = dataPath + "-" + FLAGS_precision + "-batch"
+        FLAGS_engine_file_path = dataPath + "-" + FLAGS_precision + "-" + FLAGS_deviceType + "-batch"
             + std::to_string(FLAGS_batch_size) + ".engine";
     }
 
@@ -157,8 +159,8 @@ void yoloConfigParserInit(int argc, char** argv)
 NetworkInfo getYoloNetworkInfo()
 {
     return NetworkInfo{FLAGS_network_type,     FLAGS_config_file_path, FLAGS_wts_file_path,
-                       FLAGS_labels_file_path, FLAGS_precision,        FLAGS_calibration_table_path,
-                       FLAGS_engine_file_path, FLAGS_input_blob_name};
+                       FLAGS_labels_file_path, FLAGS_precision,        FLAGS_deviceType,
+                       FLAGS_calibration_table_path, FLAGS_engine_file_path, FLAGS_input_blob_name};
 }
 
 InferParams getYoloInferParams()

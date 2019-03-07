@@ -77,7 +77,7 @@ gie-unique-id=1
 parse-func=0
 is-classifier=0
 parse-bbox-func-name=NvDsInferParseCustomCaffeMNIST
-custom-lib-path=nvdsinfer_custom_impl_CaffeMNIST/libnvdsinfer_custom_impl_CaffeMNIST.so
+custom-lib-path=nvdsinfer_custom_impl_CaffeMNIST/build/libnvdsinfer_custom_impl_CaffeMNIST.so
 
 [class-attrs-all]
 threshold=0.2
