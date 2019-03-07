@@ -9,11 +9,11 @@ capability of Deepstream SDK.
 Install opencv-4.0.1 by following commands.
 
 ```
-$ wget https://github.com/opencv/opencv/archive/4.0.1.zip <br/>
-$ wget https://github.com/opencv/opencv_contrib/archive/4.0.1.zip <br/>
-$ cd ~/opencv/ <br/>
-$ mkdir build <br/>
-$ cd build <br/>
+$ wget https://github.com/opencv/opencv/archive/4.0.1.zip
+$ wget https://github.com/opencv/opencv_contrib/archive/4.0.1.zip
+$ cd ~/opencv/
+$ mkdir build
+$ cd build
 $ cmake -D CMAKE_BUILD_TYPE=RELEASE \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
         -DWITH_CUDA=ON \
@@ -21,10 +21,10 @@ $ cmake -D CMAKE_BUILD_TYPE=RELEASE \
         -DOPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
         -DBUILD_EXAMPLES=ON \
         -DBUILD_opencv_cudacodec=OFF \
-        -DCMAKE_CXX_FLAGS="" .. <br/>
-$ sudo make; <br/>
-$ sudo make install; <br/>
-$ sudo ldconfig; <br/>
+        -DCMAKE_CXX_FLAGS="" ..
+$ sudo make;
+$ sudo make install;
+$ sudo ldconfig;
 ```
 
 ## Getting Started
@@ -42,9 +42,9 @@ Auxiliary plugins can be tested with following pipelines with command line tool 
 -  gst-dsopticalflow Plugin
 ```
 $ cd anoamaly/plugins/gst-dsopticalflow
-$ mkdir build <br/>
-$ cd build <br/>
-$ cmake -D CMAKE_BUILD_TYPE=RELEASE -D DS_SDK_ROOT=$DS_SDK_ROOT .. <br/>
+$ mkdir build
+$ cd build
+$ cmake -D CMAKE_BUILD_TYPE=RELEASE -D DS_SDK_ROOT=$DS_SDK_ROOT .. <
 $ make
 For manual installation,
 $ sudo cp libgstdsopticalflow.so ~/.local/share/gstreamer-1.0/plugins/
@@ -53,9 +53,9 @@ $ sudo cp libgstdsopticalflow.so ~/.local/share/gstreamer-1.0/plugins/
 - gst-dsdirection Plugin
 ```
 $ cd anoamaly/plugins/gst-dsdirection
-$ mkdir build <br/>
-$ cd build <br/>
-$ cmake -D CMAKE_BUILD_TYPE=RELEASE -D DS_SDK_ROOT=$DS_SDK_ROOT .. <br/>
+$ mkdir build
+$ cd build
+$ cmake -D CMAKE_BUILD_TYPE=RELEASE -D DS_SDK_ROOT=$DS_SDK_ROOT ..
 $ make
 For manual installation,
 $ sudo cp libgstdsdirection.so.so ~/.local/share/gstreamer-1.0/plugins/

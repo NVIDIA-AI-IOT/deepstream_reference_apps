@@ -29,6 +29,7 @@ tests/
 **/*.binaryproto
 **/*.engine
 **/*.weights
+**/*.wts
 **/*.o
 **/*.a
 **/*.so
