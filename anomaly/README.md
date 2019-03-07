@@ -44,7 +44,7 @@ Auxiliary plugins can be tested with following pipelines with command line tool 
 $ cd anoamaly/plugins/gst-dsopticalflow
 $ mkdir build
 $ cd build
-$ cmake -D CMAKE_BUILD_TYPE=RELEASE -D DS_SDK_ROOT=$DS_SDK_ROOT .. <
+$ cmake -D CMAKE_BUILD_TYPE=RELEASE -D DS_SDK_ROOT=$DS_SDK_ROOT ..
 $ make
 For manual installation,
 $ sudo cp libgstdsopticalflow.so ~/.local/share/gstreamer-1.0/plugins/
