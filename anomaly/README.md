@@ -1,4 +1,4 @@
-# DeepStream Sample Application for Anomaly Detection
+# Anomaly Detection Reference Apps using DeepStream SDK 3.0
 
 ## Introduction
 The project contains a set of applications and auxiliary plug-ins to show the

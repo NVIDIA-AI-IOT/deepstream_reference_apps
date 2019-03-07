@@ -42,3 +42,5 @@ yolo/data/**/*.cfg
 yolo/data/**/*.jpeg
 yolo/data/**/*.png
 yolo/**/build/
+senet/**/build/
+anomaly/**/build/
