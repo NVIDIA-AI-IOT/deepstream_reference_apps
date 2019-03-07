@@ -17,9 +17,9 @@ There are two sample applications under `senet/apps` : trt-sent and deeptream-re
     Further details are provided in [here](apps/trt-senet/README.md)<br/>
     To use only the stand alone trt-senet-app, Deepstream installation can be skipped.<br/>
 
-2. `deepstream-resnet-senet-app` is the reference application using Deepstream and SENet.
+2. `deepstream-senet-app` is the reference application using Deepstream and SENet.
 
     SENet is used as a secondary inference in this example.<br/>
     In order to run this app, you must run `trt-senet-app` to obtain TensorRT engine for SENet.<br/>
     In addition, you must install Deepstream and other pre-requisites.<br/>
-    Further details are provided in [here](apps/deepstream-resnet-senet/README.md)<br/>
+    Further details are provided in [here](apps/deepstream-senet/README.md)<br/>
