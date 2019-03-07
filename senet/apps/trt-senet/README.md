@@ -65,27 +65,31 @@ To use the stand alone trt-se-resnet50-app,
 
   1. Update the TENSORRT_INSTALL_DIR, OPENCV_INSTALL_DIR, and cuda directory in `Makefile.config` file present in the main directory.
 
-  2. Set the kIMAGE_DATASET_DIR to the path of the ImageNet dataset directory in the `senet/lib/network_config.cpp` file.
+  2. Set the kIMAGE_DATASET_DIR to the path of the ImageNet dataset directory in the `lib/network_config.cpp` file.
 
   3. [OPTIONAL] Update the paths of the and .wts file and other network parameters in senet/lib/network_config.cpp file if required.
 
 ## Building and running the trt-se-resnet50-app ##
-  1. Go to the `senet/apps/trt-senet` directory and run the following command to build the trt-senet-app
-
-        make
-
-  2. The trt-senet-app located at `senet/apps/trt-senet` is a standalone app, which does inference on test images listed in the eval.txt file in the ImageNet dataset directory.
+  1. he trt-senet-app located at `apps/trt-senet/build` is a standalone app, which does inference on test images listed in the eval.txt file in the ImageNet dataset directory.
 
       This app has two important parameters--kBATCHSIZE and kPRECISION present in the `network_config.cpp` file that can set the batch size and precision respectively.
 
       To use different batch size, set the kBATCHSIZE parameter to the desired value. The default value is 1.
       To use the INT8 mode, set the kPRECISION parameter to "kINT8". The default value is "kFLOAT".
+   2.
+      Run the following command to build/install the trt-senet-app using cmake and execute the app.
 
-      Execute the trt-se-resnet50-app by running the following command from the `senet/apps/trt-senet` directory
+        ```
+        $ cd apps/trt-senet
+        $ mkdir build && cd build
+        $ cmake -D OPENCV_ROOT=/path/to/opencv-4.0.1/ -D TRT_SDK_ROOT=/path/to/TensorRT -D CMAKE_BUILD_TYPE=Release ..
+        $ make
+        $ make && sudo make install
+        $ cd ../../../  
+        $ trt-senet-app       
+        ```
 
-                `$ ./trt-se-resnet50-app`
-
-  3. After running the app successfully, TensorRT engine file will be stored under `senet/data/SE-ResNet50-Engines` by default.
+  3. After running the app successfully, TensorRT engine file will be stored under `senet/data` by default.
   We can use this TensorRT engine file to do inference using Deepstream later.
 
 ## Inference Performance ##
@@ -134,12 +138,12 @@ Table3: Accuracy change with the number of calibration image used.
 
 ## Note ##
 
-1. Whenever you adjust the network definition or using a different calibration table, it is necessary to delete the .engine files from the `data/SE-ResNet50-Engines` directory and generate a new engine in the next run. To delete the .engine files, you can run the following command in the apps directory:
+1. Whenever you adjust the network definition or using a different calibration table, it is necessary to delete the .engine files from the `senet/data` directory and generate a new engine in the next run. To delete the .engine files, simply go to data folder and delete the engine file.
 
-            make clean_engines
+2. You can also delete the calibration table by going to data folder and delete the table file if needed.
 
-2. You can delete the calibration table by running
-
-            make clean_clean_calibration_tables
-
-3. If you run `make clean_all`, all the engine, calibration tables, trt-senet-app, and objective files will be removed. If you want to just remove the trt-senet-app and objective files, run `make clean` instead.
+3. If you run make the app again,
+    ```
+    $ cd apps/trt-senet
+    $ rm -rf build
+    ```

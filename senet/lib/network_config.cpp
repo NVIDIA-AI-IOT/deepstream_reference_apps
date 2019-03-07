@@ -38,8 +38,8 @@ namespace config
     const uint kOUTPUTSIZE = 1000;
     const uint kMAXWORKSPACESIZE = 1 << 30;
 
-    const std::string kTRAINED_WEIGHTS_PATH = "../../data/SE-ResNet50.wts";
-    const std::string kPLAN_FILE_PATH = "../../data/SE-ResNet50-Engines/SE-ResNet50-" + kPRECISION + "-batch" + std::to_string(kBATCHSIZE) + ".engine";
-    const std::string kCALIB_TABLE_PATH = "../../lib/calibration/se-resnet50-calibration.table";
-    const std::string kIMAGE_DATASET_DIR = "/path/to/ImageNet/dataset";
+    const std::string kTRAINED_WEIGHTS_PATH = "data/SE-ResNet50.wts";
+    const std::string kPLAN_FILE_PATH = "data/SE-ResNet50-" + kPRECISION + "-batch" + std::to_string(kBATCHSIZE) + ".engine";
+    const std::string kCALIB_TABLE_PATH = "lib/calibration/se-resnet50-calibration.table";
+    const std::string kIMAGE_DATASET_DIR = "/path/to/ImageNet/dataset/";
 } // namespace config

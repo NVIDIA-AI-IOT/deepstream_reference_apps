@@ -45,17 +45,7 @@ In order to use SeNet-Deepstream Reference app,
   Make sure you have .engine file and check the path where it is stored.
 
 ## Update configurations ##
-1. Update the installed paths for
-
-  - DEEPSTREAM_INSTALL_DIR
-  - PLATFORM
-  - TENSORRT_INSTALL_DIR
-  - OPENCV_INSTALL_DIR
-  - CUDA_VER
-
-  in `Makefile.config` file present in the main directory from this repository.
-
-2. Modify the provided configuration files under `senet/configs`
+1. Modify the provided configuration files under `senet/configs`
   - config_infer_primary_resnet10.txt
     `model-file, proto-file, labelfile-path, int8-calib-file` need to be modified.
     For resnet10 example, all files are located in `path/to/Deeepstream/samples/models/Primary_Detector/resnet10`
@@ -64,15 +54,17 @@ In order to use SeNet-Deepstream Reference app,
     `model-engine-file` needs to be modified.
      You should enter the path to TensorRT engine file we got by running trt-senet app.
 
-3. You can change some configurations in `deepstream-resnet-senet-app.cpp` as needed.
+2. You can change some configurations in `deepstream-senet-app.cpp` as needed.
    This cpp file contains configuration variables such as path to configuration file for pgie, label files for pgie and sgie.
 
-## Building and running the deepstream-resnet-senet-app ##
-
-  1. `$ cd senet/apps/deepstream-resnet-senet`
-  2. `$ make`
-  3. If the app was successfully made, you will have executable app, deepstream-resnet-senet-app.o, under same directory
-  4. Run the following command to run the deepstream reference app
-
-
-    $ ./deepstream-resnet-senet-app <Platform> <h264_elementary_stream> <path_to_secondary_classifier_configuration_file>
+## Building and running the deepstream-senet-app ##
+  Run the following command to build/install the deepstream-senet-app using cmake and execute the app.
+    ```
+    $ cd apps/deepstream-senet
+    $ mkdir build && cd build
+    $ cmake -D DS_SDK_ROOT=/opt/DeepStream_Release -D CMAKE_BUILD_TYPE=Release ..
+    $ make
+    $ make && sudo make install
+    $ cd ../../../  
+    $ deepstream-senet-app <Platform> <h264_elementary_stream> <path_to_secondary_classifier_configuration_file>
+    ```

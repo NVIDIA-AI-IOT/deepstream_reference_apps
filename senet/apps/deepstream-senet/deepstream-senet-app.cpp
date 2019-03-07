@@ -18,9 +18,9 @@
 
 #include "gstnvdsmeta.h"
 
-#define PGIE_CONFIG_FILE  "../../config/config_infer_primary_resnet10.txt"
-#define PGIE_LABELS "../../data/resnet10_labels.txt"
-#define SGIE1_LABELS "../../data/imagenet_labels.txt"
+#define PGIE_CONFIG_FILE  "config/config_infer_primary_resnet10.txt"
+#define PGIE_LABELS "data/resnet10_labels.txt"
+#define SGIE1_LABELS "data/imagenet_labels.txt"
 #define MAX_DISPLAY_LEN 128
 
 #define PGIE_CLASS_ID_VEHICLE 0

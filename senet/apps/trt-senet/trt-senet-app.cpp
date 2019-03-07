@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
     // Do inference on all images in imgList
     uint32_t imgListSize = imgList.size();
-    
+
     // Run Inference
     std::cout<< "Running inference..." <<std::endl;
     float prob[inferNet->getOutputSize() * BATCHSIZE];
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
             ds.push_back(DsImage( imgFilePath, inferNet->getInputH(), inferNet->getInputW()));
         }
         cv::Mat input = blobFromDsImages(ds, inferNet->getInputH(), inferNet->getInputW());
-        
+
         // Do inference
         auto start = std::chrono::high_resolution_clock::now();
         inferNet->doInference(input.data, batchCnt, prob);

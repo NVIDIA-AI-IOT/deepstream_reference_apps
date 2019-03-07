@@ -48,6 +48,7 @@ SE_ResNet50::SE_ResNet50() :
                   << "precision-" << m_Precision << "-batch_size-" << std::to_string(m_BatchSize)
                   << std::endl;
         std::cout << "Creating a new TensorRT Engine" << std::endl;
+
         if(m_Precision == "kFLOAT")
         {
             createSE_Resnet50Engine(m_BatchSize, DataType::kFLOAT, m_WeightFilePath, nullptr);
@@ -104,9 +105,9 @@ SE_ResNet50::~SE_ResNet50()
     CHECK(cudaFree(buffers[outputIndex]));
 }
 
-void SE_ResNet50::createSE_Resnet50Engine(const unsigned int maxBatchSize, 
-                                    const DataType dataType, 
-                                    const std::string trainedWeightsPath, 
+void SE_ResNet50::createSE_Resnet50Engine(const unsigned int maxBatchSize,
+                                    const DataType dataType,
+                                    const std::string trainedWeightsPath,
                                     nvinfer1::IInt8EntropyCalibrator* calibrator)
 {
     // Create builder
@@ -130,7 +131,7 @@ void SE_ResNet50::createSE_Resnet50Engine(const unsigned int maxBatchSize,
 
     // Add asymmetrical padding
     IPaddingLayer* conv0_pad = network->addPadding(*data, DimsHW{2, 2}, DimsHW{3, 3});
-    
+
     IConvolutionLayer* conv = network->addConvolution(*conv0_pad->getOutput(0), 64, DimsHW{7, 7}, weightMap["conv0_W"], convBias);
     assert(conv);
     conv->setStride(DimsHW{2, 2});
@@ -169,19 +170,19 @@ void SE_ResNet50::createSE_Resnet50Engine(const unsigned int maxBatchSize,
                 std::string conv_name = "group" + to_string(group) + "_block0_convshortcut_W";
                 std::string batch_name = "group" + to_string(group) + "_block0_convshortcut_bn";
                 // 1x1 convolution
-                IConvolutionLayer* conv1 = network->addConvolution(*previous_left, 
-                                                                    feature_space * 4, 
-                                                                    DimsHW{1, 1}, 
-                                                                    weightMap[conv_name], 
+                IConvolutionLayer* conv1 = network->addConvolution(*previous_left,
+                                                                    feature_space * 4,
+                                                                    DimsHW{1, 1},
+                                                                    weightMap[conv_name],
                                                                     convBias);
                 assert(conv1);
                 conv1->setName(("group" + to_string(group) + "_block0_convshortcut").c_str());
-                if(group!=0){   
+                if(group!=0){
                     conv1->setStride(DimsHW{2, 2});}
                 // Add batch normalization layer
                 IScaleLayer* bn1= addBN(network, *conv1->getOutput(0), weightMap, batch_name);
                 bn1->setName(("group" + to_string(group) + "_block0_convshortcut_bn").c_str());
-                
+
                 previous_left = bn1->getOutput(0);
             }
             for(int convBnRelu = 0; convBnRelu <3; convBnRelu++){
@@ -198,15 +199,15 @@ void SE_ResNet50::createSE_Resnet50Engine(const unsigned int maxBatchSize,
                 // 1x1 convolution
                 IConvolutionLayer* conv2 = network->addConvolution(*conv2_pad->getOutput(0),
                                                                    feature_space * feature[convBnRelu],
-                                                                   DimsHW{kernel[convBnRelu], kernel[convBnRelu]}, 
-                                                                   weightMap[conv_name], 
+                                                                   DimsHW{kernel[convBnRelu], kernel[convBnRelu]},
+                                                                   weightMap[conv_name],
                                                                    convBias);
                 assert(conv2);
                 conv2->setName(("group" + to_string(group) + "_block" + to_string(block) + "_conv" + to_string(convBnRelu+1)).c_str());
-    
+
                 if(group!=0 && block==0 && convBnRelu == 1){
                     conv2->setStride(DimsHW{2, 2});}
-                
+
                 // Add batch normalization layer
                 IScaleLayer* bn2 = addBN(network, *conv2->getOutput(0), weightMap, batch_name);
                 assert(bn2);
@@ -233,15 +234,15 @@ void SE_ResNet50::createSE_Resnet50Engine(const unsigned int maxBatchSize,
                     IActivationLayer* relu2 = network->addActivation(*fc1->getOutput(0), ActivationType::kRELU);
                     assert(relu2);
                     relu2->setName(("group" + to_string(group) + "_block" + to_string(block) + "_fc1_relu").c_str());
-                    
+
                     IFullyConnectedLayer* fc2 = network->addFullyConnected(*relu2->getOutput(0), feature_space * 4, weightMap[fc_name+"2_W"], weightMap[fc_name+"2_b"]);
                     assert(fc2);
                     fc2->setName((fc_name + "2").c_str());
-                    
+
                     IActivationLayer* sigmoid = network->addActivation(*fc2->getOutput(0), ActivationType::kSIGMOID);
                     assert(sigmoid);
                     sigmoid->setName(("group" + to_string(group) + "_block" + to_string(block) + "_fc1_sigmoid").c_str());
-                    
+
                     IElementWiseLayer* mul = network->addElementWise(*sigmoid->getOutput(0), *bn2->getOutput(0), ElementWiseOperation::kPROD);
                     assert(mul);
                     mul->setName(("group" + to_string(group) + "_block" + to_string(block) + "_mul").c_str());
@@ -285,7 +286,7 @@ void SE_ResNet50::createSE_Resnet50Engine(const unsigned int maxBatchSize,
         builder->setInt8Mode(true);
         builder->setInt8Calibrator(calibrator);
     }
-    
+
     // Build the engine
     std::cout << "Building the TensorRT Engine..." << std::endl;
     ICudaEngine* engine = builder->buildCudaEngine(*network);
@@ -328,4 +329,3 @@ void SE_ResNet50::doInference(const unsigned char* input, const int batchSize, f
     CHECK(cudaMemcpyAsync(output, buffers[outputIndex], batchSize * m_OutputSize * sizeof(float), cudaMemcpyDeviceToHost, m_stream));
     cudaStreamSynchronize(m_stream);
 }
-
