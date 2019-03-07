@@ -6,7 +6,7 @@ This repository contains the reference applications for video analytics tasks us
   ![DS3 Workflow](.DS3-workflow.png)
 
 ## Getting Started ##
-We currently provide three different reference applications:
+We currently provide four different reference applications:
 
 For further details, please see each project's README.
 
@@ -17,6 +17,10 @@ For further details, please see each project's README.
    The sample output from Deepstream yolo application is shown below.<br/>
 
    ![sample output](.sample_screen.png)
+
+### Anomaly Detection : [README](anomaly/README.md) ###
+  The project contains auxiliary plug-ins to show the capability of Deepstream SDK in anomaly detection.
+  ![sample output](.opticalflow.png)
 
 ### SENet : [README](senet/README.md) ###
   SENet is used to demonstrates secondary inference on detected objects.<br/>
