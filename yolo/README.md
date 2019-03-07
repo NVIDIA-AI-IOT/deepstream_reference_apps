@@ -63,7 +63,7 @@ Refer to sample config files `yolov2.txt`, `yolov2-tiny.txt`, `yolov3.txt` and `
 The trt-yolo-app located at `apps/trt-yolo` is a sample standalone app, which can be used to run inference on test images. This app does not have any deepstream dependencies and can be built independently. There is also an option of using custom build paths for TensorRT(-D TRT_SDK_ROOT)and OpenCV(-D OPENCV_ROOT). These are optional and not required if the libraries have already been installed.
 
 `$ cd apps/trt-yolo`    
-`$ mkdir build &&cd build`   
+`$ mkdir build && cd build`   
 `$ cmake -D CMAKE_BUILD_TYPE=Release ..`
 `$ make && sudo make install`   
 `$ cd ../../../`   

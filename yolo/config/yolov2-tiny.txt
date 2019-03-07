@@ -48,7 +48,7 @@
 
 #Uncomment the lines below to use a specific config param
 #--precision=kINT8
-#--calibration_table_pathdata/calibration/yolov2-tiny-calibration.table
+#--calibration_table_path=data/calibration/yolov2-tiny-calibration.table
 #--engine_file_path=
 #--print_prediction_info=true
 #--print_perf_info=true
