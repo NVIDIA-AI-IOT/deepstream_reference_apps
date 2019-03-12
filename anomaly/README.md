@@ -110,7 +110,7 @@ Anomaly detection app is using a parrallelized pipeline to process two streams a
 ![DS Anomaly Detection Pipeline](.pipeline.png)
 
 - Modify ds_pgie_config.txt under anomaly/config for /path/to/DeepStream/
-  config_infer_primary_resnet10.txt
+
   `model-file, proto-file, labelfile-path, int8-calib-file` need to be modified.
 
   For this example, all files are located in `path/to/Deeepstream/samples/models/Primary_Detector/`
