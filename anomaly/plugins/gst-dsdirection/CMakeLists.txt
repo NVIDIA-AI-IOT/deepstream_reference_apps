@@ -42,6 +42,7 @@ pkg_check_modules(GST REQUIRED gstreamer-1.0>=1.4
 set(CMAKE_CXX_FLAGS "-fPIC -std=c++11")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 add_subdirectory(dsdirection_lib)
 
@@ -51,3 +52,4 @@ link_directories(${CUDA_TOOLKIT_ROOT_DIR}/lib64 ${GST_LIBRARY_DIRS} /usr/local/d
 add_library(gstdsdirection SHARED gstdsdirection.cpp)
 
 target_link_libraries(gstdsdirection cudart nppc nppig npps nppicc nppidei nvdsgst_helper nvdsgst_meta dsdirection)
+install(TARGETS gstdsdirection LIBRARY DESTINATION "/usr/lib/x86_64-linux-gnu/gstreamer-1.0/" CONFIGURATIONS Release Debug)

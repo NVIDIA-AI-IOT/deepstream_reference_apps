@@ -21,19 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #-------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(deepstream-anomaly-app)
 enable_language(C)
 
 find_package(PkgConfig)
-
 pkg_check_modules(GST REQUIRED gstreamer-1.0>=1.4
                                gstreamer-video-1.0>=1.4
                                gstreamer-app-1.0>=1.4)
 
-include_directories(${GST_INCLUDE_DIRS} ${DS_SDK_ROOT}/sources/includes)
+set(DS_SDK_ROOT "" CACHE PATH "NVIDIA Deepstream SDK root path")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 link_directories(${GST_LIBRARY_DIRS} /usr/local/deepstream)
 
+include_directories(${GST_INCLUDE_DIRS} ${DS_SDK_ROOT}/sources/includes)
 add_executable(deepstream-anomaly-app deepstream-anomaly-app.c)
-
 target_link_libraries(deepstream-anomaly-app ${GST_LIBRARIES} rt m nvdsgst_helper nvdsgst_meta)
+
+#Install app
+install(TARGETS deepstream-anomaly-app RUNTIME DESTINATION bin CONFIGURATIONS Release Debug)

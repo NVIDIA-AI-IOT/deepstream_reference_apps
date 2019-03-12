@@ -63,10 +63,10 @@
 [property]
 gpu-id=0
 net-scale-factor=0.0039215697906911373
-model-file=/opt/DeepStream_Release/samples/models/Primary_Detector/resnet10.caffemodel
-proto-file=/opt/DeepStream_Release/samples/models/Primary_Detector/resnet10.prototxt
-labelfile-path=/opt/DeepStream_Release/samples/models/Primary_Detector/labels.txt
-int8-calib-file=/opt/DeepStream_Release/samples/models/Primary_Detector/cal_trt4.bin
+model-file=/path/to/DeepStream/samples/models/Primary_Detector/resnet10.caffemodel
+proto-file=/path/to/DeepStream/samples/models/Primary_Detector/resnet10.prototxt
+labelfile-path=/path/to/DeepStream/samples/models/Primary_Detector/labels.txt
+int8-calib-file=/path/to/DeepStream/samples/models/Primary_Detector/cal_trt4.bin
 batch-size=2
 network-mode=1
 num-detected-classes=4

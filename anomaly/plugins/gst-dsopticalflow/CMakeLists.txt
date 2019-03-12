@@ -35,6 +35,14 @@ find_package(PkgConfig)
 find_package(OpenCV REQUIRED core imgproc imgcodecs highgui dnn PATHS ${OPENCV_ROOT} ${CMAKE_SYSTEM_PREFIX_PATH} PATH_SUFFIXES build share NO_DEFAULT_PATH)
 find_package(OpenCV REQUIRED core imgproc imgcodecs highgui dnn)
 
+set(OpenCV_INCLUDE_DIRS
+  ${OpenCV_INCLUDE_DIRS}
+  ${OpenCV_INSTALL_PATH}/build/include
+  ${OpenCV_INSTALL_PATH}/build/include/opencv4
+  ${OpenCV_INSTALL_PATH}/installed/include
+  ${OpenCV_INSTALL_PATH}/installed/include/opencv4
+)
+
 pkg_check_modules(GST REQUIRED gstreamer-1.0>=1.4
                                gstreamer-video-1.0>=1.4
                                gstreamer-app-1.0>=1.4)
@@ -42,6 +50,7 @@ pkg_check_modules(GST REQUIRED gstreamer-1.0>=1.4
 set(CMAKE_CXX_FLAGS "-fPIC -std=c++11")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 add_subdirectory(dsopticalflow_lib)
 
@@ -51,3 +60,4 @@ link_directories(${CUDA_TOOLKIT_ROOT_DIR}/lib64 ${GST_LIBRARY_DIRS} /usr/local/d
 add_library(gstdsopticalflow SHARED gstdsopticalflow.cpp)
 
 target_link_libraries(gstdsopticalflow cudart nppc nppig npps nppicc nppidei nvdsgst_helper nvdsgst_meta dsopticalflow)
+install(TARGETS gstdsopticalflow LIBRARY DESTINATION "/usr/lib/x86_64-linux-gnu/gstreamer-1.0/" CONFIGURATIONS Release Debug)
