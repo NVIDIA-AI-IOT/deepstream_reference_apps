@@ -64,7 +64,7 @@ The trt-yolo-app located at `apps/trt-yolo` is a sample standalone app, which ca
 
 `$ cd apps/trt-yolo`    
 `$ mkdir build && cd build`   
-`$ cmake -D CMAKE_BUILD_TYPE=Release ..`
+`$ cmake -D CMAKE_BUILD_TYPE=Release ..`    
 `$ make && sudo make install`   
 `$ cd ../../../`   
 `$ trt-yolo-app --flagfile=/path/to/config-file.txt`
