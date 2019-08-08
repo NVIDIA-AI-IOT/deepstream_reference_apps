@@ -1,5 +1,0 @@
-/path/to/image1.jpg
-/path/to/image2.jpg
-.
-.
-.
