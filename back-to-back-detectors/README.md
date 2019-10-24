@@ -32,7 +32,7 @@ apps.
 ```
 
 Back to back detectors app pipeline:
-![DS Back to back detectors Pipeline](.backtobackdetectors_pipeline.png)
+![DS Back to back detectors Pipeline](../.backtobackdetectors_pipeline.png)
 
 ## Compilation Steps:
 ```
@@ -40,7 +40,7 @@ Back to back detectors app pipeline:
   $ ./back-to-back-detectors <h264_elementary_stream>
 ```
 The result should be like below:
-  ![DS Back to Back Detectors Screenshot](.backtobackdetectors.png)
+  ![DS Back to Back Detectors Screenshot](../.backtobackdetectors.png)
 
 NOTE:
 - Edit the paths in `secondary_detector_config.txt` to the location of the models

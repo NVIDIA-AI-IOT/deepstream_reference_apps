@@ -51,7 +51,7 @@ qtdemux ! h264parse ! nvv4l2decoder ! m.sink_1  --gst-debug=3
 
 ```
 Anomaly detection app pipeline:
-![DS Anomaly Detection Pipeline](.dsdirection_pipeline.png)
+![DS Anomaly Detection Pipeline](../.dsdirection_pipeline.png)
 
 ## Compilation Steps for Application:
 ```
@@ -60,7 +60,7 @@ Anomaly detection app pipeline:
  $ deepstream-anomaly-detection-app <uri1> [uri2] ... [uriN]
 ```
   The result should be like below:
-  ![DS Anomaly Detection Screenshot](.opticalflow.png)
+  ![DS Anomaly Detection Screenshot](../.opticalflow.png)
 
 ## NOTE:
 - Minimum supported resolution: DGPU - 160 x 64, Jetson - 256 x 96
