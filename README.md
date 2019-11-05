@@ -13,3 +13,5 @@ For further details, please see each project's README.
 ### Anomaly Detection : [README](anomaly/README.md) ###
   The project contains auxiliary dsdirection plugin to show the capability of DeepstreamSDK in anomaly detection.
   ![sample anomaly output](.opticalflow.png)
+### runtime_source_add_delete : [README](runtime_source_add_delete/README.md) ###
+  The project demonstrates adding and removing sources in runnning DeepStream pipeline.
