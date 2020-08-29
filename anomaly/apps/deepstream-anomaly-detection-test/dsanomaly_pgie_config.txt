@@ -1,23 +1,17 @@
 ################################################################################
-# Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2019-2020, NVIDIA CORPORATION.  All rights reserved.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 ################################################################################
 
 # Following properties are mandatory when engine files are not specified:
@@ -51,7 +45,7 @@
 # Other optional properties:
 #   net-scale-factor(Default=1), network-mode(Default=0 i.e FP32),
 #   model-color-format(Default=0 i.e. RGB) model-engine-file, labelfile-path,
-#   mean-file, gie-unique-id(Default=0), offsets, gie-mode (Default=1 i.e. primary),
+#   mean-file, gie-unique-id(Default=0), offsets, process-mode (Default=1 i.e. primary),
 #   custom-lib-path, network-mode(Default=0 i.e FP32)
 #
 # The values in the config file are overridden by values set through GObject
@@ -60,10 +54,12 @@
 [property]
 gpu-id=0
 net-scale-factor=0.0039215697906911373
-model-file=../../../../samples/models/Primary_Detector/resnet10.caffemodel
-proto-file=../../../../samples/models/Primary_Detector/resnet10.prototxt
-labelfile-path=../../../../samples/models/Primary_Detector/labels.txt
-int8-calib-file=../../../../samples/models/Primary_Detector/cal_trt.bin
+model-file=../../../../../../../samples/models/Primary_Detector/resnet10.caffemodel
+proto-file=../../../../../../../samples/models/Primary_Detector/resnet10.prototxt
+model-engine-file=../../../../../../../samples/models/Primary_Detector/resnet10.caffemodel_b1_gpu0_int8.engine
+labelfile-path=../../../../../../../samples/models/Primary_Detector/labels.txt
+int8-calib-file=../../../../../../../samples/models/Primary_Detector/cal_trt.bin
+force-implicit-batch-dim=1
 batch-size=1
 process-mode=1
 model-color-format=0
@@ -74,6 +70,6 @@ gie-unique-id=1
 output-blob-names=conv2d_bbox;conv2d_cov/Sigmoid
 
 [class-attrs-all]
-threshold=0.2
+pre-cluster-threshold=0.2
 eps=0.2
 group-threshold=1

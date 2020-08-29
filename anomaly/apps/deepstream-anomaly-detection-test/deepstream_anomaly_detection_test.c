@@ -1,23 +1,17 @@
 /*
- * Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2019-2020, NVIDIA CORPORATION.  All rights reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <gst/gst.h>
@@ -36,9 +30,9 @@
 #define MUXER_OUTPUT_WIDTH 1280
 #define MUXER_OUTPUT_HEIGHT 720
 
-/* Muxer batch formation timeout, for e.g. 40 millisec. Should ideally be set
+/* Muxer batch formation timeout, for e.g. 33 millisec. Should ideally be set
  * based on the fastest source's framerate. */
-#define MUXER_BATCH_TIMEOUT_USEC 3400000
+#define MUXER_BATCH_TIMEOUT_USEC 33000
 
 #define TILED_OUTPUT_WIDTH_INFER 1280
 #define TILED_OUTPUT_HEIGHT_INFER 720
@@ -193,7 +187,9 @@ int
 main (int argc, char *argv[])
 {
   GMainLoop *loop = NULL;
-  GstElement *pipeline = NULL, *streammux = NULL, *sink_of = NULL,
+  GstElement *pipeline = NULL, *streammux = NULL, *streammux_queue = NULL,
+      *sink_of = NULL, *pgie_queue = NULL, *dsdirection_queue = NULL,
+      *nvvidconv_queue = NULL, *nvosd_queue = NULL, *tiler_infer_queue = NULL,
       *tiler_of = NULL, *nvof = NULL, *nvofvisual = NULL, *dsdirection = NULL,
       *of_queue = NULL, *ofvisual_queue = NULL, *sink_infer = NULL,
       *tiler_infer = NULL, *pgie = NULL, *nvvidconv = NULL,
@@ -229,8 +225,9 @@ main (int argc, char *argv[])
 
   /* Create nvstreammux instance to form batches from one or more sources. */
   streammux = gst_element_factory_make ("nvstreammux", "stream-muxer");
+  streammux_queue = gst_element_factory_make ("queue", "streammux-queue");
 
-  if (!pipeline || !streammux) {
+  if (!pipeline || !streammux || !streammux_queue) {
     g_printerr ("(Line=%d) One element could not be created. Exiting.\n",
         __LINE__);
     return -1;
@@ -276,6 +273,7 @@ main (int argc, char *argv[])
 
   /* Use nvinfer to infer on batched frame. */
   pgie = gst_element_factory_make ("nvinfer", "primary-nvinference-engine");
+  pgie_queue = gst_element_factory_make ("queue", "nvinfer-queue");
 
   /* For Optical Flow output */
   tiler_of = gst_element_factory_make ("nvmultistreamtiler", "nvtiler-of");
@@ -283,12 +281,15 @@ main (int argc, char *argv[])
    * on the source of the frames. */
   tiler_infer =
       gst_element_factory_make ("nvmultistreamtiler", "nvtiler-infer");
+  tiler_infer_queue =
+      gst_element_factory_make ("queue", "nvtiler-infer-queue");
 
   /* create nv optical flow element */
   nvof = gst_element_factory_make ("nvof", "nvopticalflow");
 
   /* create nv ds direction element */
   dsdirection = gst_element_factory_make ("dsdirection", "dsdirection");
+  dsdirection_queue = gst_element_factory_make ("queue", "dsdirection-queue");
 
   /* create nv optical flow visualisation element */
   nvofvisual = gst_element_factory_make ("nvofvisual", "nvopticalflowvisual");
@@ -307,9 +308,11 @@ main (int argc, char *argv[])
 
   /* Use convertor to convert from NV12 to RGBA as required by nvosd */
   nvvidconv = gst_element_factory_make ("nvvideoconvert", "nvvideo-converter");
+  nvvidconv_queue = gst_element_factory_make ("queue", "nvvideoconvert-queue");
 
   /* Create OSD to draw on the converted RGBA buffer */
   nvosd = gst_element_factory_make ("nvdsosd", "nv-onscreendisplay");
+  nvosd_queue = gst_element_factory_make ("queue", "nvdsosd-queue");
 
   /* Finally render the osd output */
 #ifdef PLATFORM_TEGRA
@@ -341,6 +344,15 @@ main (int argc, char *argv[])
     g_printerr ("One Infer element could not be created. Exiting.\n");
     return -1;
   }
+
+  if (!pgie_queue || !tiler_infer_queue || !nvvidconv_queue || !nvosd_queue) {
+    g_printerr ("One Queue element could not be created. Exiting.\n");
+    return -1;
+  }
+
+  /* We set the sync value of both sink elements */
+  g_object_set (G_OBJECT (sink_of), "sync", 1, NULL);
+  g_object_set (G_OBJECT (sink_infer), "sync", 1, NULL);
 
   g_object_set (G_OBJECT (streammux), "width", MUXER_OUTPUT_WIDTH, "height",
       MUXER_OUTPUT_HEIGHT, "batch-size", num_sources,
@@ -381,25 +393,28 @@ main (int argc, char *argv[])
 
   /* Set up the pipeline */
   /* we add all elements into the pipeline */
-  gst_bin_add_many (GST_BIN (pipeline), pgie, nvof, of_queue, dsdirection, tee,
+  gst_bin_add_many (GST_BIN (pipeline), streammux_queue, pgie, pgie_queue, 
+      nvof, of_queue, dsdirection, dsdirection_queue, tee,
       of_branch_queue, nvofvisual, ofvisual_queue, tiler_of, sink_of,
-      infer_branch_queue, tiler_infer, nvvidconv, nvosd, sink_infer, NULL);
+      infer_branch_queue, tiler_infer, tiler_infer_queue, nvvidconv,
+      nvvidconv_queue, nvosd, nvosd_queue, sink_infer, NULL);
 #ifdef PLATFORM_TEGRA
   gst_bin_add (GST_BIN (pipeline), transform_of);
   gst_bin_add (GST_BIN (pipeline), transform_infer);
 #endif
-  if ((!gst_element_link_many (streammux, pgie, nvof, of_queue, dsdirection,
-              tee, NULL))
+  if ((!gst_element_link_many (streammux, streammux_queue, pgie, pgie_queue,
+              nvof, of_queue, dsdirection, dsdirection_queue, tee, NULL))
       || (!gst_element_link_many (of_branch_queue, nvofvisual, ofvisual_queue,
               tiler_of, NULL))
-      || (!gst_element_link_many (infer_branch_queue, tiler_infer, nvvidconv,
-              nvosd, NULL)) ||
+      || (!gst_element_link_many (infer_branch_queue, tiler_infer,
+              tiler_infer_queue, nvvidconv, nvvidconv_queue, nvosd,
+	      nvosd_queue, NULL)) ||
 #ifdef PLATFORM_TEGRA
       (!gst_element_link_many (tiler_of, transform_of, sink_of, NULL)) ||
-      (!gst_element_link_many (nvosd, transform_infer, sink_infer, NULL))) {
+      (!gst_element_link_many (nvosd_queue, transform_infer, sink_infer, NULL))) {
 #else
       (!gst_element_link_many (tiler_of, sink_of, NULL)) ||
-      (!gst_element_link_many (nvosd, sink_infer, NULL))) {
+      (!gst_element_link_many (nvosd_queue, sink_infer, NULL))) {
 #endif
     g_printerr ("Elements could not be linked. Exiting.\n");
     return -1;

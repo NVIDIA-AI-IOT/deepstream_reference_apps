@@ -1,4 +1,4 @@
-# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 4.0
+# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 5.0
 
 ## Introduction
 The project contains anomaly detection application and auxiliary plug-ins to show the
@@ -11,11 +11,8 @@ to install the prequisites for Deepstream SDK apps.
 
 ## Getting Started
 
-- Export the environment variable:
-  `export DS_SDK_ROOT="your deepstream SDK root"`
-
 - Preferably clone the app in
-  `$DS_SDK_ROOT/sources/apps/sample_apps/`
+  `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/`
 
 - Edit the `dsanomaly_pgie_config.txt` according to the location of the models to be used
 
@@ -37,8 +34,8 @@ nvmultistreamtiler width=1920 height=1080 ! nvvideoconvert ! nvdsosd ! nveglgles
 ```
 gst-launch-1.0 filesrc location = samples/streams/sample_1080p_h264.mp4 ! qtdemux ! h264parse ! nvv4l2decoder ! m.sink_0 \
 nvstreammux name=m batch-size=1 width=1280 height=720 ! nvinfer config-file-path= samples/configs/deepstream-app/config_infer_primary.txt  \
-! nvof ! tee name=t ! queue ! nvofvisual ! nvmultistreamtiler width=1920 height=1080 !  nvegltransform ! nveglglessink t. ! queue ! dsdirection ! \
-nvmultistreamtiler width=1920 height=1080 ! nvvideoconvert ! nvdsosd ! nvegltransform ! nveglglessink
+! nvof ! tee name=t ! queue ! nvofvisual ! nvmultistreamtiler width=1920 height=1080 !  nvegltransform ! nveglglessink sync=0 t. ! queue ! dsdirection ! \
+nvmultistreamtiler width=1920 height=1080 ! nvvideoconvert ! nvdsosd ! nvegltransform ! nveglglessink sync=0
 ```
 
 3. Test direction calculation using optical flow on two video inputs on dGPU, run following commands
@@ -51,7 +48,7 @@ qtdemux ! h264parse ! nvv4l2decoder ! m.sink_1  --gst-debug=3
 
 ```
 Anomaly detection app pipeline:
-![DS Anomaly Detection Pipeline](../.dsdirection_pipeline.png)
+![DS Anomaly Detection Pipeline](.dsdirection_pipeline.png)
 
 ## Compilation Steps for Application:
 ```
@@ -60,7 +57,7 @@ Anomaly detection app pipeline:
  $ deepstream-anomaly-detection-app <uri1> [uri2] ... [uriN]
 ```
   The result should be like below:
-  ![DS Anomaly Detection Screenshot](../.opticalflow.png)
+  ![DS Anomaly Detection Screenshot](.opticalflow.png)
 
 ## NOTE:
 - Minimum supported resolution: DGPU - 160 x 64, Jetson - 256 x 96

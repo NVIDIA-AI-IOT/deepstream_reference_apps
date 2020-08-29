@@ -1,4 +1,4 @@
-# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 4.0
+# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 5.0
 
 ## Introduction
 The project contains Back to Back detector application to show the
@@ -12,18 +12,17 @@ apps.
 
 ## Getting Started
 
-- Export the environment variable:
-  `export DS_SDK_ROOT="your deepstream SDK root"`
-
 - Preferably clone the app in
-  `$DS_SDK_ROOT/sources/apps/sample_apps/`
+  `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/`
+
+- Edit the `primary_detector_config.txt` according to the location of the models to be used
 
 ## Steps to download the models:
 - To download the models for the second nvinfer, visit:
   https://github.com/NVIDIA-AI-IOT/redaction_with_deepstream
 -  Use the following commands:
 ```
-  $ cd $DS_SDK_ROOT/samples/models
+  $ cd /opt/nvidia/deepstream/deepstream/samples/models
   $ mkdir Secondary_FaceDetect
   $ cd Secondary_FaceDetect
   $ wget https://github.com/NVIDIA-AI-IOT/redaction_with_deepstream/raw/master/fd_lpd_model/fd_lpd.caffemodel
@@ -32,7 +31,7 @@ apps.
 ```
 
 Back to back detectors app pipeline:
-![DS Back to back detectors Pipeline](../.backtobackdetectors_pipeline.png)
+![DS Back to back detectors Pipeline](.backtobackdetectors_pipeline.png)
 
 ## Compilation Steps:
 ```
@@ -40,9 +39,10 @@ Back to back detectors app pipeline:
   $ ./back-to-back-detectors <h264_elementary_stream>
 ```
 The result should be like below:
-  ![DS Back to Back Detectors Screenshot](../.backtobackdetectors.png)
+  ![DS Back to Back Detectors Screenshot](.backtobackdetectors.png)
 
 NOTE:
+- Run the above commands with sudo.
 - Edit the paths in `secondary_detector_config.txt` to the location of the models
   downloaded from the above site.
 

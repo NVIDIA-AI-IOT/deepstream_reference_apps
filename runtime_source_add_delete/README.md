@@ -1,4 +1,4 @@
-# RUNTIME SOURCE ADDITION DELETION REFERENCE APP USING DEEPSTREAMSDK 4.0
+# RUNTIME SOURCE ADDITION DELETION REFERENCE APP USING DEEPSTREAMSDK 5.0
 
 ## Introduction
 The project contains Runtime source addition/deletion application to show the
@@ -11,11 +11,8 @@ to install the prequisites for Deepstream SDK apps.
 
 ## Getting Started
 
-- Export the environment variable:
-  `export DS_SDK_ROOT="your deepstream SDK root"`
-
 - Preferably clone the app in
-  `$DS_SDK_ROOT/sources/apps/sample_apps/`
+  `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/`
 
 - Edit all the inference models config files according to the location of the models to be used
 
