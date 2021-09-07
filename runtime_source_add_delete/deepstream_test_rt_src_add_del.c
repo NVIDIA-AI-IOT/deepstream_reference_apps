@@ -59,12 +59,16 @@ GMainLoop *loop = NULL;
 #define CONFIG_GROUP_TRACKER_LL_LIB_FILE "ll-lib-file"
 #define CONFIG_GROUP_TRACKER_ENABLE_BATCH_PROCESS "enable-batch-process"
 
+
 gint g_num_sources = 0;
 gint g_source_id_list[MAX_NUM_SOURCES];
 gboolean g_eos_list[MAX_NUM_SOURCES];
 gboolean g_source_enabled[MAX_NUM_SOURCES];
+GstPad * pad_list[MAX_NUM_SOURCES];
 GstElement **g_source_bin_list = NULL;
-GMutex eos_lock;
+GMutex eos_lock,delete_lock;
+gboolean delete_flag;
+GCond delete_cond;
 
 /* Assuming Resnet 10 model packaged in DS SDK */
 gchar pgie_classes_str[4][32] = { "Vehicle", "TwoWheeler", "Person",
@@ -144,6 +148,7 @@ cb_newpad (GstElement * decodebin, GstPad * pad, gpointer data)
     GstPad *sinkpad = NULL;
     g_snprintf (pad_name, 15, "sink_%u", source_id);
     sinkpad = gst_element_get_request_pad (streammux, pad_name);
+    pad_list[source_id]= gst_object_ref (pad);
     if (gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK) {
       g_print ("Failed to link decodebin to pipeline\n");
     } else {
@@ -173,52 +178,62 @@ create_uridecode_bin (guint index, gchar * filename)
   return bin;
 }
 
+static GstPadProbeReturn
+delete_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
+{
+  gint source_id   = GPOINTER_TO_INT(data);
+  GstPad *sinkpad, *srcpad;
+  gchar pad_name[16];
+  g_mutex_lock (&delete_lock);
+
+  // getting the pads
+  g_snprintf (pad_name, 15, "sink_%u", source_id);
+  sinkpad = gst_element_get_static_pad (streammux, pad_name);
+
+  // unlink 
+  gst_pad_unlink (pad_list[source_id],sinkpad);
+
+  // deleting streammux pad
+  gst_pad_send_event (sinkpad, gst_event_new_flush_stop (FALSE));
+  gst_element_release_request_pad (streammux, sinkpad);
+  gst_object_unref (sinkpad);
+
+  delete_flag = TRUE;
+  g_cond_signal(&delete_cond);
+  g_mutex_unlock (&delete_lock);
+  
+  return GST_PAD_PROBE_PASS;
+}
+
 static void
 stop_release_source (gint source_id)
 {
   GstStateChangeReturn state_return;
   gchar pad_name[16];
   GstPad *sinkpad = NULL;
-  state_return =
-      gst_element_set_state (g_source_bin_list[source_id], GST_STATE_NULL);
-  switch (state_return) {
-    case GST_STATE_CHANGE_SUCCESS:
-      g_print ("STATE CHANGE SUCCESS\n\n");
-      g_snprintf (pad_name, 15, "sink_%u", source_id);
-      sinkpad = gst_element_get_static_pad (streammux, pad_name);
-      gst_pad_send_event (sinkpad, gst_event_new_flush_stop (FALSE));
-      gst_element_release_request_pad (streammux, sinkpad);
-      g_print ("STATE CHANGE SUCCESS %p\n\n", sinkpad);
-      gst_object_unref (sinkpad);
-      gst_bin_remove (GST_BIN (pipeline), g_source_bin_list[source_id]);
-      source_id--;
-      g_num_sources--;
-      break;
-    case GST_STATE_CHANGE_FAILURE:
-      g_print ("STATE CHANGE FAILURE\n\n");
-      break;
-    case GST_STATE_CHANGE_ASYNC:
-      g_print ("STATE CHANGE ASYNC\n\n");
-      state_return =
-          gst_element_get_state (g_source_bin_list[source_id], NULL, NULL,
-          GST_CLOCK_TIME_NONE);
-      g_snprintf (pad_name, 15, "sink_%u", source_id);
-      sinkpad = gst_element_get_static_pad (streammux, pad_name);
-      gst_pad_send_event (sinkpad, gst_event_new_flush_stop (FALSE));
-      gst_element_release_request_pad (streammux, sinkpad);
-      g_print ("STATE CHANGE ASYNC %p\n\n", sinkpad);
-      gst_object_unref (sinkpad);
-      gst_bin_remove (GST_BIN (pipeline), g_source_bin_list[source_id]);
-      source_id--;
-      g_num_sources--;
-      break;
-    case GST_STATE_CHANGE_NO_PREROLL:
-      g_print ("STATE CHANGE NO PREROLL\n\n");
-      break;
-    default:
-      break;
-  }
 
+  delete_flag = FALSE;
+  
+  gst_pad_add_probe ( pad_list[source_id], GST_PAD_PROBE_TYPE_IDLE, delete_probe_cb, GINT_TO_POINTER (source_id), NULL);
+  
+  g_mutex_lock (&delete_lock);
+  while(!delete_flag)  {
+    g_cond_wait(&delete_cond,&delete_lock);
+  }
+  g_mutex_unlock (&delete_lock);
+
+  // set decodebin state to NULL
+  gst_element_set_state ( g_source_bin_list[source_id], GST_STATE_NULL);
+
+  // remove decodebin from pipeline
+  gst_bin_remove (GST_BIN (pipeline), g_source_bin_list[source_id]);
+ 
+  // clearing the sourcebin list and sourcebin srcpad list
+  g_source_bin_list[source_id] = NULL;
+  pad_list[source_id] = NULL;
+
+  source_id--;
+  g_num_sources--;
 
 }
 
@@ -482,6 +497,7 @@ main (int argc, char *argv[])
   loop = g_main_loop_new (NULL, FALSE);
 
   g_mutex_init (&eos_lock);
+  g_mutex_init (&delete_lock);
   /* Create gstreamer elements */
   /* Create Pipeline element that will form a connection of other elements */
   pipeline = gst_pipeline_new ("dstest-pipeline");
