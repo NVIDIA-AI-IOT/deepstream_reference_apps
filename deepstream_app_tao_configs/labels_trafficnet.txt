@@ -1,0 +1,4 @@
+Car
+Bicycle
+Person
+Roadsign

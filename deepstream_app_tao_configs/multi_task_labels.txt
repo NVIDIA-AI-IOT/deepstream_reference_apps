@@ -1,0 +1,3 @@
+Fall;Spring;Summer;Winter
+Bags;Bottomwear;Eyewear;Fragrance;Innerwear;Jewellery;Sandal;Shoes;Topwear;Watches
+Black;Blue;Brown;Green;Grey;Navy Blue;Pink;Purple;Red;Silver;White
