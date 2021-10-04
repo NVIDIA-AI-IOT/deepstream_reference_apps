@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -38,34 +38,34 @@ Downloading the config files
 *******************************************************************************************
 Config files are now present in https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps
 under `deepstream_app_tao_configs` folder. There are two ways to obtain these configs:
-1. Clone `deepstream_reference_apps` repo as per instructions in the README.
-   Run the following commands:
+1. Clone `deepstream_reference_apps` repo in
+   `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/` using command:
+   $ sudo git clone https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps.git
+   After cloning, run the following commands:
    $ cd /opt/nvidia/deepstream/deepstream/
    $ sudo cp \
-     sources/apps/sample_apps/deepstream_reference_apps/* \
-     samples/configs/tao-pretrained-models/`
+     sources/apps/sample_apps/deepstream_reference_apps/deepstream_app_tao_configs/* \
+     samples/configs/tao_pretrained_models/
 2. Run the following commands:
    $ cd /opt/nvidia/deepstream/deepstream/samples/configs/
    $ sudo apt-get install git-svn
-   $ git svn clone \
+   $ sudo git svn clone \
      https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps/trunk/deepstream_app_tao_configs
-   $ mv deepstream_app_tao_configs tao-pretrained-models
-
-NOTE: The above commands will require `sudo` or root permissions
+   $ sudo cp deepstream_app_tao_configs/* tao_pretrained_models/
+   $ sudo rm -rf deepstream_app_tao_configs/
 
 *******************************************************************************
 Downloading the models
 *******************************************************************************
-The models can be downloaded by running the following commands from the same
-directory as this README. This will ensure that the models are downloaded to
-the paths that the config files expect:
+The models can be downloaded by running the following commands:
 
-apt install wget
-apt install zip
-./download_models.sh
+$ sudo apt install wget
+$ sudo apt install zip
+$ cd /opt/nvidia/deepstream/deepstream/samples/configs/tao_pretrained_models/
+$ sudo ./download_models.sh
 
-For how to download TAO3.0 models,
-please refer https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/release/tao3.0#2-download-models to get the models
+For more information on TAO3.0 models,
+please refer https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/release/tao3.0#2-download-models.
 
 *******************************************************************************
 Running the models in DeepStream:
@@ -93,9 +93,9 @@ Running the models in DeepStream:
    - https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/master/TRT-OSS/Jetson for Jetson
    - https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/master/TRT-OSS/x86 for x86
 - Run deepstream-app using one of the deepstream_app_* configuration files.
-  $ deepstream-app -c <deepstream_app_config>
+  $ sudo deepstream-app -c <deepstream_app_config>
   e.g.
-  $ deepstream-app -c deepstream_app_source1_dashcamnet_vehiclemakenet_vehicletypenet.txt
+  $ sudo deepstream-app -c deepstream_app_source1_dashcamnet_vehiclemakenet_vehicletypenet.txt
 
   NOTE: Sample images/clips for FaceDetectIR would be available on it's NGC
         page.
