@@ -34,7 +34,7 @@ batch-size=1
 process-mode=1
 model-color-format=0
 ## 0=FP32, 1=INT8, 2=FP16 mode
-network-mode=1
+network-mode=2
 num-detected-classes=3
 cluster-mode=2
 interval=0
@@ -43,22 +43,23 @@ output-blob-names=output_bbox/BiasAdd;output_cov/Sigmoid
 
 #Use the config params below for dbscan clustering mode
 #[class-attrs-all]
-#detected-min-w=4
-#detected-min-h=4
-#minBoxes=3
-#eps=0.7
+detected-min-w=4
+detected-min-h=4
+minBoxes=3
+eps=0.7
+pre-cluster-threshold=0.4
 
 #Use the config params below for NMS clustering mode
 [class-attrs-all]
-topk=20
-nms-iou-threshold=0.5
-pre-cluster-threshold=0.2
+# topk=20
+# nms-iou-threshold=0.5
+# pre-cluster-threshold=0.2
 
 ## Per class configurations
-[class-attrs-0]
-topk=20
-nms-iou-threshold=0.5
-pre-cluster-threshold=0.4
+# [class-attrs-0]
+# topk=20
+# nms-iou-threshold=0.5
+# pre-cluster-threshold=0.4
 
 #[class-attrs-1]
 #pre-cluster-threshold=0.05
