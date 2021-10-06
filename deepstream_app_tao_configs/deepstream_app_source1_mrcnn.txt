@@ -84,7 +84,6 @@ gie-unique-id=1
 # model-engine-file=../../models/tao_pretrained_models/mrcnn/mask_rcnn_resnet50.etlt_b1_gpu0_int8.engine
 #config-file=config_infer_primary_mrcnn.txt
 config-file=config_infer_primary_peopleSegNet.txt
-#config-file=config_infer_primary_peopleSemSegNet.txt
 
 [sink1]
 enable=0
