@@ -39,8 +39,8 @@ num-detected-classes=2
 interval=0
 gie-unique-id=1
 network-type=3
-output-blob-names=generate_detections;mask_head/mask_fcn_logits/BiasAdd
-parse-bbox-instance-mask-func-name=NvDsInferParseCustomMrcnnTLT
+output-blob-names=generate_detections;mask_fcn_logits/BiasAdd
+parse-bbox-instance-mask-func-name=NvDsInferParseCustomMrcnnTLTV2
 custom-lib-path=/opt/nvidia/deepstream/deepstream-6.0/lib/libnvds_infercustomparser.so
 #no cluster
 ## 1=DBSCAN, 2=NMS, 3= DBSCAN+NMS Hybrid, 4 = None(No clustering)
@@ -52,9 +52,4 @@ workspace-size=1000
 output-instance-mask=1
 
 [class-attrs-all]
-roi-top-offset=0
-roi-bottom-offset=0
-detected-min-w=0
-detected-min-h=0
-detected-max-w=0
-detected-max-h=0
+pre-cluster-threshold=0.8
