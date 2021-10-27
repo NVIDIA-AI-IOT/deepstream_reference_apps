@@ -83,8 +83,8 @@ gie-unique-id=1
 #config-file=config_infer_primary_dssd.txt
 #config-file=config_infer_primary_retinanet.txt
 #config-file=config_infer_primary_yolov3.txt
-#config-file=config_infer_primary_yolov4.txt
-config-file=config_infer_primary_detectnet_v2.txt
+config-file=config_infer_primary_yolov4.txt
+#config-file=config_infer_primary_detectnet_v2.txt
 
 [sink1]
 enable=0

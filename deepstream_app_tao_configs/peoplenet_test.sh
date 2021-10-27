@@ -27,11 +27,11 @@ echo "==================================================================="
 echo "begin download models for peopleNet "
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.1
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1/files/resnet34_peoplenet_pruned_int8.etlt \
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1.1/files/resnet34_peoplenet_pruned_int8.etlt \
   -O ../../models/tao_pretrained_models/peopleNet/V2.1/resnet34_peoplenet_pruned_int8.etlt
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1/files/resnet34_peoplenet_pruned_int8_gpu.txt \
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1.1/files/resnet34_peoplenet_pruned_int8_gpu.txt \
   -O ../../models/tao_pretrained_models/peopleNet/V2.1/resnet34_peoplenet_pruned_int8_gpu.txt
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1/files/labels.txt \
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1.1/files/labels.txt \
   -O ../../models/tao_pretrained_models/peopleNet/V2.1/labels.txt
 
 echo "==================================================================="

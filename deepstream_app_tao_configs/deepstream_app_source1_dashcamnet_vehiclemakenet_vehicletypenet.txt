@@ -49,7 +49,7 @@ width=1920
 height=1080
 
 [sink0]
-enable=0
+enable=1
 #Type - 1=FakeSink 2=EglSink 3=File
 type=2
 sync=1
@@ -80,7 +80,7 @@ gie-unique-id=1
 config-file=config_infer_primary_dashcamnet.txt
 
 [sink1]
-enable=1
+enable=0
 type=3
 #1=mp4 2=mkv
 container=1
