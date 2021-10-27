@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2020-2021, NVIDIA CORPORATION.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <math.h>
 #include <string.h>
 #include <sys/time.h>
+#include <cuda_runtime_api.h>
 
 #include "gstnvdsmeta.h"
 #include "gst-nvmessage.h"
@@ -195,10 +196,9 @@ main (int argc, char *argv[])
       *tiler_infer = NULL, *pgie = NULL, *nvvidconv = NULL,
       *nvosd = NULL, *tee = NULL, *of_branch_queue = NULL, *infer_branch_queue =
       NULL;
-#ifdef PLATFORM_TEGRA
   GstElement *transform_of = NULL;
   GstElement *transform_infer = NULL;
-#endif
+
   GstBus *bus = NULL;
   guint bus_watch_id;
   guint i, num_sources;
@@ -207,6 +207,11 @@ main (int argc, char *argv[])
 
   GstPad *tee_of_pad, *tee_infer_pad;
   GstPad *queue_of_pad, *queue_infer_pad;
+
+  int current_device = -1;
+  cudaGetDevice(&current_device);
+  struct cudaDeviceProp prop;
+  cudaGetDeviceProperties(&prop, current_device);
 
   /* Check input arguments */
   if (argc < 2) {
@@ -315,17 +320,17 @@ main (int argc, char *argv[])
   nvosd_queue = gst_element_factory_make ("queue", "nvdsosd-queue");
 
   /* Finally render the osd output */
-#ifdef PLATFORM_TEGRA
-  transform_of =
-      gst_element_factory_make ("nvegltransform", "nvegl-transform-of");
-  transform_infer =
-      gst_element_factory_make ("nvegltransform", "nvegl-transform-infer");
+  if(prop.integrated) {
+    transform_of =
+        gst_element_factory_make ("nvegltransform", "nvegl-transform-of");
+    transform_infer =
+        gst_element_factory_make ("nvegltransform", "nvegl-transform-infer");
 
-  if (!transform_of || !transform_infer) {
-    g_printerr ("nvegltransform element could not be created. Exiting.\n");
-    return -1;
+    if (!transform_of || !transform_infer) {
+      g_printerr ("nvegltransform element could not be created. Exiting.\n");
+      return -1;
+    }
   }
-#endif
   sink_of = gst_element_factory_make ("nveglglessink", "nvelgglessink-of");
   sink_infer =
       gst_element_factory_make ("nveglglessink", "nvelgglessink-infer");
@@ -398,26 +403,39 @@ main (int argc, char *argv[])
       of_branch_queue, nvofvisual, ofvisual_queue, tiler_of, sink_of,
       infer_branch_queue, tiler_infer, tiler_infer_queue, nvvidconv,
       nvvidconv_queue, nvosd, nvosd_queue, sink_infer, NULL);
-#ifdef PLATFORM_TEGRA
-  gst_bin_add (GST_BIN (pipeline), transform_of);
-  gst_bin_add (GST_BIN (pipeline), transform_infer);
-#endif
-  if ((!gst_element_link_many (streammux, streammux_queue, pgie, pgie_queue,
-              nvof, of_queue, dsdirection, dsdirection_queue, tee, NULL))
-      || (!gst_element_link_many (of_branch_queue, nvofvisual, ofvisual_queue,
-              tiler_of, NULL))
-      || (!gst_element_link_many (infer_branch_queue, tiler_infer,
-              tiler_infer_queue, nvvidconv, nvvidconv_queue, nvosd,
-	      nvosd_queue, NULL)) ||
-#ifdef PLATFORM_TEGRA
-      (!gst_element_link_many (tiler_of, transform_of, sink_of, NULL)) ||
-      (!gst_element_link_many (nvosd_queue, transform_infer, sink_infer, NULL))) {
-#else
-      (!gst_element_link_many (tiler_of, sink_of, NULL)) ||
-      (!gst_element_link_many (nvosd_queue, sink_infer, NULL))) {
-#endif
-    g_printerr ("Elements could not be linked. Exiting.\n");
-    return -1;
+
+  if(prop.integrated) {
+    gst_bin_add (GST_BIN (pipeline), transform_of);
+    gst_bin_add (GST_BIN (pipeline), transform_infer);
+  }
+
+  if(prop.integrated) {
+    if ((!gst_element_link_many (streammux, streammux_queue, pgie, pgie_queue,
+                nvof, of_queue, dsdirection, dsdirection_queue, tee, NULL))
+        || (!gst_element_link_many (of_branch_queue, nvofvisual, ofvisual_queue,
+                tiler_of, NULL))
+        || (!gst_element_link_many (infer_branch_queue, tiler_infer,
+                tiler_infer_queue, nvvidconv, nvvidconv_queue, nvosd,
+          nvosd_queue, NULL)) ||
+        (!gst_element_link_many (tiler_of, transform_of, sink_of, NULL)) ||
+        (!gst_element_link_many (nvosd_queue, transform_infer, sink_infer, NULL))) {
+
+      g_printerr ("Elements could not be linked. Exiting.\n");
+      return -1;
+    }
+  } else {
+    if ((!gst_element_link_many (streammux, streammux_queue, pgie, pgie_queue,
+                nvof, of_queue, dsdirection, dsdirection_queue, tee, NULL))
+        || (!gst_element_link_many (of_branch_queue, nvofvisual, ofvisual_queue,
+                tiler_of, NULL))
+        || (!gst_element_link_many (infer_branch_queue, tiler_infer,
+                tiler_infer_queue, nvvidconv, nvvidconv_queue, nvosd,
+          nvosd_queue, NULL)) ||
+        (!gst_element_link_many (tiler_of, sink_of, NULL)) ||
+        (!gst_element_link_many (nvosd_queue, sink_infer, NULL))) {
+      g_printerr ("Elements could not be linked. Exiting.\n");
+      return -1;
+    }
   }
 
   /* Manually link the Tee, which has "Request" pads */

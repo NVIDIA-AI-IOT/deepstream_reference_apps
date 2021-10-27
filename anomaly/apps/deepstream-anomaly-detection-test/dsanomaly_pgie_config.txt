@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2019-2020, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2019-2021, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,8 +68,9 @@ num-detected-classes=4
 interval=0
 gie-unique-id=1
 output-blob-names=conv2d_bbox;conv2d_cov/Sigmoid
+cluster-mode=2
 
 [class-attrs-all]
 pre-cluster-threshold=0.2
-eps=0.2
-group-threshold=1
+topk=20
+nms-iou-threshold=0.5

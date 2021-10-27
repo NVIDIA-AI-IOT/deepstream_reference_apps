@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2020-2021, NVIDIA CORPORATION.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <glib.h>
 #include <stdio.h>
 #include "gstnvdsmeta.h"
+#include <cuda_runtime_api.h>
 
 #define MAX_DISPLAY_LEN 64
 
@@ -49,11 +50,11 @@ gchar pgie_classes_str[4][32] = { "Vehicle", "TwoWheeler", "Person",
 #define PRIMARY_DETECTOR_UID 1
 #define SECONDARY_DETECTOR_UID 2
 
-/* osd_sink_pad_buffer_probe  will extract metadata received on OSD sink pad
+/* nvvidconv_sink_pad_buffer_probe  will extract metadata received on nvvideoconvert sink pad
  * and update params for drawing rectangle, object information etc. */
 
 static GstPadProbeReturn
-osd_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
+nvvidconv_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer u_data)
 {
     GstBuffer *buf = (GstBuffer *) info->data;
@@ -177,12 +178,15 @@ main (int argc, char *argv[])
   GstElement *pipeline = NULL, *source = NULL, *h264parser = NULL,
       *decoder = NULL, *streammux = NULL, *sink = NULL, *primary_detector = NULL,
       *secondary_detector = NULL, *nvvidconv = NULL, *nvosd = NULL;
-#ifdef PLATFORM_TEGRA
   GstElement *transform = NULL;
-#endif
   GstBus *bus = NULL;
   guint bus_watch_id;
-  GstPad *osd_sink_pad = NULL;
+  GstPad *nvvidconv_sink_pad = NULL;
+
+  int current_device = -1;
+  cudaGetDevice(&current_device);
+  struct cudaDeviceProp prop;
+  cudaGetDeviceProperties(&prop, current_device);
 
   /* Check input arguments */
   if (argc != 2) {
@@ -228,9 +232,9 @@ main (int argc, char *argv[])
   nvosd = gst_element_factory_make ("nvdsosd", "nv-onscreendisplay");
 
   /* Finally render the osd output */
-#ifdef PLATFORM_TEGRA
-  transform = gst_element_factory_make ("nvegltransform", "nvegl-transform");
-#endif
+  if(prop.integrated) {
+    transform = gst_element_factory_make ("nvegltransform", "nvegl-transform");
+  }
   sink = gst_element_factory_make ("nveglglessink", "nvvideo-renderer");
 
   if (!source || !h264parser || !decoder || !primary_detector || !secondary_detector
@@ -239,12 +243,12 @@ main (int argc, char *argv[])
     return -1;
   }
 
-#ifdef PLATFORM_TEGRA
-  if(!transform) {
-    g_printerr ("One tegra element could not be created. Exiting.\n");
-    return -1;
+  if(prop.integrated) {
+    if(!transform) {
+      g_printerr ("One tegra element could not be created. Exiting.\n");
+      return -1;
+    }
   }
-#endif
 
   /* we set the input filename to the source element */
   g_object_set (G_OBJECT (source), "location", argv[1], NULL);
@@ -270,15 +274,15 @@ main (int argc, char *argv[])
 
   /* Set up the pipeline */
   /* we add all elements into the pipeline */
-#ifdef PLATFORM_TEGRA
-  gst_bin_add_many (GST_BIN (pipeline),
-      source, h264parser, decoder, streammux, primary_detector, secondary_detector,
-      nvvidconv, nvosd, transform, sink, NULL);
-#else
-  gst_bin_add_many (GST_BIN (pipeline),
-      source, h264parser, decoder, streammux, primary_detector, secondary_detector,
-      nvvidconv, nvosd, sink, NULL);
-#endif
+  if(prop.integrated) {
+    gst_bin_add_many (GST_BIN (pipeline),
+        source, h264parser, decoder, streammux, primary_detector, secondary_detector,
+        nvvidconv, nvosd, transform, sink, NULL);
+  } else {
+    gst_bin_add_many (GST_BIN (pipeline),
+        source, h264parser, decoder, streammux, primary_detector, secondary_detector,
+        nvvidconv, nvosd, sink, NULL);
+  }
 
   GstPad *sinkpad, *srcpad;
   gchar pad_name_sink[16] = "sink_0";
@@ -313,29 +317,29 @@ main (int argc, char *argv[])
     return -1;
   }
 
-#ifdef PLATFORM_TEGRA
-  if (!gst_element_link_many (streammux, primary_detector, secondary_detector,
-      nvvidconv, nvosd, transform, sink, NULL)) {
-    g_printerr ("Elements could not be linked: 2. Exiting.\n");
-    return -1;
+  if(prop.integrated) {
+    if (!gst_element_link_many (streammux, primary_detector, secondary_detector,
+        nvvidconv, nvosd, transform, sink, NULL)) {
+      g_printerr ("Elements could not be linked: 2. Exiting.\n");
+      return -1;
+    }
+  } else {
+    if (!gst_element_link_many (streammux, primary_detector, secondary_detector,
+        nvvidconv, nvosd, sink, NULL)) {
+      g_printerr ("Elements could not be linked: 2. Exiting.\n");
+      return -1;
+    }
   }
-#else
-  if (!gst_element_link_many (streammux, primary_detector, secondary_detector,
-      nvvidconv, nvosd, sink, NULL)) {
-    g_printerr ("Elements could not be linked: 2. Exiting.\n");
-    return -1;
-  }
-#endif
 
   /* Lets add probe to get informed of the meta data generated, we add probe to
-   * the sink pad of the osd element, since by that time, the buffer would have
+   * the sink pad of the nvvideoconvert element, since by that time, the buffer would have
    * had got all the metadata. */
-  osd_sink_pad = gst_element_get_static_pad (nvosd, "sink");
-  if (!osd_sink_pad)
+  nvvidconv_sink_pad = gst_element_get_static_pad (nvvidconv, "sink");
+  if (!nvvidconv_sink_pad)
     g_print ("Unable to get sink pad\n");
   else
-    gst_pad_add_probe (osd_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
-        osd_sink_pad_buffer_probe, NULL, NULL);
+    gst_pad_add_probe (nvvidconv_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
+        nvvidconv_sink_pad_buffer_probe, NULL, NULL);
 
   /* Set the pipeline to "playing" state */
   g_print ("Now playing: %s\n", argv[1]);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2020-2021, NVIDIA CORPORATION.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include "gstnvdsmeta.h"
 #include "gst-nvmessage.h"
 #include "nvdsmeta.h"
+#include <cuda_runtime_api.h>
 
 #define MAX_DISPLAY_LEN 64
 
@@ -86,15 +87,20 @@ decodebin_child_added (GstChildProxy * child_proxy, GObject * object,
     g_signal_connect (G_OBJECT (object), "child-added",
         G_CALLBACK (decodebin_child_added), user_data);
   }
+  int current_device = -1;
+  cudaGetDevice(&current_device);
+  struct cudaDeviceProp prop;
+  cudaGetDeviceProperties(&prop, current_device);
+
   if (g_strrstr (name, "nvv4l2decoder") == name) {
-#ifdef PLATFORM_TEGRA
-    g_object_set (object, "enable-max-performance", TRUE, NULL);
-    g_object_set (object, "bufapi-version", TRUE, NULL);
-    g_object_set (object, "drop-frame-interval", 0, NULL);
-    g_object_set (object, "num-extra-surfaces", 0, NULL);
-#else
-    g_object_set (object, "gpu-id", GPU_ID, NULL);
-#endif
+    if(prop.integrated) {
+      g_object_set (object, "enable-max-performance", TRUE, NULL);
+      g_object_set (object, "bufapi-version", TRUE, NULL);
+      g_object_set (object, "drop-frame-interval", 0, NULL);
+      g_object_set (object, "num-extra-surfaces", 0, NULL);
+    } else {
+      g_object_set (object, "gpu-id", GPU_ID, NULL);
+    }
   }
 }
 
@@ -199,9 +205,6 @@ stop_release_source (gint source_id)
       break;
     case GST_STATE_CHANGE_ASYNC:
       g_print ("STATE CHANGE ASYNC\n\n");
-      state_return =
-          gst_element_get_state (g_source_bin_list[source_id], NULL, NULL,
-          GST_CLOCK_TIME_NONE);
       g_snprintf (pad_name, 15, "sink_%u", source_id);
       sinkpad = gst_element_get_static_pad (streammux, pad_name);
       gst_pad_send_event (sinkpad, gst_event_new_flush_stop (FALSE));
@@ -466,9 +469,12 @@ main (int argc, char *argv[])
   guint i, num_sources;
   guint tiler_rows, tiler_columns;
   guint pgie_batch_size;
-#ifdef PLATFORM_TEGRA
   GstElement *nvtransform;
-#endif
+
+  int current_device = -1;
+  cudaGetDevice(&current_device);
+  struct cudaDeviceProp prop;
+  cudaGetDeviceProperties(&prop, current_device);
 
   /* Check input arguments */
   if (argc != 2) {
@@ -525,9 +531,10 @@ main (int argc, char *argv[])
   /* Use convertor to convert from NV12 to RGBA as required by nvosd */
   nvvideoconvert =
       gst_element_factory_make ("nvvideoconvert", "nvvideo-converter");
-#ifdef PLATFORM_TEGRA
-  nvtransform = gst_element_factory_make ("nvegltransform", "nvegltransform");
-#endif
+
+  if(prop.integrated) {
+    nvtransform = gst_element_factory_make ("nvegltransform", "nvegltransform");
+  }
 
   /* Create OSD to draw on the converted RGBA buffer */
   nvosd = gst_element_factory_make ("nvdsosd", "nv-onscreendisplay");
@@ -540,15 +547,18 @@ main (int argc, char *argv[])
 
   /* Finally render the osd output */
   sink = gst_element_factory_make (SINK_ELEMENT, "nveglglessink");
-
-  if (!pgie || !sgie1 || !sgie2 || !sgie3 || !tiler || !nvvideoconvert || !nvosd
-      || !sink || !tracker
-#ifdef PLATFORM_TEGRA
-      || !nvtransform
-#endif
-      ) {
-    g_printerr ("One element could not be created. Exiting.\n");
-    return -1;
+  if(prop.integrated) {
+    if (!pgie || !sgie1 || !sgie2 || !sgie3 || !tiler || !nvvideoconvert || !nvosd
+        || !sink || !tracker || !nvtransform) {
+      g_printerr ("One element could not be created. Exiting.\n");
+      return -1;
+    }
+  } else {
+    if (!pgie || !sgie1 || !sgie2 || !sgie3 || !tiler || !nvvideoconvert || !nvosd
+        || !sink || !tracker) {
+      g_printerr ("One element could not be created. Exiting.\n");
+      return -1;
+    }
   }
 
   g_object_set (G_OBJECT (streammux), "width", MUXER_OUTPUT_WIDTH, "height",
@@ -591,9 +601,9 @@ main (int argc, char *argv[])
   SET_GPU_ID (tiler, GPU_ID);
   SET_GPU_ID (nvvideoconvert, GPU_ID);
   SET_GPU_ID (nvosd, GPU_ID);
-#ifndef PLATFORM_TEGRA
-  SET_GPU_ID (sink, GPU_ID);
-#endif
+  if(!prop.integrated) {
+    SET_GPU_ID (sink, GPU_ID);
+  }
 
   /* we add a message handler */
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -605,26 +615,26 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (pipeline), pgie, tracker, sgie1, sgie2, sgie3,
       tiler, nvvideoconvert, nvosd, sink, NULL);
 
-#ifdef PLATFORM_TEGRA
-  gst_bin_add (GST_BIN (pipeline), nvtransform);
-#endif
+  if(prop.integrated) {
+    gst_bin_add (GST_BIN (pipeline), nvtransform);
+  }
 
   /* we link the elements together */
   /* file-source -> h264-parser -> nvh264-decoder ->
    * nvinfer -> nvvideoconvert -> nvosd -> video-renderer */
-#ifdef PLATFORM_TEGRA
-  if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,
-          tiler, nvvideoconvert, nvosd, nvtransform, sink, NULL)) {
-    g_printerr ("Elements could not be linked. Exiting.\n");
-    return -1;
+  if(prop.integrated) {
+    if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,
+            tiler, nvvideoconvert, nvosd, nvtransform, sink, NULL)) {
+      g_printerr ("Elements could not be linked. Exiting.\n");
+      return -1;
+    }
+  } else {
+    if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,
+            tiler, nvvideoconvert, nvosd, sink, NULL)) {
+      g_printerr ("Elements could not be linked. Exiting.\n");
+      return -1;
+    }
   }
-#else
-  if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,
-          tiler, nvvideoconvert, nvosd, sink, NULL)) {
-    g_printerr ("Elements could not be linked. Exiting.\n");
-    return -1;
-  }
-#endif
 
   g_object_set (G_OBJECT (sink), "sync", FALSE, "qos", FALSE, NULL);
 

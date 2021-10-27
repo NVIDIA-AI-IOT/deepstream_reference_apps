@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2019-2020, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2019-2021, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ DEP:=dsdirection_lib/libdsdirection.a
 DEP_FILES:=$(wildcard dsdirection_lib/dsdirection_lib.* )
 DEP_FILES-=$(DEP)
 
-CFLAGS+= -fPIC -DDS_VERSION=\"5.0.0\" \
+CFLAGS+= -fPIC -DDS_VERSION=\"6.0.0\" \
 	 -I $(DS_SDK_ROOT)/sources/includes
 
 GST_INSTALL_DIR?=$(DS_SDK_ROOT)/lib/gst-plugins/

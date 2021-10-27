@@ -1,4 +1,4 @@
-# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 5.0
+# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 6.0
 
 ## Introduction
 The project contains Back to Back detector application to show the
@@ -23,20 +23,25 @@ apps.
 -  Use the following commands:
 ```
   $ cd /opt/nvidia/deepstream/deepstream/samples/models
-  $ mkdir Secondary_FaceDetect
+  $ sudo mkdir Secondary_FaceDetect
   $ cd Secondary_FaceDetect
-  $ wget https://github.com/NVIDIA-AI-IOT/redaction_with_deepstream/raw/master/fd_lpd_model/fd_lpd.caffemodel
-  $ wget https://raw.githubusercontent.com/NVIDIA-AI-IOT/redaction_with_deepstream/master/fd_lpd_model/fd_lpd.prototxt
-  $ wget https://raw.githubusercontent.com/NVIDIA-AI-IOT/redaction_with_deepstream/master/fd_lpd_model/labels.txt
+  $ sudo wget https://github.com/NVIDIA-AI-IOT/redaction_with_deepstream/raw/master/fd_lpd_model/fd_lpd.caffemodel
+  $ sudo wget https://raw.githubusercontent.com/NVIDIA-AI-IOT/redaction_with_deepstream/master/fd_lpd_model/fd_lpd.prototxt
+  $ sudo wget https://raw.githubusercontent.com/NVIDIA-AI-IOT/redaction_with_deepstream/master/fd_lpd_model/labels.txt
 ```
 
 Back to back detectors app pipeline:
 ![DS Back to back detectors Pipeline](.backtobackdetectors_pipeline.png)
 
-## Compilation Steps:
+## Compilation Steps and Execution:
 ```
-  $ make
+  $ Set CUDA_VER in the MakeFile as per platform.
+      For Jetson, CUDA_VER=10.2
+      For x86, CUDA_VER=11.4
+  $ sudo make
+
   $ ./back-to-back-detectors <h264_elementary_stream>
+    Ex.: ./back-to-back-detectors ../../../../../samples/streams/sample_720p.h264
 ```
 The result should be like below:
   ![DS Back to Back Detectors Screenshot](.backtobackdetectors.png)

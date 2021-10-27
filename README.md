@@ -1,9 +1,14 @@
-# Reference Apps using DeepStream 5.0
+# Reference Apps using DeepStream 6.0
 
-This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 5.0.
+This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 6.0.
 
 ## Getting Started ##
-We currently provide two different reference applications:
+We currently provide three different reference applications:
+
+Preferably clone this project in
+`/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/`
+
+To clone the project in the above directory, sudo permission may be required.
 
 For further details, please see each project's README.
 

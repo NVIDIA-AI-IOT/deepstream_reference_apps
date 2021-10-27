@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2018-2020, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2018-2021, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,10 +22,16 @@
 #   ll-config-file: required for NvDCF, optional for KLT and IOU
 #
 [tracker]
+# For NvDCF and DeepSORT tracker, tracker-width and tracker-height must be a multiple of 32, respectively
 tracker-width=640
 tracker-height=384
+ll-lib-file=/opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
+# ll-config-file required to set different tracker types
+# ll-config-file=config_tracker_IOU.yml
+ll-config-file=config_tracker_NvDCF_perf.yml
+# ll-config-file=config_tracker_NvDCF_accuracy.yml
+# ll-config-file=config_tracker_DeepSORT.yml
 gpu-id=0
-ll-lib-file=/opt/nvidia/deepstream/deepstream-5.0/lib/libnvds_mot_klt.so
-#ll-lib-file=/opt/nvidia/deepstream/deepstream-5.0/lib/libnvds_nvdcf.so
-#ll-config-file=tracker_config.yml
-enable-batch-process=0
+enable-batch-process=1
+enable-past-frame=1
+display-tracking-id=1
