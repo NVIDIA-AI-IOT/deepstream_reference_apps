@@ -87,7 +87,7 @@ Running the models in DeepStream:
   model-engine-file paths are correct in config_infer_* and deepstream_app_*
   configuration files.
 - For classifier model(multi-task), use deepstream_app_source1_classifier.txt
-- For instance segmentation models(MaskRCNN/peopelSegNet), use deepstream_app_source1_mrcnn.txt
+- For instance segmentation models(peopelSegNet), use deepstream_app_source1_mrcnn.txt
   It also requires TRT plugin using https://github.com/NVIDIA/TensorRT.
   Follow
    - https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/master/TRT-OSS/Jetson for Jetson

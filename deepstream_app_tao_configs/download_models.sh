@@ -82,11 +82,6 @@ wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peopl
 unzip peoplesegnet_deployable_v2.0.1.zip -d ../../models/tao_pretrained_models/peopleSegNet/V2 && \
 rm peoplesegnet_deployable_v2.0.1.zip
 
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplesegnet/versions/deployable_v1.0/zip \
--O peoplesegnet_deployable_v1.0.zip && \
-unzip peoplesegnet_deployable_v1.0.zip -d ../../models/tao_pretrained_models/peopleSegNet/ && \
-rm peoplesegnet_deployable_v1.0.zip
-
 echo "==================================================================="
 echo "Download models successfully "
 echo "==================================================================="
