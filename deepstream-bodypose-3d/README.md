@@ -1,4 +1,4 @@
-# 3d-bodypose-deepstream
+# DeepStream Bodypose 3D
 
 ## Introduction
 The project contains 3D Body Pose application built using  Deepstream SDK.

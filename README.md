@@ -20,3 +20,6 @@ For further details, please see each project's README.
   ![sample anomaly output](anomaly/.opticalflow.png)
 ### Runtime Source Addition Deletion: [README](runtime_source_add_delete/README.md) ###
   The project demonstrates addition and deletion of video sources in a live Deepstream pipeline.
+### Body Pose 3D: [README](deepstream-bodypose-3d/README.md) ###
+  The project demonstrates usage of Body Pose 3D model in Deepstream application
+  ![sample anomaly output](deepstream-bodypose-3d/sources/.screenshot.png)
