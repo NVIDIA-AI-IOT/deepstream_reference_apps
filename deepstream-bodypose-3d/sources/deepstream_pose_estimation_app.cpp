@@ -969,9 +969,35 @@ void parse_25dpose_from_tensor_meta(NvDsInferTensorMeta *tensor_meta,
           fprintf(_pose_file, ", ");
         }
         fsetpos(_pose_file, &g_fp_25_pos);
-        fprintf(_pose_file, "]\n");
+        fprintf(_pose_file, "],\n");
 
-        // Remember the position of "," so that we can remove it on the last entry.
+        //---Save bounding box coordinates---
+        {
+          float left, top, width, height;
+          if (strcmp(_tracker, "none")) {
+            left   = obj_meta->tracker_bbox_info.org_bbox_coords.left;
+            top    = obj_meta->tracker_bbox_info.org_bbox_coords.top;
+            width  = obj_meta->tracker_bbox_info.org_bbox_coords.width;
+            height = obj_meta->tracker_bbox_info.org_bbox_coords.height;
+          }
+          else {
+            left   = obj_meta->detector_bbox_info.org_bbox_coords.left;
+            top    = obj_meta->detector_bbox_info.org_bbox_coords.top;
+            width  = obj_meta->detector_bbox_info.org_bbox_coords.width;
+            height = obj_meta->detector_bbox_info.org_bbox_coords.height;
+          }
+          fprintf(_pose_file,
+            "      \"bbox\": [");
+          fprintf(_pose_file, "%f, %f, %f, %f",
+            left,
+            top,
+            width,
+            height);
+          fprintf(_pose_file, "]\n");
+        }
+        //---Save bounding box coordinates---
+
+	// Remember the position of "," so that we can remove it on the last entry.
         fprintf(_pose_file, "    }");
         fgetpos(_pose_file, &g_fp_25_pos);
         fprintf(_pose_file, ", ");
