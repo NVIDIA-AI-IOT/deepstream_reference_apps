@@ -986,7 +986,10 @@ void parse_25dpose_from_tensor_meta(NvDsInferTensorMeta *tensor_meta,
             width  = obj_meta->detector_bbox_info.org_bbox_coords.width;
             height = obj_meta->detector_bbox_info.org_bbox_coords.height;
           }
-          fprintf(_pose_file,
+          // Restore the bbox location due to padding and cropping.
+          left -= _pad_dim;
+          top -= _pad_dim;
+	  fprintf(_pose_file,
             "      \"bbox\": [");
           fprintf(_pose_file, "%f, %f, %f, %f",
             left,
