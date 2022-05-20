@@ -58,12 +58,12 @@ Anomaly detection app pipeline:
  $ cd sources/apps/sample_apps/deepstream_reference_apps/anomaly/
  $ cd apps/deepstream-anomaly-detection-test/
  $ Set CUDA_VER in the MakeFile as per platform.
-     For Jetson, CUDA_VER=10.2
-     For x86, CUDA_VER=11.4
+     For Jetson, CUDA_VER=11.4
+     For x86, CUDA_VER=11.6
  $ sudo make
 
  $ ./deepstream-anomaly-detection-app <uri1> [uri2] ... [uriN]
-   Ex.: ./deepstream-anomaly-detection-app file:///opt/nvidia/deepstream/deepstream-6.0/samples/streams/sample_1080p_h264.mp4
+   Ex.: ./deepstream-anomaly-detection-app file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4
 ```
   The result should be like below:
   ![DS Anomaly Detection Screenshot](.opticalflow.png)

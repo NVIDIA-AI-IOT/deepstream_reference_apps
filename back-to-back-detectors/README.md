@@ -36,8 +36,8 @@ Back to back detectors app pipeline:
 ## Compilation Steps and Execution:
 ```
   $ Set CUDA_VER in the MakeFile as per platform.
-      For Jetson, CUDA_VER=10.2
-      For x86, CUDA_VER=11.4
+      For Jetson, CUDA_VER=11.4
+      For x86, CUDA_VER=11.6
   $ sudo make
 
   $ ./back-to-back-detectors <h264_elementary_stream>
