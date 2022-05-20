@@ -1,6 +1,6 @@
 #!/bin/sh
 ################################################################################
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021-2022, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -26,13 +26,13 @@
 echo "==================================================================="
 echo "begin download models for peopleNet "
 echo "==================================================================="
-mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.1
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1.1/files/resnet34_peoplenet_pruned_int8.etlt \
-  -O ../../models/tao_pretrained_models/peopleNet/V2.1/resnet34_peoplenet_pruned_int8.etlt
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1.1/files/resnet34_peoplenet_pruned_int8_gpu.txt \
-  -O ../../models/tao_pretrained_models/peopleNet/V2.1/resnet34_peoplenet_pruned_int8_gpu.txt
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1.1/files/labels.txt \
-  -O ../../models/tao_pretrained_models/peopleNet/V2.1/labels.txt
+mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.5
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.5/files/resnet34_peoplenet_int8.etlt \
+  -O ../../models/tao_pretrained_models/peopleNet/V2.5/resnet34_peoplenet_int8.etlt
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.5/files/resnet34_peoplenet_int8.txt \
+  -O ../../models/tao_pretrained_models/peopleNet/V2.5/resnet34_peoplenet_int8.txt
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.5/files/labels.txt \
+  -O ../../models/tao_pretrained_models/peopleNet/V2.5/labels.txt
 
 echo "==================================================================="
 echo "Run deepstream-app"

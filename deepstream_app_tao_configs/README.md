@@ -1,18 +1,29 @@
-This document describes the procedure to download and run the TAO pre-trained purpose-built models in DeepStream.
+################################################################################
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+################################################################################
+
+This document describes the procedure to download and run the Transfer Learning
+Toolkit pre-trained purpose-built models in DeepStream.
 
 The following pre-trained models are provided:
-
-##### Detection Network
-
-- Faster-RCNN / YoloV3 / SSD / DSSD / RetinaNet / YoloV4  (https://ngc.nvidia.com/catalog/models/nvidia:tao:Faster-RCNN)
-- DetectNet_v2 (https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/pretrained_detectnet_v2)
-
-##### Classification Network
-
-- multi_task (https://ngc.nvidia.com/catalog/models/nvidia:tao:pretrained_image_classification)
-
-##### Other Networks
-
 - DashCamNet (https://ngc.nvidia.com/catalog/models/nvidia:tao:dashcamnet)
 - VehicleMakeNet (https://ngc.nvidia.com/catalog/models/nvidia:tao:vehiclemakenet)
 - VehicleTypeNet (https://ngc.nvidia.com/catalog/models/nvidia:tao:vehicletypenet)
@@ -23,84 +34,69 @@ The following pre-trained models are provided:
 - PeopleSemSegnet (https://ngc.nvidia.com/catalog/models/nvidia:tao:peoplesemsegnet)
 
 *******************************************************************************************
-## 1. Download the config files
-
+Downloading the config files
 *******************************************************************************************
-```
-$ git clone https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps.git
-$ cd deepstream_reference_apps/deepstream_app_tao_configs/
-$ sudo cp -a * /opt/nvidia/deepstream/deepstream/samples/configs/tao_pretrained_models/
-```
+Config files are now present in https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps
+under `deepstream_app_tao_configs` folder. There are two ways to obtain these configs:
+1. Clone `deepstream_reference_apps` repo in
+   `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/` using command:
+   $ sudo git clone https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps.git
+   After cloning, run the following commands:
+   $ cd /opt/nvidia/deepstream/deepstream/
+   $ sudo cp \
+     sources/apps/sample_apps/deepstream_reference_apps/deepstream_app_tao_configs/* \
+     samples/configs/tao_pretrained_models/
+2. Run the following commands:
+   $ cd /opt/nvidia/deepstream/deepstream/samples/configs/
+   $ sudo apt-get install git-svn
+   $ sudo git svn clone \
+     https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps/trunk/deepstream_app_tao_configs
+   $ sudo cp deepstream_app_tao_configs/* tao_pretrained_models/
+   $ sudo rm -rf deepstream_app_tao_configs/
 
 *******************************************************************************
-## 2. Download the models
-
+Downloading the models
 *******************************************************************************
-```
-$ sudo apt install -y wget zip
+The models can be downloaded by running the following commands:
+
+$ sudo apt install wget
+$ sudo apt install zip
 $ cd /opt/nvidia/deepstream/deepstream/samples/configs/tao_pretrained_models/
 $ sudo ./download_models.sh
-```
 
 For more information on TAO3.0 models,
 please refer https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/release/tao3.0#2-download-models.
 
-
-
 *******************************************************************************
-## 3. Run the models in DeepStream
-
+Running the models in DeepStream:
 *******************************************************************************
-```
-$ sudo deepstream-app -c deepstream_app_source1_$MODEL.txt
-e.g.
-$ sudo deepstream-app -c deepstream_app_source1_dashcamnet_vehiclemakenet_vehicletypenet.txt
-```
+- An nvinfer configuration file (config_infer_*) is provided for each of the
+  models.
+- Following deepstream-app configuration files are provided:
+  - deepstream_app_source1_dashcamnet_vehiclemakenet_vehicletypenet.txt
+  - deepstream_app_source1_peoplenet.txt
+  - deepstream_app_source1_facedetectir.txt
+  - deepstream_app_source1_trafficcamnet.txt
+- For detction models, use following deepstream-app configs, default model is
+  Faster Rcnn change the config-path under primary-gie group to switch to
+  other models(ssd/dssd/retinanet/yolov3/yolov4/detectnet_v2/frcnn)
+  - deepstream_app_source1_detection_models.txt
+- Make sure encoded TAO model file paths and the INT8 calibration file paths
+  are correct in the config_infer_* files and that the files exist.
+- Some models need different INT8 calibration files for different TensorRT versions.
+- To re-use the engine files built in the first run, make sure the
+  model-engine-file paths are correct in config_infer_* and deepstream_app_*
+  configuration files.
+- For classifier model(multi-task), use deepstream_app_source1_classifier.txt
+- For instance segmentation models(MaskRCNN/peopelSegNet), use deepstream_app_source1_mrcnn.txt
+  It also requires TRT plugin using https://github.com/NVIDIA/TensorRT.
+  Follow
+   - https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/master/TRT-OSS/Jetson for Jetson
+   - https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/master/TRT-OSS/x86 for x86
+- Run deepstream-app using one of the deepstream_app_* configuration files.
+  $ sudo deepstream-app -c <deepstream_app_config>
+  e.g.
+  $ sudo deepstream-app -c deepstream_app_source1_dashcamnet_vehiclemakenet_vehicletypenet.txt
 
-**Note:**
-
-1. For which model of the *deepstream_app_source1_$MODEL.txt* uses, please find from the **[primary-gie]** section in it, for example
-
-   Below is the **[primary-gie]** config of deepstream_app_source1_detection_models.txt, which indicates it uses yolov4 by default, and user can change to frcnn/ssd/dssd/retinanet/yolov3/detectnet_v2 by commenting "config-file=config_infer_primary_yolov4.txt" and uncommenting the corresponding "config-file=" .
-
-   ```
-   [primary-gie]
-   enable=1
-   gpu-id=0
-   # Modify as necessary
-   batch-size=1
-   #Required by the app for OSD, not a plugin property
-   bbox-border-color0=1;0;0;1
-   bbox-border-color1=0;1;1;1
-   bbox-border-color2=0;0;1;1
-   bbox-border-color3=0;1;0;1
-   gie-unique-id=1
-   # Replace the infer primary config file when you need to
-   # use other detection models
-   #config-file=config_infer_primary_frcnn.txt
-   #config-file=config_infer_primary_ssd.txt
-   #config-file=config_infer_primary_dssd.txt
-   #config-file=config_infer_primary_retinanet.txt
-   #config-file=config_infer_primary_yolov3.txt
-   config-file=config_infer_primary_yolov4.txt
-   #config-file=config_infer_primary_detectnet_v2.txt
-   ```
-
-2. When running the model with "deepstream-app", during the TensorRT engine building stage, if you see error logs like 
-
-   `ERROR: [TRT]: UffParser: Validator error: FirstDimTile_5: Unsupported operation _BatchTilePlugin_TRT`
-
-   it indicates the TensorRT plugin lib needs to be updated following steps in 
-
-    - https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/master/TRT-OSS/Jetson for Jetson 
-
-    - https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/master/TRT-OSS/x86 for x86 
-
-
-*******************************************************************************
-## 4. Related Links
-
-*******************************************************************************
-deepstream-tao-app : https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps 
-
-TAO Toolkit Guide : https://docs.nvidia.com/tao/tao-toolkit/index.html 
+  NOTE: Sample images/clips for FaceDetectIR would be available on it's NGC
+        page.

@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021-2022, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -26,8 +26,8 @@ net-scale-factor=1.0
 offsets=103.939;116.779;123.68
 model-color-format=1
 labelfile-path=ssd_labels.txt
-model-engine-file=../../models/tao_pretrained_models/ssd/ssd_resnet18.etlt_b1_gpu0_int8.engine
-tlt-encoded-model=../../models/tao_pretrained_models/ssd/ssd_resnet18.etlt
+model-engine-file=../../models/tao_pretrained_models/ssd/ssd.etlt_b1_gpu0_int8.engine
+tlt-encoded-model=../../models/tao_pretrained_models/ssd/ssd.etlt
 int8-calib-file=../../models/tao_pretrained_models/ssd/ssd_cal.bin
 tlt-model-key=nvidia_tlt
 infer-dims=3;544;960
@@ -44,7 +44,7 @@ is-classifier=0
 #network-type=0
 output-blob-names=NMS
 parse-bbox-func-name=NvDsInferParseCustomNMSTLT
-custom-lib-path=/opt/nvidia/deepstream/deepstream-6.0/lib/libnvds_infercustomparser.so
+custom-lib-path=/opt/nvidia/deepstream/deepstream/lib/libnvds_infercustomparser.so
 
 [class-attrs-all]
 pre-cluster-threshold=0.3

@@ -29,7 +29,7 @@ echo "==================================================================="
 echo "begin download models for Faster-RCNN / YoloV3 / YoloV4 /SSD / DSSD / RetinaNet/ UNET/"
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models
-wget https://nvidia.box.com/shared/static/511552h6b1ecw4gd20ptuihoiidz13cs -O models.zip
+wget https://nvidia.box.com/shared/static/em2dh1h4isjhfu7qf0hh6ggzbusdg129 -O models.zip
 unzip models.zip -d ../../models/tao_pretrained_models
 mv ../../models/tao_pretrained_models/models/* ../../models/tao_pretrained_models/
 rm -r ../../models/tao_pretrained_models/models
@@ -67,11 +67,11 @@ rm facedetectir_pruned_v1.0.1.zip
 echo "==================================================================="
 echo "begin download models for peopleNet "
 echo "==================================================================="
-mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.1
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_v2.1.1/zip \
--O peoplenet_pruned_int8_v2.1.1.zip && \
-unzip peoplenet_pruned_int8_v2.1.1.zip -d ../../models/tao_pretrained_models/peopleNet/V2.1 && \
-rm peoplenet_pruned_int8_v2.1.1.zip
+mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.5
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.5/zip \
+-O peoplenet_deployable_quantized_v2.5.zip && \
+unzip peoplenet_deployable_quantized_v2.5.zip -d ../../models/tao_pretrained_models/peopleNet/V2.5 && \
+rm peoplenet_deployable_quantized_v2.5.zip
 
 echo "==================================================================="
 echo "begin download models for peopleSegNet "

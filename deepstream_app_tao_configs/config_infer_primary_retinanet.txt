@@ -44,7 +44,7 @@ is-classifier=0
 #network-type=0
 output-blob-names=NMS
 parse-bbox-func-name=NvDsInferParseCustomNMSTLT
-custom-lib-path=/opt/nvidia/deepstream/deepstream-6.0/lib/libnvds_infercustomparser.so
+custom-lib-path=/opt/nvidia/deepstream/deepstream/lib/libnvds_infercustomparser.so
 
 [class-attrs-all]
 pre-cluster-threshold=0.3

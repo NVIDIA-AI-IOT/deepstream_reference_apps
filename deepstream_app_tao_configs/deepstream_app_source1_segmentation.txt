@@ -28,8 +28,8 @@ perf-measurement-interval-sec=1
 enable=1
 rows=1
 columns=1
-width=1280
-height=720
+width=960
+height=540
 gpu-id=0
 
 [source0]
@@ -37,7 +37,7 @@ enable=1
 #Type - 1=CameraV4L2 2=URI 3=MultiURI
 type=3
 num-sources=1
-uri=file://../../streams/sample_1080p_h265.mp4
+uri=file://../../streams/sample_qHD.mp4
 gpu-id=0
 
 [streammux]
@@ -45,14 +45,14 @@ gpu-id=0
 batch-size=1
 batched-push-timeout=40000
 ## Set muxer output width and height
-width=1920
-height=1080
+width=960
+height=540
 
 [sink0]
 enable=1
 #Type - 1=FakeSink 2=EglSink 3=File
 type=2
-sync=1
+sync=0
 source-id=0
 gpu-id=0
 
@@ -63,13 +63,15 @@ border-width=3
 text-size=15
 text-color=1;1;1;1;
 text-bg-color=0.3;0.3;0.3;1
-font=Arial
+font=Serif
+display-mask=1
+display-bbox=0
+display-text=0
 
 [primary-gie]
 enable=1
 gpu-id=0
 # Modify as necessary
-model-engine-file=../../models/tao_pretrained_models/peopleNet/V2.5/resnet34_peoplenet_int8.etlt_b1_gpu0_int8.engine
 batch-size=1
 #Required by the app for OSD, not a plugin property
 bbox-border-color0=1;0;0;1
@@ -77,7 +79,10 @@ bbox-border-color1=0;1;1;1
 bbox-border-color2=0;0;1;1
 bbox-border-color3=0;1;0;1
 gie-unique-id=1
-config-file=config_infer_primary_peoplenet.txt
+# Replace the infer primary config file when you need to
+# use other detection models
+# model-engine-file=../../models/tao_pretrained_models/mrcnn/mask_rcnn_resnet50.etlt_b1_gpu0_int8.engine
+config-file=config_infer_primary_peopleSegNet.txt
 
 [sink1]
 enable=0

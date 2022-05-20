@@ -78,13 +78,19 @@ bbox-border-color3=0;1;0;1
 gie-unique-id=1
 # Replace the infer primary config file when you need to
 # use other detection models
-#config-file=config_infer_primary_frcnn.txt
-#config-file=config_infer_primary_ssd.txt
+#config-file=config_infer_primary_frcnn_dgpu.txt
+#config-file=config_infer_primary_frcnn_jetson.txt
+config-file=config_infer_primary_ssd.txt
 #config-file=config_infer_primary_dssd.txt
 #config-file=config_infer_primary_retinanet.txt
-#config-file=config_infer_primary_yolov3.txt
-config-file=config_infer_primary_yolov4.txt
+#config-file=config_infer_primary_yolov3_dgpu.txt
+#config-file=config_infer_primary_yolov3_jetson.txt
+#config-file=config_infer_primary_yolov4_dgpu.txt
+#config-file=config_infer_primary_yolov4_jetson.txt
 #config-file=config_infer_primary_detectnet_v2.txt
+#config-file=config_infer_primary_yolov4-tiny_dgpu.txt
+#config-file=config_infer_primary_yolov4-tiny_jetson.txt
+#config-file=config_infer_primary_efficientdet.txt
 
 [sink1]
 enable=0
@@ -125,7 +131,7 @@ enable=1
 # For NvDCF and DeepSORT tracker, tracker-width and tracker-height must be a multiple of 32, respectively
 tracker-width=640
 tracker-height=384
-ll-lib-file=/opt/nvidia/deepstream/deepstream-6.0/lib/libnvds_nvmultiobjecttracker.so
+ll-lib-file=/opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
 # ll-config-file required to set different tracker types
 # ll-config-file=../deepstream-app/config_tracker_IOU.yml
 ll-config-file=../deepstream-app/config_tracker_NvDCF_perf.yml
