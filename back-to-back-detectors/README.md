@@ -1,4 +1,4 @@
-# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 6.0
+# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 6.1
 
 ## Introduction
 The project contains Back to Back detector application to show the
