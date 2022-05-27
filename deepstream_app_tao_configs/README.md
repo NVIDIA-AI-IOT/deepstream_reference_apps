@@ -1,27 +1,5 @@
-################################################################################
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
-################################################################################
-
 This document describes the procedure to download and run the Transfer Learning
-Toolkit pre-trained purpose-built models in DeepStream.
+ Toolkit pre-trained purpose-built models in DeepStream.
 
 The following pre-trained models are provided:
 - DashCamNet (https://ngc.nvidia.com/catalog/models/nvidia:tao:dashcamnet)
@@ -34,7 +12,7 @@ The following pre-trained models are provided:
 - PeopleSemSegnet (https://ngc.nvidia.com/catalog/models/nvidia:tao:peoplesemsegnet)
 
 *******************************************************************************************
-Downloading the config files
+# Downloading the config files
 *******************************************************************************************
 Config files are now present in https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps
 under `deepstream_app_tao_configs` folder. There are two ways to obtain these configs:
@@ -55,7 +33,7 @@ under `deepstream_app_tao_configs` folder. There are two ways to obtain these co
    $ sudo rm -rf deepstream_app_tao_configs/
 
 *******************************************************************************
-Downloading the models
+# Downloading the models
 *******************************************************************************
 The models can be downloaded by running the following commands:
 
@@ -68,7 +46,7 @@ For more information on TAO3.0 models,
 please refer https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/release/tao3.0#2-download-models.
 
 *******************************************************************************
-Running the models in DeepStream:
+# Running the models in DeepStream:
 *******************************************************************************
 - An nvinfer configuration file (config_infer_*) is provided for each of the
   models.
