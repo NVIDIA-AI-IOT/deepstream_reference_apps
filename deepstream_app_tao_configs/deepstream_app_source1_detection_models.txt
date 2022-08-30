@@ -78,18 +78,14 @@ bbox-border-color3=0;1;0;1
 gie-unique-id=1
 # Replace the infer primary config file when you need to
 # use other detection models
-#config-file=config_infer_primary_frcnn_dgpu.txt
-#config-file=config_infer_primary_frcnn_jetson.txt
+#config-file=config_infer_primary_frcnn.txt
 config-file=config_infer_primary_ssd.txt
 #config-file=config_infer_primary_dssd.txt
 #config-file=config_infer_primary_retinanet.txt
-#config-file=config_infer_primary_yolov3_dgpu.txt
-#config-file=config_infer_primary_yolov3_jetson.txt
-#config-file=config_infer_primary_yolov4_dgpu.txt
-#config-file=config_infer_primary_yolov4_jetson.txt
+#config-file=config_infer_primary_yolov3.txt
+#config-file=config_infer_primary_yolov4.txt
 #config-file=config_infer_primary_detectnet_v2.txt
-#config-file=config_infer_primary_yolov4-tiny_dgpu.txt
-#config-file=config_infer_primary_yolov4-tiny_jetson.txt
+#config-file=config_infer_primary_yolov4-tiny.txt
 #config-file=config_infer_primary_efficientdet.txt
 
 [sink1]

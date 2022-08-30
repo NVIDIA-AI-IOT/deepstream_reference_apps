@@ -25,10 +25,10 @@ property:
   net-scale-factor: 1.0
   offsets: 103.939;116.779;123.68
   model-color-format: 1
-  labelfile-path: ../../configs/yolov4-tiny_tao/yolov4_tiny_labels.txt
-  model-engine-file: ../../models/yolov4-tiny/yolov4_cspdarknet_tiny_397.etlt_b1_gpu0_int8.engine
-  int8-calib-file: ../../models/yolov4-tiny/cal.bin.trt8251
-  tlt-encoded-model: ../../models/yolov4-tiny/yolov4_cspdarknet_tiny_397.etlt
+  labelfile-path: yolov4_labels.txt
+  model-engine-file: ../../models/tao_pretrained_models/yolov4/yolov4_resnet18_395.etlt_b1_gpu0_int8.engine
+  int8-calib-file: ../../models/tao_pretrained_models/yolov4/cal.bin.trt8415
+  tlt-encoded-model: ../../models/tao_pretrained_models/yolov4/yolov4_resnet18_395.etlt
   tlt-model-key: nvidia_tlt
   infer-dims: 3;544;960
   maintain-aspect-ratio: 1
@@ -45,6 +45,7 @@ property:
   output-blob-names: BatchedNMS
   parse-bbox-func-name: NvDsInferParseCustomBatchedNMSTLT
   custom-lib-path: /opt/nvidia/deepstream/deepstream/lib/libnvds_infercustomparser.so
+  layer-device-precision: cls/mul:fp32:gpu;box/mul_6:fp32:gpu;box/add:fp32:gpu;box/mul_4:fp32:gpu;box/add_1:fp32:gpu;cls/Reshape_reshape:fp32:gpu;box/Reshape_reshape:fp32:gpu;encoded_detections:fp32:gpu;bg_leaky_conv1024_lrelu:fp32:gpu;sm_bbox_processor/concat_concat:fp32:gpu;sm_bbox_processor/sub:fp32:gpu;sm_bbox_processor/Exp:fp32:gpu;yolo_conv1_4_lrelu:fp32:gpu;yolo_conv1_3_1_lrelu:fp32:gpu;md_leaky_conv512_lrelu:fp32:gpu;sm_bbox_processor/Reshape_reshape:fp32:gpu;conv_sm_object:fp32:gpu;yolo_conv5_1_lrelu:fp32:gpu;concatenate_6:fp32:gpu;yolo_conv3_1_lrelu:fp32:gpu;concatenate_5:fp32:gpu;yolo_neck_1_lrelu:fp32:gpu
 
 class-attrs-all:
   pre-cluster-threshold: 0.3
@@ -54,3 +55,7 @@ class-attrs-all:
   detected-min-h: 0
   detected-max-w: 0
   detected-max-h: 0
+
+class-attrs-1:
+  nms-iou-threshold: 0.9
+

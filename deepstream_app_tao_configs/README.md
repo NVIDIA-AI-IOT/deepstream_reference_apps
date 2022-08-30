@@ -96,30 +96,6 @@ $ sudo deepstream-app -c deepstream_app_source1_dashcamnet_vehiclemakenet_vehicl
    #config-file=config_infer_primary_detectnet_v2.txt
    ```
 
-2. When running the model with "deepstream-app", during the TensorRT engine building stage, if you see error logs like 
-
-   `ERROR: [TRT]: UffParser: Validator error: FirstDimTile_5: Unsupported operation _BatchTilePlugin_TRT`
-
-   it indicates the TensorRT plugin lib needs to be updated following steps in 
-
-    - https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/master/TRT-OSS/Jetson for Jetson 
-
-    - https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps/tree/master/TRT-OSS/x86 for x86
-
-3. For some models, the INT8 calibration files are different for different TensorRT versions. https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps#calibration-file-with-tensorrt-version
-
-   Please use corresponding configuration file for the platform.
-
-   For example, when we want to run deepstream-app with YOLOV3 model in Jetson, the following commandline works:
-   ```
-   deepstream-app -c config_infer_primary_yolov3_jetson.txt
-   ```
-   When we want to run YOLOV3 model on dGPU, the following command line works:
-   ```
-   deepstream-app -c config_infer_primary_yolov3_dgpu.txt
-   ```
-
-
 *******************************************************************************
 ## 4. Related Links
 

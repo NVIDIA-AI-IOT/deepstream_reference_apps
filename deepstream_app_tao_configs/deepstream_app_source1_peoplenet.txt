@@ -69,7 +69,7 @@ font=Arial
 enable=1
 gpu-id=0
 # Modify as necessary
-model-engine-file=../../models/tao_pretrained_models/peopleNet/V2.5/resnet34_peoplenet_int8.etlt_b1_gpu0_int8.engine
+model-engine-file=../../models/tao_pretrained_models/peopleNet/V2.6/resnet34_peoplenet_int8.etlt_b1_gpu0_int8.engine
 batch-size=1
 #Required by the app for OSD, not a plugin property
 bbox-border-color0=1;0;0;1

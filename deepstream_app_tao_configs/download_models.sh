@@ -29,7 +29,7 @@ echo "==================================================================="
 echo "begin download models for Faster-RCNN / YoloV3 / YoloV4 /SSD / DSSD / RetinaNet/ UNET/"
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models
-wget https://nvidia.box.com/shared/static/em2dh1h4isjhfu7qf0hh6ggzbusdg129 -O models.zip
+wget https://nvidia.box.com/shared/static/vynsy1tzhdeiwt7a5j44ssitqlm2a9rg -O models.zip
 unzip models.zip -d ../../models/tao_pretrained_models
 mv ../../models/tao_pretrained_models/models/* ../../models/tao_pretrained_models/
 rm -r ../../models/tao_pretrained_models/models
@@ -40,9 +40,9 @@ echo "begin download models for dashcamnet / vehiclemakenet / vehicletypenet"
 echo " / trafficcamnet / facedetectir"
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models/dashcamnet && \
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/dashcamnet/versions/pruned_v1.0.1/zip \
--O dashcamnet_pruned_v1.0.1.zip && unzip dashcamnet_pruned_v1.0.1.zip -d ../../models/tao_pretrained_models/dashcamnet \
-&& rm dashcamnet_pruned_v1.0.1.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/dashcamnet/versions/pruned_v1.0.2/zip \
+-O dashcamnet_pruned_v1.0.2.zip && unzip dashcamnet_pruned_v1.0.2.zip -d ../../models/tao_pretrained_models/dashcamnet \
+&& rm dashcamnet_pruned_v1.0.2.zip
 mkdir -p ../../models/tao_pretrained_models/vehiclemakenet && \
 wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehiclemakenet/versions/pruned_v1.0.1/zip \
 -O vehiclemakenet_pruned_v1.0.1.zip && \
@@ -54,10 +54,10 @@ wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehic
 unzip vehicletypenet_pruned_v1.0.1.zip -d ../../models/tao_pretrained_models/vehicletypenet && \
 rm vehicletypenet_pruned_v1.0.1.zip
 mkdir -p ../../models/tao_pretrained_models/trafficcamnet && \
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/trafficcamnet/versions/pruned_v1.0.1/zip \
--O trafficcamnet_pruned_v1.0.1.zip && \
-unzip trafficcamnet_pruned_v1.0.1.zip -d ../../models/tao_pretrained_models/trafficcamnet && \
-rm trafficcamnet_pruned_v1.0.1.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/trafficcamnet/versions/pruned_v1.0.2/zip \
+-O trafficcamnet_pruned_v1.0.2.zip && \
+unzip trafficcamnet_pruned_v1.0.2.zip -d ../../models/tao_pretrained_models/trafficcamnet && \
+rm trafficcamnet_pruned_v1.0.2.zip
 mkdir -p ../../models/tao_pretrained_models/facedetectir && \
 wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/facedetectir/versions/pruned_v1.0.1/zip \
 -O facedetectir_pruned_v1.0.1.zip && \
@@ -67,20 +67,20 @@ rm facedetectir_pruned_v1.0.1.zip
 echo "==================================================================="
 echo "begin download models for peopleNet "
 echo "==================================================================="
-mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.5
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.5/zip \
--O peoplenet_deployable_quantized_v2.5.zip && \
-unzip peoplenet_deployable_quantized_v2.5.zip -d ../../models/tao_pretrained_models/peopleNet/V2.5 && \
-rm peoplenet_deployable_quantized_v2.5.zip
+mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.6
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.6/zip \
+-O peoplenet_deployable_quantized_v2.6.zip && \
+unzip peoplenet_deployable_quantized_v2.6.zip -d ../../models/tao_pretrained_models/peopleNet/V2.6 && \
+rm peoplenet_deployable_quantized_v2.6.zip
 
 echo "==================================================================="
 echo "begin download models for peopleSegNet "
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models/peopleSegNet/V2
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplesegnet/versions/deployable_v2.0.1/zip \
--O peoplesegnet_deployable_v2.0.1.zip && \
-unzip peoplesegnet_deployable_v2.0.1.zip -d ../../models/tao_pretrained_models/peopleSegNet/V2 && \
-rm peoplesegnet_deployable_v2.0.1.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplesegnet/versions/deployable_v2.0.2/zip \
+-O peoplesegnet_deployable_v2.0.2.zip && \
+unzip peoplesegnet_deployable_v2.0.2.zip -d ../../models/tao_pretrained_models/peopleSegNet/V2 && \
+rm peoplesegnet_deployable_v2.0.2.zip
 
 echo "==================================================================="
 echo "Download models successfully "

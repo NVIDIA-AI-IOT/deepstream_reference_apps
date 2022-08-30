@@ -73,17 +73,13 @@ primary-gie:
   gie-unique-id: 1
   # Replace the infer primary config file when you need to
   # use other detection models
-  #config-file: config_infer_primary_frcnn_dgpu.yml
-  #config-file: config_infer_primary_frcnn_jetson.yml
+  #config-file: config_infer_primary_frcnn.yml
   config-file: config_infer_primary_ssd.yml
   #config-file: config_infer_primary_dssd.yml
   #config-file: config_infer_primary_retinanet.yml
-  #config-file: config_infer_primary_yolov3_dgpu.yml
-  #config-file: config_infer_primary_yolov3_jetson.yml
-  #config-file: config_infer_primary_yolov4_dgpu.yml
-  #config-file: config_infer_primary_yolov4_jetson.yml
-  #config-file: config_infer_primary_yolov4-tiny_dgpu.yml
-  #config-file: config_infer_primary_yolov4-tiny_jetson.yml
+  #config-file: config_infer_primary_yolov3.yml
+  #config-file: config_infer_primary_yolov4.yml
+  #config-file: config_infer_primary_yolov4-tiny.yml
   #config-file: config_infer_primary_detectnet_v2.yml
   #config-file: config_infer_primary_efficientdet.yml
 

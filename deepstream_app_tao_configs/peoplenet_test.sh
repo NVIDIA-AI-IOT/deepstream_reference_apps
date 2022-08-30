@@ -26,13 +26,11 @@
 echo "==================================================================="
 echo "begin download models for peopleNet "
 echo "==================================================================="
-mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.5
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.5/files/resnet34_peoplenet_int8.etlt \
-  -O ../../models/tao_pretrained_models/peopleNet/V2.5/resnet34_peoplenet_int8.etlt
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.5/files/resnet34_peoplenet_int8.txt \
-  -O ../../models/tao_pretrained_models/peopleNet/V2.5/resnet34_peoplenet_int8.txt
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.5/files/labels.txt \
-  -O ../../models/tao_pretrained_models/peopleNet/V2.5/labels.txt
+mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.6
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.6/zip \
+-O peoplenet_deployable_quantized_v2.6.zip && \
+unzip peoplenet_deployable_quantized_v2.6.zip -d ../../models/tao_pretrained_models/peopleNet/V2.6 && \
+rm peoplenet_deployable_quantized_v2.6.zip
 
 echo "==================================================================="
 echo "Run deepstream-app"
