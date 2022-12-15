@@ -4,7 +4,7 @@ The following pre-trained models are provided:
 
 ##### Detection Network
 
-- Faster-RCNN / YoloV3 / SSD / DSSD / RetinaNet / YoloV4  (https://ngc.nvidia.com/catalog/models/nvidia:tao:Faster-RCNN)
+- Faster-RCNN / YoloV3 / SSD / DSSD / RetinaNet / YoloV4 / YoloV4-tiny
 - DetectNet_v2 (https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/pretrained_detectnet_v2)
 
 ##### Classification Network
@@ -42,7 +42,7 @@ $ cd /opt/nvidia/deepstream/deepstream/samples/configs/tao_pretrained_models/
 $ sudo ./download_models.sh
 ```
 
-For more information on TAO3.0 models,
+For more information on TAO models,
 please refer https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps#2-download-models.
 
 

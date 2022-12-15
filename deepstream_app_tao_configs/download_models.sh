@@ -29,7 +29,7 @@ echo "==================================================================="
 echo "begin download models for Faster-RCNN / YoloV3 / YoloV4 /SSD / DSSD / RetinaNet/ UNET/"
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models
-wget https://nvidia.box.com/shared/static/vynsy1tzhdeiwt7a5j44ssitqlm2a9rg -O models.zip
+wget https://nvidia.box.com/shared/static/taqr2y52go17x1ymaekmg6dh8z6d43wr -O models.zip
 unzip models.zip -d ../../models/tao_pretrained_models
 mv ../../models/tao_pretrained_models/models/* ../../models/tao_pretrained_models/
 rm -r ../../models/tao_pretrained_models/models

@@ -27,7 +27,7 @@ property:
   model-color-format: 1
   labelfile-path: ./frcnn_labels.txt
   tlt-encoded-model: ../../models/tao_pretrained_models/frcnn/frcnn_kitti_resnet18.epoch24_trt8.etlt
-  int8-calib-file: ../../models/tao_pretrained_models/frcnn/cal_8415.bin
+  int8-calib-file: ../../models/tao_pretrained_models/frcnn/cal_8517.bin
   tlt-model-key: nvidia_tlt
   infer-dims: 3;544;960
   uff-input-order: 0
