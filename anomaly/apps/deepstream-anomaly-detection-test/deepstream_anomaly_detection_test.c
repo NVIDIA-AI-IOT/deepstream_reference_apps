@@ -359,6 +359,7 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (sink_of), "sync", 1, NULL);
   g_object_set (G_OBJECT (sink_infer), "sync", 1, NULL);
 
+  g_object_set (G_OBJECT (streammux), "sync-inputs", TRUE, NULL);
   g_object_set (G_OBJECT (streammux), "width", MUXER_OUTPUT_WIDTH, "height",
       MUXER_OUTPUT_HEIGHT, "batch-size", num_sources,
       "batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC, NULL);

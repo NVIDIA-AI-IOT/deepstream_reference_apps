@@ -66,6 +66,7 @@ gboolean g_eos_list[MAX_NUM_SOURCES];
 gboolean g_source_enabled[MAX_NUM_SOURCES];
 GstElement **g_source_bin_list = NULL;
 GMutex eos_lock;
+gboolean g_run_forever = FALSE;
 
 /* Assuming Resnet 10 model packaged in DS SDK */
 gchar pgie_classes_str[4][32] = { "Vehicle", "TwoWheeler", "Person",
@@ -77,6 +78,8 @@ GstElement *pipeline = NULL, *streammux = NULL, *sink = NULL, *pgie = NULL,
     *nvvideoconvert = NULL, *nvosd = NULL, *tiler = NULL, *tracker = NULL;
 
 gchar *uri = NULL;
+
+static gboolean add_sources (gpointer data);
 
 static void
 decodebin_child_added (GstChildProxy * child_proxy, GObject * object,
@@ -192,6 +195,7 @@ stop_release_source (gint source_id)
       g_print ("STATE CHANGE SUCCESS\n\n");
       g_snprintf (pad_name, 15, "sink_%u", source_id);
       sinkpad = gst_element_get_static_pad (streammux, pad_name);
+      gst_pad_send_event (sinkpad, gst_event_new_eos ());
       gst_pad_send_event (sinkpad, gst_event_new_flush_stop (FALSE));
       gst_element_release_request_pad (streammux, sinkpad);
       g_print ("STATE CHANGE SUCCESS %p\n\n", sinkpad);
@@ -207,6 +211,7 @@ stop_release_source (gint source_id)
       g_print ("STATE CHANGE ASYNC\n\n");
       g_snprintf (pad_name, 15, "sink_%u", source_id);
       sinkpad = gst_element_get_static_pad (streammux, pad_name);
+      gst_pad_send_event (sinkpad, gst_event_new_eos ());
       gst_pad_send_event (sinkpad, gst_event_new_flush_stop (FALSE));
       gst_element_release_request_pad (streammux, sinkpad);
       g_print ("STATE CHANGE ASYNC %p\n\n", sinkpad);
@@ -239,8 +244,13 @@ delete_sources (gpointer data)
   g_mutex_unlock (&eos_lock);
 
   if (g_num_sources == 0) {
-    g_main_loop_quit (loop);
-    g_print ("All sources Stopped quitting\n");
+    if (g_run_forever==FALSE){
+      g_main_loop_quit (loop);
+      g_print ("All sources Stopped quitting\n");
+    }
+    else {
+      g_timeout_add_seconds (15, add_sources, (gpointer) g_source_bin_list);
+    }
     return FALSE;
   }
 
@@ -252,8 +262,13 @@ delete_sources (gpointer data)
   stop_release_source (source_id);
 
   if (g_num_sources == 0) {
-    g_main_loop_quit (loop);
-    g_print ("All sources Stopped quitting\n");
+    if (g_run_forever==FALSE){
+      g_main_loop_quit (loop);
+      g_print ("All sources Stopped quitting\n");
+    }
+    else {
+      g_timeout_add_seconds (15, add_sources, (gpointer) g_source_bin_list);
+    }
     return FALSE;
   }
 
@@ -313,7 +328,7 @@ add_sources (gpointer data)
     /* We have reached MAX_NUM_SOURCES to be added, no stop calling this function
      * and enable calling delete sources
      */
-    g_timeout_add_seconds (10, delete_sources, (gpointer) g_source_bin_list);
+    g_timeout_add_seconds (5, delete_sources, (gpointer) g_source_bin_list);
     return FALSE;
   }
 
@@ -326,8 +341,10 @@ bus_call (GstBus * bus, GstMessage * msg, gpointer data)
   GMainLoop *loop = (GMainLoop *) data;
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_EOS:
-      g_print ("End of stream\n");
-      g_main_loop_quit (loop);
+      if (g_run_forever==FALSE){
+        g_print ("End of stream\n");
+        g_main_loop_quit (loop);
+      }
       break;
     case GST_MESSAGE_WARNING:
     {
@@ -475,13 +492,32 @@ main (int argc, char *argv[])
   cudaGetDevice(&current_device);
   struct cudaDeviceProp prop;
   cudaGetDeviceProperties(&prop, current_device);
+  gboolean sync = TRUE;
+  gboolean display = TRUE;
 
   /* Check input arguments */
-  if (argc != 2) {
-    g_printerr ("Usage: %s <uri1> \n", argv[0]);
+  if ((argc != 5)) {
+    g_printerr ("Usage: %s <uri> <run forever> <sink> <sync>\n", argv[0]);
+    g_printerr ("     : <run forever> 0 or 1 \n");
+    g_printerr ("     : <sink> filesink (generates test.mkv) or nveglglessink \n");
+    g_printerr ("     : <sync> 0 or 1 \n\n");
+    g_printerr ("example: %s file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4 0 filesink 1\n", argv[0]);
     return -1;
   }
-  num_sources = argc - 1;
+  if (!strcmp(argv[3],"filesink")){
+    display =FALSE;
+  }
+  else if  (!strcmp(argv[3],"nveglglessink")){
+    display =TRUE;
+  }
+  else {
+    g_printerr ("Error: set correct sink filesink or nveglglessink\n");
+    return -1;
+  }
+
+  num_sources = 1;
+  g_run_forever = atoi(argv[2]);
+  sync = atoi(argv[4]);
 
   /* Standard GStreamer initialization */
   gst_init (&argc, &argv);
@@ -497,6 +533,7 @@ main (int argc, char *argv[])
   streammux = gst_element_factory_make ("nvstreammux", "stream-muxer");
   g_object_set (G_OBJECT (streammux), "batched-push-timeout", 25000, NULL);
   g_object_set (G_OBJECT (streammux), "batch-size", 30, NULL);
+  g_object_set (G_OBJECT (streammux), "no-pipeline-eos", g_run_forever, NULL);
   SET_GPU_ID (streammux, GPU_ID);
 
   if (!pipeline || !streammux) {
@@ -532,7 +569,7 @@ main (int argc, char *argv[])
   nvvideoconvert =
       gst_element_factory_make ("nvvideoconvert", "nvvideo-converter");
 
-  if(prop.integrated) {
+  if(prop.integrated && display) {
     nvtransform = gst_element_factory_make ("nvegltransform", "nvegltransform");
   }
 
@@ -545,8 +582,14 @@ main (int argc, char *argv[])
   sgie2 = gst_element_factory_make ("nvinfer", "secondary-nvinference-engine2");
   sgie3 = gst_element_factory_make ("nvinfer", "secondary-nvinference-engine3");
 
+  if (display){
   /* Finally render the osd output */
-  sink = gst_element_factory_make (SINK_ELEMENT, "nveglglessink");
+    sink = gst_element_factory_make (SINK_ELEMENT, "nveglglessink");
+  }
+  else {
+    sink = gst_element_factory_make ("nvvideoencfilesinkbin","sink");
+    g_object_set (G_OBJECT(sink), "container", 2, "output-file", "test.mkv", NULL);
+  }
   if(prop.integrated) {
     if (!pgie || !sgie1 || !sgie2 || !sgie3 || !tiler || !nvvideoconvert || !nvosd
         || !sink || !tracker || !nvtransform) {
@@ -636,7 +679,7 @@ main (int argc, char *argv[])
     }
   }
 
-  g_object_set (G_OBJECT (sink), "sync", FALSE, "qos", FALSE, NULL);
+  g_object_set (G_OBJECT (sink), "sync", sync, "qos", FALSE, NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
@@ -651,7 +694,7 @@ main (int argc, char *argv[])
 
   /* Wait till pipeline encounters an error or EOS */
   g_print ("Running...\n");
-  g_timeout_add_seconds (10, add_sources, (gpointer) g_source_bin_list);
+  g_timeout_add_seconds (15, add_sources, (gpointer) g_source_bin_list);
   g_main_loop_run (loop);
 
   /* Out of the main loop, clean up nicely */

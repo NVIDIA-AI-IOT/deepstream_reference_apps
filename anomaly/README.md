@@ -1,4 +1,4 @@
-# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 6.1
+# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 6.2
 
 ## Introduction
 The project contains anomaly detection application and auxiliary plug-ins to show the
@@ -36,8 +36,8 @@ nvmultistreamtiler width=1920 height=1080 ! nvvideoconvert ! nvdsosd ! nveglgles
 cd /opt/nvidia/deepstream/deepstream/
 gst-launch-1.0 filesrc location = samples/streams/sample_1080p_h264.mp4 ! qtdemux ! h264parse ! nvv4l2decoder ! m.sink_0 \
 nvstreammux name=m batch-size=1 width=1280 height=720 ! nvinfer config-file-path= samples/configs/deepstream-app/config_infer_primary.txt  \
-! nvof ! tee name=t ! queue ! nvofvisual ! nvmultistreamtiler width=1920 height=1080 !  nvegltransform ! nveglglessink sync=0 t. ! queue ! dsdirection ! \
-nvmultistreamtiler width=1920 height=1080 ! nvvideoconvert ! nvdsosd ! nvegltransform ! nveglglessink sync=0
+! nvof ! tee name=t ! queue ! nvofvisual ! nvmultistreamtiler width=1920 height=1080 ! nv3dsink sync=0 t. ! queue ! dsdirection ! \
+nvmultistreamtiler width=1920 height=1080 ! nvvideoconvert ! nvdsosd ! nv3dsink sync=0
 ```
 
 3. Test direction calculation using optical flow on two video inputs on dGPU, run following commands
@@ -59,7 +59,7 @@ Anomaly detection app pipeline:
  $ cd apps/deepstream-anomaly-detection-test/
  $ Set CUDA_VER in the MakeFile as per platform.
      For Jetson, CUDA_VER=11.4
-     For x86, CUDA_VER=11.6
+     For x86, CUDA_VER=11.8
  $ sudo make
 
  $ ./deepstream-anomaly-detection-app <uri1> [uri2] ... [uriN]

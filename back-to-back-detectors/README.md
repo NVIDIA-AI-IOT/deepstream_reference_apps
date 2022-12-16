@@ -1,4 +1,4 @@
-# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 6.1
+# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 6.2
 
 ## Introduction
 The project contains Back to Back detector application to show the
@@ -37,7 +37,7 @@ Back to back detectors app pipeline:
 ```
   $ Set CUDA_VER in the MakeFile as per platform.
       For Jetson, CUDA_VER=11.4
-      For x86, CUDA_VER=11.6
+      For x86, CUDA_VER=11.8
   $ sudo make
 
   $ ./back-to-back-detectors <h264_elementary_stream>
