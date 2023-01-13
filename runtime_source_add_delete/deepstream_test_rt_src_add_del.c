@@ -533,7 +533,7 @@ main (int argc, char *argv[])
   streammux = gst_element_factory_make ("nvstreammux", "stream-muxer");
   g_object_set (G_OBJECT (streammux), "batched-push-timeout", 25000, NULL);
   g_object_set (G_OBJECT (streammux), "batch-size", 30, NULL);
-  g_object_set (G_OBJECT (streammux), "no-pipeline-eos", g_run_forever, NULL);
+  g_object_set (G_OBJECT (streammux), "drop-pipeline-eos", g_run_forever, NULL);
   SET_GPU_ID (streammux, GPU_ID);
 
   if (!pipeline || !streammux) {
