@@ -32,7 +32,6 @@
 #define PGIE_CLASS_ID_PERSON 2
 #define SET_GPU_ID(object, gpu_id) g_object_set (G_OBJECT (object), "gpu-id", gpu_id, NULL);
 #define SET_MEMORY(object, mem_id) g_object_set (G_OBJECT (object), "nvbuf-memory-type", mem_id, NULL);
-#define SINK_ELEMENT "nveglglessink"
 
 GMainLoop *loop = NULL;
 /* The muxer output resolution must be set if the input streams will be of
@@ -486,7 +485,6 @@ main (int argc, char *argv[])
   guint i, num_sources;
   guint tiler_rows, tiler_columns;
   guint pgie_batch_size;
-  GstElement *nvtransform;
 
   int current_device = -1;
   cudaGetDevice(&current_device);
@@ -499,19 +497,19 @@ main (int argc, char *argv[])
   if ((argc != 5)) {
     g_printerr ("Usage: %s <uri> <run forever> <sink> <sync>\n", argv[0]);
     g_printerr ("     : <run forever> 0 or 1 \n");
-    g_printerr ("     : <sink> filesink (generates test.mkv) or nveglglessink \n");
+    g_printerr ("     : <sink> filesink (generates test.mkv) or nveglglessink (dGPU) or nv3dsink (Jetson)\n");
     g_printerr ("     : <sync> 0 or 1 \n\n");
     g_printerr ("example: %s file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4 0 filesink 1\n", argv[0]);
     return -1;
   }
   if (!strcmp(argv[3],"filesink")){
-    display =FALSE;
+    display = FALSE;
   }
-  else if  (!strcmp(argv[3],"nveglglessink")){
-    display =TRUE;
+  else if  (!strcmp(argv[3],"nveglglessink") || !strcmp(argv[3],"nv3dsink") ){
+    display = TRUE;
   }
   else {
-    g_printerr ("Error: set correct sink filesink or nveglglessink\n");
+    g_printerr ("Error: set correct sink: filesink, nveglglessink or nv3dsink\n");
     return -1;
   }
 
@@ -569,10 +567,6 @@ main (int argc, char *argv[])
   nvvideoconvert =
       gst_element_factory_make ("nvvideoconvert", "nvvideo-converter");
 
-  if(prop.integrated && display) {
-    nvtransform = gst_element_factory_make ("nvegltransform", "nvegltransform");
-  }
-
   /* Create OSD to draw on the converted RGBA buffer */
   nvosd = gst_element_factory_make ("nvdsosd", "nv-onscreendisplay");
 
@@ -584,24 +578,21 @@ main (int argc, char *argv[])
 
   if (display){
   /* Finally render the osd output */
-    sink = gst_element_factory_make (SINK_ELEMENT, "nveglglessink");
+    if (prop.integrated) {
+      sink = gst_element_factory_make ("nv3dsink", "nv3dsink");
+    } else {
+      sink = gst_element_factory_make ("nveglglessink", "nveglglessink");
+    }
   }
   else {
     sink = gst_element_factory_make ("nvvideoencfilesinkbin","sink");
     g_object_set (G_OBJECT(sink), "container", 2, "output-file", "test.mkv", NULL);
   }
-  if(prop.integrated) {
-    if (!pgie || !sgie1 || !sgie2 || !sgie3 || !tiler || !nvvideoconvert || !nvosd
-        || !sink || !tracker || !nvtransform) {
-      g_printerr ("One element could not be created. Exiting.\n");
-      return -1;
-    }
-  } else {
-    if (!pgie || !sgie1 || !sgie2 || !sgie3 || !tiler || !nvvideoconvert || !nvosd
-        || !sink || !tracker) {
-      g_printerr ("One element could not be created. Exiting.\n");
-      return -1;
-    }
+
+  if (!pgie || !sgie1 || !sgie2 || !sgie3 || !tiler || !nvvideoconvert || !nvosd
+      || !sink || !tracker) {
+    g_printerr ("One element could not be created. Exiting.\n");
+    return -1;
   }
 
   g_object_set (G_OBJECT (streammux), "width", MUXER_OUTPUT_WIDTH, "height",
@@ -658,25 +649,13 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (pipeline), pgie, tracker, sgie1, sgie2, sgie3,
       tiler, nvvideoconvert, nvosd, sink, NULL);
 
-  if(prop.integrated) {
-    gst_bin_add (GST_BIN (pipeline), nvtransform);
-  }
-
   /* we link the elements together */
   /* file-source -> h264-parser -> nvh264-decoder ->
    * nvinfer -> nvvideoconvert -> nvosd -> video-renderer */
-  if(prop.integrated) {
-    if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,
-            tiler, nvvideoconvert, nvosd, nvtransform, sink, NULL)) {
-      g_printerr ("Elements could not be linked. Exiting.\n");
-      return -1;
-    }
-  } else {
-    if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,
-            tiler, nvvideoconvert, nvosd, sink, NULL)) {
-      g_printerr ("Elements could not be linked. Exiting.\n");
-      return -1;
-    }
+  if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,
+          tiler, nvvideoconvert, nvosd, sink, NULL)) {
+    g_printerr ("Elements could not be linked. Exiting.\n");
+    return -1;
   }
 
   g_object_set (G_OBJECT (sink), "sync", sync, "qos", FALSE, NULL);
