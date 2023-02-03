@@ -74,7 +74,7 @@ gchar pgie_classes_str[4][32] = { "Vehicle", "TwoWheeler", "Person",
 
 GstElement *pipeline = NULL, *streammux = NULL, *sink = NULL, *pgie = NULL,
     *sgie1 = NULL, *sgie2 = NULL, *sgie3 = NULL,
-    *nvvideoconvert = NULL, *nvosd = NULL, *tiler = NULL, *tracker = NULL;
+    *nvvideoconvert = NULL, *nvosd = NULL, *tiler = NULL, *tracker = NULL, *queue = NULL;
 
 gchar *uri = NULL;
 
@@ -575,6 +575,7 @@ main (int argc, char *argv[])
   sgie1 = gst_element_factory_make ("nvinfer", "secondary-nvinference-engine1");
   sgie2 = gst_element_factory_make ("nvinfer", "secondary-nvinference-engine2");
   sgie3 = gst_element_factory_make ("nvinfer", "secondary-nvinference-engine3");
+  queue = gst_element_factory_make ("queue", "queue");
 
   if (display){
   /* Finally render the osd output */
@@ -647,12 +648,12 @@ main (int argc, char *argv[])
   /* Set up the pipeline */
   /* we add all elements into the pipeline */
   gst_bin_add_many (GST_BIN (pipeline), pgie, tracker, sgie1, sgie2, sgie3,
-      tiler, nvvideoconvert, nvosd, sink, NULL);
+      tiler, nvvideoconvert, nvosd, queue, sink, NULL);
 
   /* we link the elements together */
   /* file-source -> h264-parser -> nvh264-decoder ->
    * nvinfer -> nvvideoconvert -> nvosd -> video-renderer */
-  if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,
+  if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,queue,
           tiler, nvvideoconvert, nvosd, sink, NULL)) {
     g_printerr ("Elements could not be linked. Exiting.\n");
     return -1;
@@ -688,3 +689,4 @@ main (int argc, char *argv[])
   g_mutex_clear (&eos_lock);
   return 0;
 }
+
