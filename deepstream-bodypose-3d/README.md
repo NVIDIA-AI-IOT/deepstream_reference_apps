@@ -1,4 +1,4 @@
-# DeepStream Bodypose 3D
+# 3d-bodypose-deepstream
 
 ## Introduction
 The project contains 3D Body Pose application built using  Deepstream SDK.
@@ -6,17 +6,16 @@ The project contains 3D Body Pose application built using  Deepstream SDK.
 This application is built for [KAMA: 3D Keypoint Aware Body Mesh Articulation](https://arxiv.org/abs/2104.13502).
 ![sample pose output](./sources/.screenshot.png)
 ## Prerequisites:
-DeepStream SDK 6.0 installed which is available at  http://developer.nvidia.com/deepstream-sdk
+DeepStream SDK 6.2 installed which is available at  http://developer.nvidia.com/deepstream-sdk
 Please follow instructions in the `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/deepstream-app/README` on how
 to install the prequisites for building Deepstream SDK apps.
 
 ## Installation
-Nvidia driver version `470.57.00` or higher is required. `nvidia-docker2` should be
-installed before proceeding to the next steps.
+Follow https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_Quickstart.html to setup the DeepStream SDK
 
 1. Preferably clone the app in
   `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/`
-and define project home as `export BODYPOSE3D_HOME=<parent-path>/deepstream-bodypose-3d`.
+and define project home as `export BODYPOSE3D_HOME=<parent-path>/3d-bodypose-deepstream`.
 
 2. Install [NGC CLI](https://ngc.nvidia.com/setup/installers/cli) and download [PeopleNet](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet) and [BodyPose3DNet](https://ngc.nvidia.com/models/nvstaging:tao:bodypose3dnet) from NGC.
 ```bash
@@ -50,7 +49,7 @@ $ tar xvzf eigen-3.4.0.tar.gz
 $ ln eigen-3.4.0 eigen -s
 ```
 
-4. Copy and build custom `NvDsEventMsgMeta` into Deepstream SDK installation path.
+4. For Deepstream SDK version older than 6.2, copy and build custom `NvDsEventMsgMeta` into Deepstream SDK installation path. Copy and build custom `NvDsEventMsgMeta` into Deepstream SDK installation path.
 The custom `NvDsEventMsgMeta` structure handles pose3d and pose25d meta data.
 ```bash
 # Copy deepstream sources
@@ -59,6 +58,7 @@ cp $BODYPOSE3D_HOME/sources/deepstream-sdk/eventmsg_payload.cpp /opt/nvidia/deep
 cd /opt/nvidia/deepstream/deepstream/sources/libs/nvmsgconv
 make; make install
 ```
+Please note that this step is not necessary for Deepstream SDK version 6.2 or newer.
 
 ## Build the applications
 ```bash

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -113,15 +113,12 @@ Eigen::Matrix3f _K;// Camera intrinsic matrix
 //---Global variables derived from program arguments---
 
 static GstElement *pipeline = NULL;
-static GMutex _fps_lock;
-static std::queue<gdouble> _fps_queue;
-static gdouble _fps_sum = 0;
-const int _fps_queue_max_size = 100;
-static timeval _prev_time;
+static gint _fps_interval=1;
+static gint _osd_process_mode = 0;
 
 gint frame_number = 0;
 
-constexpr int NVDS_OBJECT_TYPE_PERSON_EXT_POSE  = 0x103; //NVDS_OBJECT_TYPE_UNKNOWN = 102
+#if (DS_VERSION_MAJOR < 6) || ((DS_VERSION_MAJOR == 6) && (DS_VERSION_MINOR < 2))
 typedef struct NvDsJoint {
   gdouble confidence;
   gdouble x;
@@ -136,6 +133,7 @@ typedef struct NvDsJoints {
   NvDsJoint *joints;
 
 }NvDsJoints;
+#endif
 
 typedef struct NvDsPersonPoseExt {
   gint num_poses;
@@ -441,31 +439,22 @@ void generate_ts_rfc3339 (char *buf, int buf_size)
   strncat(buf, strmsec, buf_size);
 }
 
-gpointer meta_copy_func (gpointer data, gpointer user_data)
+static
+gpointer copy_bodypose_meta (gpointer data, gpointer user_data)
 {
   NvDsUserMeta *user_meta = (NvDsUserMeta *) data;
   NvDsEventMsgMeta *srcMeta = (NvDsEventMsgMeta *) user_meta->user_meta_data;
   NvDsEventMsgMeta *dstMeta = NULL;
-  NvDsPersonPoseExt *srcExtMsg = NULL;
-  NvDsPersonPoseExt *dstExtMsg = NULL;
+  NvDsPersonObject *srcExt = NULL;
+  NvDsPersonObject *dstExt = NULL;
 
   dstMeta = (NvDsEventMsgMeta *)g_memdup ((gpointer)srcMeta, sizeof(NvDsEventMsgMeta));
-  dstMeta->extMsg = (gpointer)g_memdup(srcMeta->extMsg, sizeof(srcMeta->extMsgSize));
-  srcExtMsg =  (NvDsPersonPoseExt*)srcMeta->extMsg;
-  dstExtMsg =  (NvDsPersonPoseExt*)dstMeta->extMsg;
 
   // pose
-  dstExtMsg->num_poses = srcExtMsg->num_poses;
-  if (srcExtMsg->num_poses > 0) {
-    dstExtMsg->poses =
-      (NvDsJoints *)g_memdup ((gpointer)srcExtMsg->poses,
-          srcExtMsg->num_poses * sizeof(NvDsJoints));
-
-    for (int ii = 0; ii < dstExtMsg->num_poses; ii++) {
-      dstExtMsg->poses[ii].joints = (NvDsJoint *)g_memdup ((gpointer)srcExtMsg->poses[ii].joints,
-                                    sizeof(NvDsJoint)*dstExtMsg->poses[ii].num_joints);
-    }
-  }
+  dstMeta->pose.num_joints = srcMeta->pose.num_joints;
+  dstMeta->pose.pose_type = srcMeta->pose.pose_type;
+  dstMeta->pose.joints = (NvDsJoint *)g_memdup ((gpointer)srcMeta->pose.joints,
+                                    sizeof(NvDsJoint)*srcMeta->pose.num_joints);
 
   if (srcMeta->ts)
     dstMeta->ts = g_strdup (srcMeta->ts);
@@ -483,26 +472,28 @@ gpointer meta_copy_func (gpointer data, gpointer user_data)
     dstMeta->objectId = g_strdup (srcMeta->objectId);
   }
 
+  if (srcMeta->extMsg){
+    dstMeta->extMsg = g_memdup(srcMeta->extMsg, srcMeta->extMsgSize);
+    dstMeta->extMsgSize = srcMeta->extMsgSize;
+    srcExt = (NvDsPersonObject *)srcMeta->extMsg;
+    dstExt = (NvDsPersonObject *)dstMeta->extMsg;
+    dstExt->gender = g_strdup(srcExt->gender);
+    dstExt->hair = g_strdup(srcExt->hair);
+    dstExt->cap = g_strdup(srcExt->cap);
+    dstExt->apparel = g_strdup(srcExt->apparel);
+    dstExt->age = srcExt->age;
+  }
   return dstMeta;
 }
 
-void meta_free_func (gpointer data, gpointer user_data)
+static void
+release_bodypose_meta (gpointer data, gpointer user_data)
 {
   NvDsUserMeta *user_meta = (NvDsUserMeta *) data;
   NvDsEventMsgMeta *srcMeta = (NvDsEventMsgMeta *) user_meta->user_meta_data;
-  NvDsPersonPoseExt *poseSrcMeta = (NvDsPersonPoseExt*)srcMeta->extMsg;
 
   // pose
-  if (poseSrcMeta && poseSrcMeta->poses) {
-    for (int ii = 0; ii < poseSrcMeta->num_poses; ii++) {
-      g_free (poseSrcMeta->poses[ii].joints);
-    }
-    g_free (poseSrcMeta->poses);
-    g_free (poseSrcMeta);
-    srcMeta->extMsgSize = 0;
-    srcMeta->extMsg = NULL;
-  }
-
+  g_free (srcMeta->pose.joints);
   g_free (srcMeta->ts);
   g_free (srcMeta->sensorStr);
 
@@ -514,6 +505,10 @@ void meta_free_func (gpointer data, gpointer user_data)
   if(srcMeta->objectId) {
     g_free (srcMeta->objectId);
   }
+
+  g_free (srcMeta->extMsg);
+  srcMeta->extMsgSize = 0;
+  srcMeta->extMsg = NULL;
 
   g_free (user_meta->user_meta_data);
   user_meta->user_meta_data = NULL;
@@ -528,61 +523,60 @@ void build_msg_meta(NvDsFrameMeta *frame_meta,
       const std::vector<NvAR_Point3f> &p3dLifted)
 {
   NvDsEventMsgMeta *msg_meta = (NvDsEventMsgMeta *) g_malloc0 (sizeof (NvDsEventMsgMeta));
-  NvDsPersonPoseExt *msg_meta_ext = (NvDsPersonPoseExt *) g_malloc0 (sizeof (NvDsPersonPoseExt));
+  NvDsPersonObject *msg_meta_ext = (NvDsPersonObject *) g_malloc0 (sizeof (NvDsPersonObject));
 
   msg_meta->type = NVDS_EVENT_ENTRY; //Should this be ENTRY
-  msg_meta->objType = (NvDsObjectType) NVDS_OBJECT_TYPE_PERSON_EXT_POSE;
+  msg_meta->objType = (NvDsObjectType) NVDS_OBJECT_TYPE_PERSON;
   msg_meta->bbox.top = obj_meta->rect_params.top;
   msg_meta->bbox.left = obj_meta->rect_params.left;
   msg_meta->bbox.width = obj_meta->rect_params.width;
   msg_meta->bbox.height = obj_meta->rect_params.height;
   msg_meta->extMsg = msg_meta_ext;
-  msg_meta->extMsgSize =  sizeof(NvDsPersonPoseExt);
+  msg_meta->extMsgSize =  sizeof(NvDsPersonObject);
+  msg_meta_ext->gender  = g_strdup("");
+  msg_meta_ext->hair    = g_strdup("");
+  msg_meta_ext->cap     = g_strdup("");
+  msg_meta_ext->apparel = g_strdup("");
+  msg_meta_ext->age = 0;
+
   //---msg_meta->poses---
   if (1) {
     int pose_types[8];
 
     if (_publish_pose) {
-      msg_meta_ext->num_poses = 1;// pose3D OR pose25D
       if (!strcmp(_publish_pose, "pose3d"))
-        pose_types[0] = 1;// pose3d
+        msg_meta->pose.pose_type = 2;// pdatapose3D
       else if (!strcmp(_publish_pose, "pose25d"))
-        pose_types[0] = 2;// pose25d
+        msg_meta->pose.pose_type = 1;// pdatapose3D
     }
     else {
-      msg_meta_ext->num_poses = 2;// pose3D AND pose25D
-      pose_types[0] = 1;// pose3d
-      pose_types[1] = 2;// pose25d
+      msg_meta->pose.pose_type = 2;// pdatapose3D
     }
-    msg_meta_ext->poses = (NvDsJoints *)g_malloc0(sizeof(NvDsJoints) * msg_meta_ext->num_poses);
 
-    for (int ii = 0; ii < msg_meta_ext->num_poses; ii++) {
-      msg_meta_ext->poses[ii].num_joints = numKeyPoints;
-      msg_meta_ext->poses[ii].pose_type = pose_types[ii];
-      msg_meta_ext->poses[ii].joints = (NvDsJoint *)g_malloc0(sizeof(NvDsJoint) * msg_meta_ext->poses[ii].num_joints);
+    msg_meta->pose.num_joints = numKeyPoints;
+    msg_meta->pose.joints = (NvDsJoint *)g_malloc0(sizeof(NvDsJoint) * numKeyPoints);
 
-      if (msg_meta_ext->poses[ii].pose_type == 0) {// pose25d without zRel
-        for(int i = 0; i < msg_meta_ext->poses[ii].num_joints; i++){
-          msg_meta_ext->poses[ii].joints[i].x = keypoints[2*i  ];
-          msg_meta_ext->poses[ii].joints[i].y = keypoints[2*i+1];
-          msg_meta_ext->poses[ii].joints[i].confidence = keypoints_confidence[i];
-        }
+    if (msg_meta->pose.pose_type == 0) {// pose25d without zRel
+      for(int i = 0; i < msg_meta->pose.num_joints; i++){
+        msg_meta->pose.joints[i].x = keypoints[2*i  ];
+        msg_meta->pose.joints[i].y = keypoints[2*i+1];
+        msg_meta->pose.joints[i].confidence = keypoints_confidence[i];
       }
-      else if (msg_meta_ext->poses[ii].pose_type == 1) {// pose3d
-        for(int i = 0; i < msg_meta_ext->poses[ii].num_joints; i++){
-          msg_meta_ext->poses[ii].joints[i].x = p3dLifted[i].x;
-          msg_meta_ext->poses[ii].joints[i].y = p3dLifted[i].y;
-          msg_meta_ext->poses[ii].joints[i].z = p3dLifted[i].z;
-          msg_meta_ext->poses[ii].joints[i].confidence = keypoints_confidence[i];
-        }
+    }
+    else if (msg_meta->pose.pose_type == 2) {// pose3d
+      for(int i = 0; i < msg_meta->pose.num_joints; i++){
+        msg_meta->pose.joints[i].x = p3dLifted[i].x;
+        msg_meta->pose.joints[i].y = p3dLifted[i].y;
+        msg_meta->pose.joints[i].z = p3dLifted[i].z;
+        msg_meta->pose.joints[i].confidence = keypoints_confidence[i];
       }
-      else if (msg_meta_ext->poses[ii].pose_type == 2) {// pose25d
-        for(int i = 0; i < msg_meta_ext->poses[ii].num_joints; i++){
-          msg_meta_ext->poses[ii].joints[i].x = keypoints[2*i  ];
-          msg_meta_ext->poses[ii].joints[i].y = keypoints[2*i+1];
-          msg_meta_ext->poses[ii].joints[i].z = keypointsZRel[i];
-          msg_meta_ext->poses[ii].joints[i].confidence = keypoints_confidence[i];
-        }
+    }
+    else if (msg_meta->pose.pose_type == 1) {// pose25d
+      for(int i = 0; i < msg_meta->pose.num_joints; i++){
+        msg_meta->pose.joints[i].x = keypoints[2*i  ];
+        msg_meta->pose.joints[i].y = keypoints[2*i+1];
+        msg_meta->pose.joints[i].z = keypointsZRel[i];
+        msg_meta->pose.joints[i].confidence = keypoints_confidence[i];
       }
     }
   }
@@ -593,7 +587,8 @@ void build_msg_meta(NvDsFrameMeta *frame_meta,
   // msg_meta->location =
   // msg_meta->coordinate =
   // msg_meta->objSignature =
-  msg_meta->objClassId = PGIE_CLASS_ID_PERSON;
+  //msg_meta->objClassId = PGIE_CLASS_ID_PERSON;
+  msg_meta->objClassId = obj_meta->class_id;
   // msg_meta->sensorId =
   // msg_meta->moduleId =
   // msg_meta->placeId =
@@ -616,8 +611,8 @@ void build_msg_meta(NvDsFrameMeta *frame_meta,
   if (user_event_meta) {
     user_event_meta->user_meta_data = (void *) msg_meta;
     user_event_meta->base_meta.meta_type = NVDS_EVENT_MSG_META;
-    user_event_meta->base_meta.copy_func = (NvDsMetaCopyFunc) meta_copy_func;
-    user_event_meta->base_meta.release_func = (NvDsMetaReleaseFunc) meta_free_func;
+    user_event_meta->base_meta.copy_func = (NvDsMetaCopyFunc) copy_bodypose_meta;
+    user_event_meta->base_meta.release_func = (NvDsMetaReleaseFunc)release_bodypose_meta;
     nvds_add_user_meta_to_frame(frame_meta, user_event_meta);
   } else {
     g_printerr("Error in attaching event meta to buffer\n");
@@ -644,31 +639,31 @@ void osd_upper_body(NvDsFrameMeta* frame_meta,
                             15, 16, 15, 17, 19, 17, 18, 16,  0,  1,  0,  2,
                              0,  3};
   const NvOSD_ColorParams bone_colors[] = {
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{0, 255, 0, 1},
-                          NvOSD_ColorParams{0, 255, 0, 1},
-                          NvOSD_ColorParams{0, 255, 0, 1},
-                          NvOSD_ColorParams{0, 255, 0, 1},
-                          NvOSD_ColorParams{0, 255, 0, 1},
-                          NvOSD_ColorParams{0, 255, 0, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{0, 255, 0, 1}};
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{0, 1.0, 0, 1},
+                          NvOSD_ColorParams{0, 1.0, 0, 1},
+                          NvOSD_ColorParams{0, 1.0, 0, 1},
+                          NvOSD_ColorParams{0, 1.0, 0, 1},
+                          NvOSD_ColorParams{0, 1.0, 0, 1},
+                          NvOSD_ColorParams{0, 1.0, 0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{0, 1.0, 0, 1}};
 
   for (int ii = 0; ii < num_joints; ii++) {
     int i = idx_joints[ii];
@@ -681,9 +676,9 @@ void osd_upper_body(NvDsFrameMeta* frame_meta,
     cparams.xc = keypoints[2 * i    ];
     cparams.yc = keypoints[2 * i + 1];
     cparams.radius = keypoint_radius;
-    cparams.circle_color = NvOSD_ColorParams{244, 67, 54, 1};
+    cparams.circle_color =  NvOSD_ColorParams{0.96, 0.26, 0.21, 1};
     cparams.has_bg_color = 1;
-    cparams.bg_color = NvOSD_ColorParams{244, 67, 54, 1};
+    cparams.bg_color =  NvOSD_ColorParams{0.96, 0.26, 0.21, 1};
     dmeta->num_circles++;
   }
 
@@ -725,16 +720,16 @@ void osd_lower_body(NvDsFrameMeta* frame_meta,
   const int idx_bones[] = {  2,  5,  5,  8,  1,  4,  4,  7,  7, 13,
                              8, 14,  8, 10,  7,  9, 11,  9, 12, 10};
   const NvOSD_ColorParams bone_colors[] = {
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{0, 0, 255, 1},
-                          NvOSD_ColorParams{255, 0, 0, 1}};
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{0, 0, 1.0, 1},
+                          NvOSD_ColorParams{1.0, 0, 0, 1}};
 
   for (int ii = 0; ii < num_joints; ii++) {
     int i = idx_joints[ii];
@@ -747,9 +742,9 @@ void osd_lower_body(NvDsFrameMeta* frame_meta,
     cparams.xc = keypoints[2 * i    ];
     cparams.yc = keypoints[2 * i + 1];
     cparams.radius = keypoint_radius;
-    cparams.circle_color = NvOSD_ColorParams{244, 67, 54, 1};
+    cparams.circle_color = NvOSD_ColorParams{0.96, 0.26, 0.21, 1};
     cparams.has_bg_color = 1;
-    cparams.bg_color = NvOSD_ColorParams{244, 67, 54, 1};
+    cparams.bg_color = NvOSD_ColorParams{0.96, 0.26, 0.21, 1};
     dmeta->num_circles++;
   }
 
@@ -1150,42 +1145,6 @@ sgie_src_pad_buffer_probe(GstPad *pad, GstPadProbeInfo *info,
   }
   // g_mutex_unlock (&str->struct_lock);
 
-  // FPS calculation
-  if (_print_fps){
-    g_mutex_lock(&_fps_lock);
-    {
-      timeval cur_time;
-      gettimeofday(&cur_time, NULL);
-
-      gdouble delta = cur_time.tv_sec - _prev_time.tv_sec;
-      delta += 0.000001 * (cur_time.tv_usec - _prev_time.tv_usec);
-      gdouble fps = 1.0 / delta;
-
-      _fps_queue.push(fps);
-
-      _fps_sum += fps;
-
-      // Maintain queue size
-      if (_fps_queue.size() > _fps_queue_max_size) {
-        _fps_sum -= _fps_queue.front();
-        _fps_queue.pop();
-      }
-
-      gdouble fps_avg = _fps_sum / _fps_queue.size();
-
-      // Get UTC time
-      time_t curr_time = time(NULL);
-      tm *tm_gmt = gmtime(&curr_time);
-      char* utc_time_str = asctime(tm_gmt);
-
-      g_print("**PERF: UTC %s", utc_time_str);
-      g_print("\tFPS: %.2f (%.2f)\n", fps, fps_avg);
-
-      _prev_time = cur_time;
-    }
-    g_mutex_unlock(&_fps_lock);
-  }
-
   return GST_PAD_PROBE_OK;
 }
 
@@ -1495,7 +1454,7 @@ bool verify_arguments()
   }
   else {// default value
     _tracker = (gchar *)g_malloc0(64);
-    strcpy(_tracker, "accuracy");
+    strcpy(_tracker, "perf");
   }
 
   if (_pose_filename) {
@@ -1549,8 +1508,8 @@ int main(int argc, char *argv[])
   // Padding the image and removing the padding
   GstElement *nvvideoconvert_enlarge = NULL, *nvvideoconvert_reduce = NULL,
     *capsFilter_enlarge = NULL, *capsFilter_reduce = NULL;
-  GstElement *nvvidconv = NULL, *nvosd = NULL, *tracker = NULL,
-    *filesink = NULL, *transform = NULL, *nvvideoencfilesinkbin = NULL,
+  GstElement *nvvidconv = NULL, *nvosd = NULL, *tracker = NULL, *nvdslogger = NULL,
+    *filesink = NULL, *nvvideoencfilesinkbin = NULL,
     *nvrtspoutsinkbin = NULL;
   GstElement *tee = NULL, *msgbroker = NULL, *msgconv = NULL;// msg broker and converter
   GstBus *bus = NULL;
@@ -1576,7 +1535,7 @@ with \"rtsp://\" or \"file://\".",
         NULL}
       ,
       {"output", 0, 0, G_OPTION_ARG_STRING, &_output,
-        "Output video address. Either \"rtsp://\" or a file path is \
+        "Output video address. Either \"rtsp://\" or a file path or \"fakesink\" is \
 acceptable. If the value is \"rtsp://\", then the result video is \
 published at \"rtsp://localhost:8554/ds-test\".",
         NULL}
@@ -1598,11 +1557,17 @@ are published to the message broker.",
       ,
       {"tracker", 0, 0, G_OPTION_ARG_STRING, &_tracker,
         "Specify the NvDCF tracker mode. The acceptable value is either \
-\"accuracy\" or \"perf\". The default value is \"accuracy\".",
+\"accuracy\" or \"perf\". The default value is \"perf\"  \"accuracy\" mode"\
+" requires DeepSORT model to be installed. Please refer to [Setup Official Re-ID Model]"\
+"(https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_plugin_gst-nvtracker.html) section for details.",
         NULL}
       ,
       {"fps", 0, 0, G_OPTION_ARG_NONE, &_print_fps,
         "Print FPS in the format of current_fps (averaged_fps).",
+        NULL}
+      ,
+      {"fps-interval", 0, 0, G_OPTION_ARG_INT, &_fps_interval,
+        "Interval in seconds to print the fps, applicable only with --fps flag.",
         NULL}
       ,
       {"width", 0, 0, G_OPTION_ARG_INT, &_image_width,
@@ -1615,6 +1580,10 @@ are published to the message broker.",
       ,
       {"focal", 0, 0, G_OPTION_ARG_DOUBLE, &_focal_length_dbl,
         "Camera focal length in millimeters. The default value is 800.79041.",//FOCAL_LENGTH
+        NULL}
+      ,
+      {"osd-process-mode", 0, 0, G_OPTION_ARG_INT, &_osd_process_mode,
+        "OSD process mode CPU - 0 or GPU 1.",
         NULL}
       ,
       {NULL}
@@ -1660,7 +1629,6 @@ are published to the message broker.",
   }
   //---Parse command line options---
 
-  g_mutex_init(&_fps_lock);
 
   /* Standard GStreamer initialization */
   // signal(SIGINT, sigintHandler);
@@ -1778,10 +1746,29 @@ are published to the message broker.",
       NULL);
   }
 
+  if (_print_fps){
+      nvdslogger = gst_element_factory_make ("nvdslogger", "nvdslogger");
+      if (!nvdslogger) {
+          g_printerr ("Nvdslogger could not be created. Exiting.\n");
+          return -1;
+      }
+      if (_fps_interval){
+        g_object_set (G_OBJECT(nvdslogger), "fps-measurement-interval-sec",
+              _fps_interval,
+              NULL);
+      }
+  }
+  else {
+      nvdslogger = gst_element_factory_make ("queue", NULL);
+      if (!nvdslogger) {
+          g_printerr ("queue could not be created. Exiting.\n");
+          return -1;
+      }
+  }
+
   /* Lets add probe to get informed of the meta data generated, we add probe to
    * the sink pad of the osd element, since by that time, the buffer would have
    * had got all the metadata. */
-  //GstPad* pgie_src_pad = gst_element_get_static_pad(pgie, "src");
   GstPad* pgie_src_pad = gst_element_get_static_pad(tracker, "src");
   if (!pgie_src_pad)
     g_printerr ("Unable to get src pad for pgie\n");
@@ -1789,8 +1776,6 @@ are published to the message broker.",
     gst_pad_add_probe(pgie_src_pad, GST_PAD_PROBE_TYPE_BUFFER,
         pgie_src_pad_buffer_probe, NULL, NULL);
   gst_object_unref (pgie_src_pad);
-  /* Create nvstreammux instance to form batches from one or more sources. */
-  //streammux_sgie = gst_element_factory_make ("nvstreammux", "streammux-sgie");
 
   /* 3d bodypose secondary gie */
   GstElement* sgie = gst_element_factory_make("nvinfer", "secondary-nvinference-engine");
@@ -1906,6 +1891,8 @@ are published to the message broker.",
     return -1;
   }
 
+  g_object_set (G_OBJECT(nvosd), "process-mode", _osd_process_mode, NULL);
+
   /* Lets add probe to get informed of the meta data generated, we add probe to
    * the sink pad of the osd element, since by that time, the buffer would have
    * had got all the metadata. */
@@ -1922,6 +1909,9 @@ are published to the message broker.",
     if (!strcmp(_output, "rtsp://")) {
       filesink = gst_element_factory_make("nvrtspoutsinkbin", "nv-filesink");
     }
+    else if (!strcmp(_output,"fakesink")){
+      filesink = gst_element_factory_make("fakesink", "nv-sink");
+    }
     else {
       filesink = gst_element_factory_make("nvvideoencfilesinkbin", "nv-filesink");
     }
@@ -1929,16 +1919,21 @@ are published to the message broker.",
       g_printerr ("Filesink could not be created. Exiting.\n");
       return -1;
     }
-    // strcat(output_path,"Pose_Estimation.mp4");
-    g_object_set(G_OBJECT(filesink), "output-file", _output, NULL);
-    g_object_set(G_OBJECT(filesink), "bitrate", 4000000, NULL);// 4000000// 20000000
-    //g_object_set(G_OBJECT(filesink), "profile", 3, NULL);
-    g_object_set(G_OBJECT(filesink), "codec", 2, NULL);//hevc
-    // g_object_set(G_OBJECT(filesink), "control-rate", 0, NULL);//hevc
+
+    if (strcmp(_output,"fakesink")){
+      g_object_set(G_OBJECT(filesink), "output-file", _output, NULL);
+      g_object_set(G_OBJECT(filesink), "bitrate", 4000000, NULL);
+      //g_object_set(G_OBJECT(filesink), "profile", 3, NULL);
+      g_object_set(G_OBJECT(filesink), "codec", 2, NULL);//hevc
+      // g_object_set(G_OBJECT(filesink), "control-rate", 0, NULL);//hevc
+    }
   }
   else {
-    filesink = gst_element_factory_make("nveglglessink", "nv-sink");
-    // filesink = gst_element_factory_make("fakesink", "fake-sink");
+    if (prop.integrated) {
+      filesink = gst_element_factory_make("nv3dsink", "nv-sink");
+    } else {
+      filesink = gst_element_factory_make("nveglglessink", "nv-sink");
+    }
   }
 
   /* Add all elements to the pipeline */
@@ -1946,42 +1941,25 @@ are published to the message broker.",
   gst_bin_add_many(GST_BIN(pipeline),
     nvvideoconvert_enlarge, capsFilter_enlarge,
     pgie, tracker, sgie, tee,
-    queue_nvvidconv, nvvidconv, nvosd, filesink,
+    queue_nvvidconv, nvvidconv, nvosd, filesink, nvdslogger,
     nvvideoconvert_reduce, capsFilter_reduce, NULL);
 
   // Link elements
   if (!gst_element_link_many(streammux_pgie,
       nvvideoconvert_enlarge, capsFilter_enlarge,
-      pgie, tracker, sgie, tee, NULL)) {
+      pgie, tracker, sgie, nvdslogger, tee, NULL)) {
     g_printerr ("Elements could not be linked. Exiting.\n");
     return -1;
   }
-  if (prop.integrated) { // Jetson
-
-    if (_output) {
-      if (!gst_element_link_many(queue_nvvidconv, nvvidconv, nvosd,
-            nvvideoconvert_reduce, capsFilter_reduce,
-            filesink, NULL)) {
-        g_printerr ("Elements could not be linked. Exiting.\n");
-        return -1;
-      }
-    }
-    else { //require nvegltransform for display
-      transform = gst_element_factory_make ("nvegltransform", "nvegl-transform");
-      if(!transform) {
-        g_printerr ("Nvegltransform on tegra could not be created. Exiting.\n");
-        return -1;
-      }
-      gst_bin_add (GST_BIN(pipeline),transform);
-      if (!gst_element_link_many(queue_nvvidconv, nvvidconv, nvosd,
-            nvvideoconvert_reduce, capsFilter_reduce,
-            transform, filesink, NULL)) {
-        g_printerr ("Elements could not be linked. Exiting.\n");
-        return -1;
-      }
+  if (prop.integrated && _output) { // Jetson
+    if (!gst_element_link_many(queue_nvvidconv, nvvidconv, nvosd,
+          nvvideoconvert_reduce, capsFilter_reduce,
+          filesink, NULL)) {
+      g_printerr ("Elements could not be linked. Exiting.\n");
+      return -1;
     }
   }
-  else { // dGPU
+  else { // dGPU & Jetson Display
     if (!gst_element_link_many(queue_nvvidconv, nvvidconv, nvosd,
           nvvideoconvert_reduce, capsFilter_reduce,
           filesink, NULL)) {
@@ -2085,7 +2063,6 @@ are published to the message broker.",
     fclose(_pose_file);
   }
 
-  g_mutex_clear(&_fps_lock);
 
   return 0;
 }

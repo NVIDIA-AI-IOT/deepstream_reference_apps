@@ -56,7 +56,7 @@ CFLAGS+= \
 	-I$(DEEPSTREAM_HOME)/sources/apps/apps-common/includes \
 	-I$(DEEPSTREAM_HOME)/sources/apps/sample_apps/deepstream-app \
 	-I../eigen \
-	-DDS_VERSION_MINOR=0 -DDS_VERSION_MAJOR=6
+	-DDS_VERSION_MINOR=2 -DDS_VERSION_MAJOR=6
 
 LIBS+= \
 	-L$(CUDA_HOME)/lib64 -lcudart -lcuda \
