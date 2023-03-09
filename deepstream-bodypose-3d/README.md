@@ -15,7 +15,7 @@ Follow https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_Quickstar
 
 1. Preferably clone the app in
   `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/`
-and define project home as `export BODYPOSE3D_HOME=<parent-path>/3d-bodypose-deepstream`.
+and define project home as `export BODYPOSE3D_HOME=<parent-path>/deepstream-bodypose-3d`.
 
 2. Install [NGC CLI](https://ngc.nvidia.com/setup/installers/cli) and download [PeopleNet](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet) and [BodyPose3DNet](https://ngc.nvidia.com/models/nvstaging:tao:bodypose3dnet) from NGC.
 ```bash
