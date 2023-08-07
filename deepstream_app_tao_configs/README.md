@@ -29,18 +29,23 @@ The following pre-trained models are provided:
 ```
 $ git clone https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps.git
 $ cd deepstream_reference_apps/deepstream_app_tao_configs/
-$ sudo cp -a * /opt/nvidia/deepstream/deepstream/samples/configs/tao_pretrained_models/
-```
-
-*******************************************************************************
-## 2. Download the models
-
-*******************************************************************************
-```
 $ sudo apt install -y wget zip
+```
+
+*******************************************************************************************
+## 2. Prepare Pretrained Models
+*******************************************************************************************
+Choose one of the following three inferencing methods:
+- For TensorRT based inferencing, please run the following commands
+```
+$ sudo cp -a * /opt/nvidia/deepstream/deepstream/samples/configs/tao_pretrained_models/
 $ cd /opt/nvidia/deepstream/deepstream/samples/configs/tao_pretrained_models/
 $ sudo ./download_models.sh
 ```
+- For Triton Inference Server based inferencing, the DeepStream application works as the Triton client:
+  * To set up the native Triton Inference Sever, please refer to [triton_server.md](https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps/tree/master/deepstream_app_tao_configs/triton_server.md).
+  * To set up the separated Triton Inference Sever, please refer to [triton_server_grpc.md](https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps/tree/master/deepstream_app_tao_configs/triton_server_grpc.md)
+
 
 For more information on TAO models,
 please refer https://github.com/NVIDIA-AI-IOT/deepstream_tao_apps#2-download-models.
@@ -69,14 +74,15 @@ $ sudo deepstream-app -c deepstream_app_source1_dashcamnet_vehiclemakenet_vehicl
 
 **Note:**
 
-1. For which model of the *deepstream_app_source1_$MODEL.txt* uses, please find from the **[primary-gie]** section in it, for example
+1. Modify the corresponding parts in the *deepstream_app_source1_$MODEL.txt* configuration to choose Which model or which inferencing module will be use, please search the **[primary-gie]** section in the configuration file, for example
 
-   Below is the **[primary-gie]** config of deepstream_app_source1_detection_models.txt, which indicates it uses yolov4 by default, and user can change to frcnn/ssd/dssd/retinanet/yolov3/detectnet_v2 by commenting "config-file=config_infer_primary_yolov4.txt" and uncommenting the corresponding "config-file=" .
-
+   First choose the inferencing method with setting "plugin-type" and then choose which model will be used. Then the corresponding "config-file" can be set. The following is the sample of nvinferserver native inferencing based Yolov4 model ineferncing configuration. 
    ```
    [primary-gie]
    enable=1
    gpu-id=0
+   #(0): nvinfer; (1): nvinferserver
+   plugin-type=1
    # Modify as necessary
    batch-size=1
    #Required by the app for OSD, not a plugin property
@@ -87,13 +93,16 @@ $ sudo deepstream-app -c deepstream_app_source1_dashcamnet_vehiclemakenet_vehicl
    gie-unique-id=1
    # Replace the infer primary config file when you need to
    # use other detection models
-   #config-file=config_infer_primary_frcnn.txt
-   #config-file=config_infer_primary_ssd.txt
-   #config-file=config_infer_primary_dssd.txt
-   #config-file=config_infer_primary_retinanet.txt
-   #config-file=config_infer_primary_yolov3.txt
-   config-file=config_infer_primary_yolov4.txt
+   #config-file=nvinfer/config_infer_primary_frcnn.txt
+   #config-file=triton/config_infer_primary_frcnn.txt
+   #config-file=triton-grpc/config_infer_primary_frcnn.txt
+   ...
+   ...
+   #config-file=nvinfer/config_infer_primary_yolov4.txt
+   config-file=triton/config_infer_primary_yolov4.txt
+   #config-file=triton-grpc/config_infer_primary_yolov4.txt
    #config-file=config_infer_primary_detectnet_v2.txt
+   ...
    ```
 
 *******************************************************************************

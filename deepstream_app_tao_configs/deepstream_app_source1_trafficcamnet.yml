@@ -64,7 +64,6 @@ primary-gie:
   enable: 1
   gpu-id: 0
   # Modify as necessary
-  model-engine-file: ../../models/tao_pretrained_models/trafficcamnet/resnet18_trafficcamnet_pruned.etlt_b1_gpu0_int8.engine
   batch-size: 1
   #Required by the app for OSD, not a plugin property
   bbox-border-color0: 1;0;0;1
@@ -72,7 +71,7 @@ primary-gie:
   bbox-border-color2: 0;0;1;1
   bbox-border-color3: 0;1;0;1
   gie-unique-id: 1
-  config-file: config_infer_primary_trafficcamnet.yml
+  config-file: nvinfer/config_infer_primary_trafficcamnet.yml
 
 sink1:
   enable: 0
@@ -115,10 +114,10 @@ tracker:
   tracker-height: 384
   ll-lib-file: /opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
   # ll-config-file required to set different tracker types
-  # ll-config-file: ../deepstream-app/config_tracker_IOU.yml
-  ll-config-file: ../deepstream-app/config_tracker_NvDCF_perf.yml
-  # ll-config-file: ../deepstream-app/config_tracker_NvDCF_accuracy.yml
-  # ll-config-file: ../deepstream-app/config_tracker_DeepSORT.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml
+  ll-config-file: /opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_NvDCF_perf.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_NvDCF_accuracy.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_DeepSORT.yml
   gpu-id: 0
   enable-batch-process: 1
   enable-past-frame: 1

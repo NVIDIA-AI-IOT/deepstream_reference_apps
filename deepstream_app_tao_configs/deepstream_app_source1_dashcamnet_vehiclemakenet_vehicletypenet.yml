@@ -72,7 +72,7 @@ primary-gie:
   bbox-border-color2: 0;0;1;1
   bbox-border-color3: 0;1;0;1
   gie-unique-id: 1
-  config-file: config_infer_primary_dashcamnet.yml
+  config-file: nvinfer/config_infer_primary_dashcamnet.yml
 
 sink1:
   enable: 0
@@ -115,10 +115,10 @@ tracker:
   tracker-height: 384
   ll-lib-file: /opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
   # ll-config-file required to set different tracker types
-  # ll-config-file: ../deepstream-app/config_tracker_IOU.yml
-  ll-config-file: ../deepstream-app/config_tracker_NvDCF_perf.yml
-  # ll-config-file: ../deepstream-app/config_tracker_NvDCF_accuracy.yml
-  # ll-config-file: ../deepstream-app/config_tracker_DeepSORT.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml
+  ll-config-file: /opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_NvDCF_perf.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_NvDCF_accuracy.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_DeepSORT.yml
   gpu-id: 0
   enable-batch-process: 1
   enable-past-frame: 1
@@ -132,7 +132,7 @@ secondary-gie0:
   gie-unique-id: 4
   operate-on-gie-id: 1
   operate-on-class-ids: 0
-  config-file: config_infer_secondary_vehiclemakenet.yml
+  config-file: nvinfer/config_infer_secondary_vehiclemakenet.yml
 
 secondary-gie1:
   enable: 1
@@ -142,7 +142,7 @@ secondary-gie1:
   gie-unique-id: 5
   operate-on-gie-id: 1
   operate-on-class-ids: 0
-  config-file: config_infer_secondary_vehicletypenet.yml
+  config-file: nvinfer/config_infer_secondary_vehicletypenet.yml
 
 tests:
   file-loop: 0

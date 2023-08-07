@@ -67,19 +67,19 @@ rm facedetectir_pruned_v1.0.1.zip
 echo "==================================================================="
 echo "begin download models for peopleNet "
 echo "==================================================================="
-mkdir -p ../../models/tao_pretrained_models/peopleNet/V2.6
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.6/zip \
--O peoplenet_deployable_quantized_v2.6.zip && \
-unzip peoplenet_deployable_quantized_v2.6.zip -d ../../models/tao_pretrained_models/peopleNet/V2.6 && \
-rm peoplenet_deployable_quantized_v2.6.zip
+mkdir -p ../../models/tao_pretrained_models/peopleNet/
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.6.1/zip \
+-O peoplenet_deployable_quantized_v2.6.1.zip && \
+unzip peoplenet_deployable_quantized_v2.6.1.zip -d ../../models/tao_pretrained_models/peopleNet/ && \
+rm peoplenet_deployable_quantized_v2.6.1.zip
 
 echo "==================================================================="
 echo "begin download models for peopleSegNet "
 echo "==================================================================="
-mkdir -p ../../models/tao_pretrained_models/peopleSegNet/V2
+mkdir -p ../../models/tao_pretrained_models/peopleSegNet/
 wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplesegnet/versions/deployable_v2.0.2/zip \
 -O peoplesegnet_deployable_v2.0.2.zip && \
-unzip peoplesegnet_deployable_v2.0.2.zip -d ../../models/tao_pretrained_models/peopleSegNet/V2 && \
+unzip peoplesegnet_deployable_v2.0.2.zip -d ../../models/tao_pretrained_models/peopleSegNet/ && \
 rm peoplesegnet_deployable_v2.0.2.zip
 
 echo "==================================================================="

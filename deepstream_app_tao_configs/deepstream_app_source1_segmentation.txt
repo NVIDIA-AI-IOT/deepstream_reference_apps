@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2023, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -37,7 +37,7 @@ enable=1
 #Type - 1=CameraV4L2 2=URI 3=MultiURI
 type=3
 num-sources=1
-uri=file://../../streams/sample_qHD.mp4
+uri=file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_qHD.mp4
 gpu-id=0
 
 [streammux]
@@ -70,6 +70,8 @@ display-text=0
 
 [primary-gie]
 enable=1
+#(0): nvinfer; (1): nvinferserver
+plugin-type=0
 gpu-id=0
 # Modify as necessary
 batch-size=1
@@ -82,7 +84,9 @@ gie-unique-id=1
 # Replace the infer primary config file when you need to
 # use other detection models
 # model-engine-file=../../models/tao_pretrained_models/mrcnn/mask_rcnn_resnet50.etlt_b1_gpu0_int8.engine
-config-file=config_infer_primary_peopleSegNet.txt
+config-file=nvinfer/config_infer_primary_peopleSegNet.txt
+#config-file=triton/config_infer_primary_peopleSegNet.txt
+#config-file=triton-grpc/config_infer_primary_peopleSegNet.txt
 
 [sink1]
 enable=0
@@ -125,10 +129,10 @@ tracker-width=640
 tracker-height=384
 ll-lib-file=/opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
 # ll-config-file required to set different tracker types
-# ll-config-file=../deepstream-app/config_tracker_IOU.yml
-ll-config-file=../deepstream-app/config_tracker_NvDCF_perf.yml
-# ll-config-file=../deepstream-app/config_tracker_NvDCF_accuracy.yml
-# ll-config-file=../deepstream-app/config_tracker_DeepSORT.yml
+# ll-config-file=/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml
+ll-config-file=/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_NvDCF_perf.yml
+# ll-config-file=/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_NvDCF_accuracy.yml
+# ll-config-file=/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_DeepSORT.yml
 gpu-id=0
 enable-batch-process=1
 enable-past-frame=1

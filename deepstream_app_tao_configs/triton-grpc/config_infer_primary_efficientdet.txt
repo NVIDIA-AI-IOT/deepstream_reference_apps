@@ -1,0 +1,82 @@
+################################################################################
+# Copyright (c) 2023, NVIDIA CORPORATION. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+################################################################################
+infer_config {
+  unique_id: 1
+  gpu_ids: [0]
+  max_batch_size: 1
+  backend {
+    inputs: [ {
+      name: "image_arrays:0"
+    }]
+    outputs: [
+      {name: "num_detections"},
+      {name: "detection_boxes"},
+      {name: "detection_scores"},
+      {name: "detection_classes"}
+    ]
+    triton {
+      model_name: "efficientdet"
+      version: -1
+      grpc {
+        url: "localhost:10001"
+        enable_cuda_buffer_sharing: false
+      }
+    }
+  }
+
+  preprocess {
+    network_format: IMAGE_FORMAT_RGB
+    tensor_order: TENSOR_ORDER_NHWC
+    tensor_name: "image_arrays:0"
+    maintain_aspect_ratio: 1
+    frame_scaling_hw: FRAME_SCALING_HW_DEFAULT
+    frame_scaling_filter: 1
+    normalize {
+      scale_factor: 1.0
+      channel_offsets: [0,0,0]
+    }
+  }
+
+  postprocess {
+    labelfile_path: "../efficientdet_d0_labels.txt"
+    detection {
+      num_detected_classes: 1
+      custom_parse_bbox_func: "NvDsInferParseCustomEfficientDetTAO"
+      simple_cluster {
+        threshold: 0.01
+      }
+    }
+  }
+
+  custom_lib {
+    path: "/opt/nvidia/deepstream/deepstream/lib/libnvds_infercustomparser.so"
+  }
+
+  extra {
+    copy_input_to_host_buffers: false
+    output_buffer_pool_size: 2
+  }
+}
+input_control {
+  process_mode: PROCESS_MODE_FULL_FRAME
+  interval: 0
+}

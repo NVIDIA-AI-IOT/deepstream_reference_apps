@@ -37,7 +37,7 @@ enable=1
 #Type - 1=CameraV4L2 2=URI 3=MultiURI
 type=3
 num-sources=1
-uri=file://../../streams/sample_1080p_h265.mp4
+uri=file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h265.mp4
 gpu-id=0
 
 [streammux]
@@ -68,6 +68,8 @@ font=Arial
 [primary-gie]
 enable=1
 gpu-id=0
+#(0): nvinfer; (1): nvinferserver
+plugin-type=0
 # Modify as necessary
 batch-size=1
 #Required by the app for OSD, not a plugin property
@@ -78,15 +80,33 @@ bbox-border-color3=0;1;0;1
 gie-unique-id=1
 # Replace the infer primary config file when you need to
 # use other detection models
-#config-file=config_infer_primary_frcnn.txt
-config-file=config_infer_primary_ssd.txt
-#config-file=config_infer_primary_dssd.txt
-#config-file=config_infer_primary_retinanet.txt
-#config-file=config_infer_primary_yolov3.txt
-#config-file=config_infer_primary_yolov4.txt
-#config-file=config_infer_primary_detectnet_v2.txt
-#config-file=config_infer_primary_yolov4-tiny.txt
-#config-file=config_infer_primary_efficientdet.txt
+#config-file=nvinfer/config_infer_primary_frcnn.txt
+#config-file=triton/config_infer_primary_frcnn.txt
+#config-file=triton-grpc/config_infer_primary_frcnn.txt
+config-file=nvinfer/config_infer_primary_ssd.txt
+#config-file=triton/config_infer_primary_ssd.txt
+#config-file=triton-grpc/config_infer_primary_ssd.txt
+#config-file=nvinfer/config_infer_primary_dssd.txt
+#config-file=triton/config_infer_primary_dssd.txt
+#config-file=triton-grpc/config_infer_primary_dssd.txt
+#config-file=nvinfer/config_infer_primary_retinanet.txt
+#config-file=triton/config_infer_primary_retinanet.txt
+#config-file=triton-grpc/config_infer_primary_retinanet.txt
+#config-file=nvinfer/config_infer_primary_yolov3.txt
+#config-file=triton/config_infer_primary_yolov3.txt
+#config-file=triton-grpc/config_infer_primary_yolov3.txt
+#config-file=nvinfer/config_infer_primary_yolov4.txt
+#config-file=triton/config_infer_primary_yolov4.txt
+#config-file=triton-grpc/config_infer_primary_yolov4.txt
+#config-file=nvinfer/config_infer_primary_detectnet_v2.txt
+#config-file=triton/config_infer_primary_detectnet_v2.txt
+#config-file=triton-grpc/config_infer_primary_detectnet_v2.txt
+#config-file=nvinfer/config_infer_primary_yolov4-tiny.txt
+#config-file=triton/config_infer_primary_yolov4-tiny.txt
+#config-file=triton-grpc/config_infer_primary_yolov4-tiny.txt
+#config-file=nvinfer/config_infer_primary_efficientdet.txt
+#config-file=triton/config_infer_primary_efficientdet.txt
+#config-file=triton-grpc/config_infer_primary_efficientdet.txt
 
 [sink1]
 enable=0
@@ -129,10 +149,10 @@ tracker-width=640
 tracker-height=384
 ll-lib-file=/opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
 # ll-config-file required to set different tracker types
-# ll-config-file=../deepstream-app/config_tracker_IOU.yml
-ll-config-file=../deepstream-app/config_tracker_NvDCF_perf.yml
-# ll-config-file=../deepstream-app/config_tracker_NvDCF_accuracy.yml
-# ll-config-file=../deepstream-app/config_tracker_DeepSORT.yml
+# ll-config-file=/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_IOU.yml
+ll-config-file=/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_NvDCF_perf.yml
+# ll-config-file=/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_NvDCF_accuracy.yml
+# ll-config-file=/opt/nvidia/deepstream/deepstream/samples/configs/deepstream-app/config_tracker_DeepSORT.yml
 gpu-id=0
 enable-batch-process=1
 enable-past-frame=1

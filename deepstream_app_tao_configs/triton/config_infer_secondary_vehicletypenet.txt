@@ -1,0 +1,80 @@
+################################################################################
+# Copyright (c) 2023, NVIDIA CORPORATION. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+################################################################################
+infer_config {
+  unique_id: 3
+  gpu_ids: [0]
+  max_batch_size: 4
+  backend {
+    inputs: [ {
+      name: "input_1"
+    }]
+    outputs: [
+      {name: "predictions/Softmax"}
+    ]
+    triton {
+      model_name: "vehicletypenet"
+      version: -1
+      model_repo {
+        root: "./"
+        strict_model_config: true
+      }
+    }
+  }
+
+  preprocess {
+    network_format: IMAGE_FORMAT_RGB
+    tensor_order: TENSOR_ORDER_LINEAR
+    tensor_name: "input_1"
+    maintain_aspect_ratio: 0
+    frame_scaling_hw: FRAME_SCALING_HW_DEFAULT
+    frame_scaling_filter: 1
+    normalize {
+      scale_factor: 1.0
+      channel_offsets: [124, 117, 104]
+    }
+  }
+
+  postprocess {
+    labelfile_path: "../labels_vehicletypenet.txt"
+    classification {
+      threshold: 0.2
+    }
+  }
+
+  extra {
+    copy_input_to_host_buffers: false
+    output_buffer_pool_size: 2
+  }
+}
+input_control {
+  process_mode: PROCESS_MODE_CLIP_OBJECTS
+  operate_on_gie_id: 1
+  operate_on_class_ids: [0]
+  interval: 0
+  async_mode: true
+  object_control {
+    bbox_filter {
+      min_width: 14
+      min_height: 14
+    }
+  }
+}
