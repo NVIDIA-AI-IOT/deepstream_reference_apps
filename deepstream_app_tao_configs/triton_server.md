@@ -3,7 +3,7 @@ As mentioned in the README, the DeepStream applications should work as Triton cl
 
 Running DeepStream Triton container, takes the DeepStream 6.1 GA container as the example:
 ```
-    docker run --gpus all -it  --ipc=host --rm -v /tmp/.X11-unix:/tmp/.X11-unix  -v $(pwd):/samples   -e DISPLAY=$DISPLAY -w /samples gitlab-master.nvidia.com:5005/deepstreamsdk/release_image/deepstream:6.2.1-triton-23.03.1
+    docker run --gpus all -it  --ipc=host --rm -v /tmp/.X11-unix:/tmp/.X11-unix  -v $(pwd):/samples   -e DISPLAY=$DISPLAY -w /samples nvcr.io/nvidia/deepstream:6.3-triton
 ```
 Inside the container, prepare model engines for Triton server, the [tao-converter links](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/resources/tao-converter) inside the prepare_triton_models.sh scripts can be changed to proper versions according to the actual TensorRT version:
 ```

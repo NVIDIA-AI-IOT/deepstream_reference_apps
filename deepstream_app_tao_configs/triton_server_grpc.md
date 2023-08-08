@@ -16,7 +16,7 @@ To start Triton Server with DeepStream Triton container, the docker should be ru
 * Start the Triton Inferece Server with DeepStream Triton docker
 ```
     //start Triton docker, 10001:8001 is used to map docker container's 8000 port to host's 10000 port, these ports can be changed.
-    docker run --gpus all -it  --ipc=host --rm -v /tmp/.X11-unix:/tmp/.X11-unix  -p 10000:8000 -p 10001:8001 -p 10002:8002  -v $(pwd):/samples   -e DISPLAY=$DISPLAY -w /samples gitlab-master.nvidia.com:5005/deepstreamsdk/release_image/deepstream:6.2.1-triton-23.03.1
+    docker run --gpus all -it  --ipc=host --rm -v /tmp/.X11-unix:/tmp/.X11-unix  -p 10000:8000 -p 10001:8001 -p 10002:8002  -v $(pwd):/samples   -e DISPLAY=$DISPLAY -w /samples nvcr.io/nvidia/deepstream:6.3-triton
 ```
 
 Then the model engines should be generated in the server, the [tao-converter links](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/resources/tao-converter) inside the prepare_triton_models.sh script can be changed to proper versions according to the actual TensorRT version:
