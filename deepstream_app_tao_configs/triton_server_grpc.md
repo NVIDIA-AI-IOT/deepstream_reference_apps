@@ -10,7 +10,7 @@ An immediate way to start a corresponding Triton Server is to use Triton contain
 * The Triton Server can be started in another machine as the server which is coonected to the machine for DeepStream applications through ehternet. 
 
 ## Prepare Triton Server For gRPC Connection
-The following steps take the DeepStream 7.0 GA as an example, if you use other DeepStream versions, the corresponding DeepStream Triton [image](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/deepstream) can be used.
+The following steps take the DeepStream 6.3 GA as an example, if you use other DeepStream versions, the corresponding DeepStream Triton [image](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/deepstream) can be used.
 
 To start Triton Server with DeepStream Triton container, the docker should be run in a new terminal and the following commands should be run in the same path as the deepstream_app_tao_configs codes are downloaded:
 * Start the Triton Inferece Server with DeepStream Triton docker
