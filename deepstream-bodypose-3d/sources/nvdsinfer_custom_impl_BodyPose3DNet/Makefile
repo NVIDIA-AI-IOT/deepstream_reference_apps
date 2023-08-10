@@ -35,8 +35,7 @@ CFLAGS+= -I/opt/nvidia/deepstream/deepstream/sources/includes -I/usr/local/cuda-
 LIBS:= -lnvinfer -lnvinfer_plugin
 LFLAGS:= -Wl,--start-group $(LIBS) -Wl,--end-group
 
-SRCFILES:= nvdsparsebbox_BodyPose3DNet.cpp nvdsiplugin_BodyPose3DNet.cpp \
-           nvdsinitinputlayers_BodyPose3DNet.cpp
+SRCFILES:= nvdsinitinputlayers_BodyPose3DNet.cpp
 TARGET_LIB:= libnvdsinfer_custom_impl_BodyPose3DNet.so
 
 all: $(TARGET_LIB)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2020-2023, NVIDIA CORPORATION.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,12 @@
 
 #define TILED_OUTPUT_WIDTH_OF 640
 #define TILED_OUTPUT_HEIGHT_OF 360
+
+#define NVINFER_PLUGIN "nvinfer"
+#define NVINFERSERVER_PLUGIN "nvinferserver"
+
+#define PGIE_CONFIG_FILE  "dsanomaly_pgie_config.txt"
+#define PGIE_NVINFERSERVER_CONFIG_FILE "dsanomaly_pgie_nvinferserver_config.txt"
 
 /* NVIDIA Decoder source pad memory feature. This feature signifies that source
  * pads having this capability will push GstBuffers containing NvBufSurface. */
@@ -184,6 +190,13 @@ create_source_bin (guint index, gchar * uri)
   return bin;
 }
 
+static void
+usage(const char *bin)
+{
+  g_printerr ("Usage: %s <uri1> [uri2] ... [uriN]\n", bin);
+  g_printerr ("For nvinferserver, Usage: %s -t inferserver <uri1> [uri2] ... [uriN]\n", bin);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -202,6 +215,7 @@ main (int argc, char *argv[])
   guint i, num_sources;
   guint tiler_rows, tiler_columns;
   guint pgie_batch_size;
+  gboolean is_nvinfer_server = FALSE;
 
   GstPad *tee_of_pad, *tee_infer_pad;
   GstPad *queue_of_pad, *queue_infer_pad;
@@ -213,10 +227,25 @@ main (int argc, char *argv[])
 
   /* Check input arguments */
   if (argc < 2) {
-    g_printerr ("Usage: %s <uri1> [uri2] ... [uriN] \n", argv[0]);
+    usage(argv[0]);
     return -1;
   }
-  num_sources = argc - 1;
+
+  if (argc >=2 && !strcmp("-t", argv[1])) {
+    if (!strcmp("inferserver", argv[2])) {
+      is_nvinfer_server = TRUE;
+    } else {
+      usage(argv[0]);
+      return -1;
+    }
+    g_print ("Using nvinferserver as the inference plugin\n");
+  }
+
+  if (is_nvinfer_server) {
+    num_sources = argc - 3;
+  } else {
+    num_sources = argc - 1;
+  }
 
   /* Standard GStreamer initialization */
   gst_init (&argc, &argv);
@@ -239,8 +268,13 @@ main (int argc, char *argv[])
 
   for (i = 0; i < num_sources; i++) {
     GstPad *sinkpad, *srcpad;
+    GstElement *source_bin;
     gchar pad_name[16] = { };
-    GstElement *source_bin = create_source_bin (i, argv[i + 1]);
+    if (is_nvinfer_server) {
+      source_bin = create_source_bin (i, argv[i + 3]);
+    } else {
+      source_bin = create_source_bin (i, argv[i + 1]);
+    }
 
     if (!source_bin) {
       g_printerr ("Failed to create source bin. Exiting.\n");
@@ -274,8 +308,10 @@ main (int argc, char *argv[])
   /* Create a tee for two sinks. */
   tee = gst_element_factory_make ("tee", "tee");
 
-  /* Use nvinfer to infer on batched frame. */
-  pgie = gst_element_factory_make ("nvinfer", "primary-nvinference-engine");
+  /* Use nvinfer/nvinferserver to infer on batched frame. */
+  pgie = gst_element_factory_make (
+        is_nvinfer_server ? NVINFERSERVER_PLUGIN : NVINFER_PLUGIN,
+        "primary-nvinference-engine");
   pgie_queue = gst_element_factory_make ("queue", "nvinfer-queue");
 
   /* For Optical Flow output */
@@ -358,9 +394,12 @@ main (int argc, char *argv[])
       MUXER_OUTPUT_HEIGHT, "batch-size", num_sources,
       "batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC, NULL);
 
-  /* Configure the nvinfer element using the nvinfer config file. */
-  g_object_set (G_OBJECT (pgie),
-      "config-file-path", "dsanomaly_pgie_config.txt", NULL);
+  /* Configure the nvinfer/nvinferserver element using the config file. */
+  if (is_nvinfer_server) {
+    g_object_set (G_OBJECT (pgie), "config-file-path", PGIE_NVINFERSERVER_CONFIG_FILE, NULL);
+  } else {
+    g_object_set (G_OBJECT (pgie), "config-file-path", PGIE_CONFIG_FILE, NULL);
+  }
 
   /* Override the batch-size set in the config file with the number of sources. */
   g_object_get (G_OBJECT (pgie), "batch-size", &pgie_batch_size, NULL);
@@ -433,11 +472,7 @@ main (int argc, char *argv[])
   gst_object_unref (queue_infer_pad);
 
   /* Set the pipeline to "playing" state */
-  g_print ("Now playing:");
-  for (i = 0; i < num_sources; i++) {
-    g_print (" %s,", argv[i + 1]);
-  }
-  g_print ("\n");
+  g_print ("Now playing...\n");
 
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
       GST_DEBUG_GRAPH_SHOW_ALL, "nvof_test_playing");

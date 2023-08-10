@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2019-2021, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2019-2023, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,24 +55,26 @@
 gpu-id=0
 process-mode=2
 net-scale-factor=0.0039215697906911373
-model-file=../../../../../samples/models/Secondary_FaceDetect/fd_lpd.caffemodel
-proto-file=../../../../../samples/models/Secondary_FaceDetect/fd_lpd.prototxt
-model-engine-file=../../../../../samples/models/Secondary_FaceDetect/fd_lpd.caffemodel_b1_gpu0_fp32.engine
-labelfile-path=../../../../../samples/models/Secondary_FaceDetect/labels.txt
-int8-calib-file=../../../../../samples/models/Secondary_FaceDetect/cal_trt.bin
+tlt-model-key=nvidia_tlt
+tlt-encoded-model=../../../../../samples/models/tao_pretrained_models/facenet/model.etlt
+labelfile-path=../../../../../samples/configs/tao_pretrained_models/labels_facenet.txt
+int8-calib-file=../../../../../samples/models/tao_pretrained_models/facenet/int8_calibration.txt
+model-engine-file=../../../../../samples/models/tao_pretrained_models/facenet/model.etlt_b1_gpu0_int8.engine
 force-implicit-batch-dim=1
 batch-size=1
 network-mode=0
-num-detected-classes=2
+num-detected-classes=1
 interval=0
 gie-unique-id=2
-output-blob-names=output_bbox;output_cov
+infer-dims=3;416;736
+uff-input-blob-name=input_1
+output-blob-names=output_bbox/BiasAdd;output_cov/Sigmoid
 input-object-min-width=64
 input-object-min-height=64
 maintain-aspect-ratio=1
 # Person has class-id 2 for the primary detector. This ensures that this secondary
 # detector only works on persons.
-#operate-on-class-ids=2
+operate-on-class-ids=2
 cluster-mode=2
 
 [class-attrs-all]

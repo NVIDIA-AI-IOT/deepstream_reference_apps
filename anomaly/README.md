@@ -1,4 +1,4 @@
-# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 6.2
+# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 6.3
 
 ## Introduction
 The project contains anomaly detection application and auxiliary plug-ins to show the
@@ -14,7 +14,7 @@ to install the prequisites for Deepstream SDK apps.
 - Preferably clone the app in
   `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/`
 
-- Edit the `dsanomaly_pgie_config.txt` according to the location of the models to be used
+- Edit the `dsanomaly_pgie_config.txt` or `dsanomaly_pgie_nvinferserver_config.txt` according to the location of the models to be used
 
 
 ## Compilation Steps for dsdirection plugin
@@ -59,11 +59,15 @@ Anomaly detection app pipeline:
  $ cd apps/deepstream-anomaly-detection-test/
  $ Set CUDA_VER in the MakeFile as per platform.
      For Jetson, CUDA_VER=11.4
-     For x86, CUDA_VER=11.8
+     For x86, CUDA_VER=12.1
  $ sudo make
 
  $ ./deepstream-anomaly-detection-app <uri1> [uri2] ... [uriN]
    Ex.: ./deepstream-anomaly-detection-app file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4
+
+Use option "-t inferserver" to select nvinferserver as the inference plugin
+ $ ./deepstream-anomaly-detection-app -t inferserver <uri1> [uri2] ... [uriN]
+   Ex.: ./deepstream-anomaly-detection-app -t inferserver file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4
 ```
   The result should be like below:
   ![DS Anomaly Detection Screenshot](.opticalflow.png)

@@ -1636,7 +1636,7 @@ are published to the message broker.",
   loop = g_main_loop_new(NULL, FALSE);
 
   _intr_setup ();
-  g_timeout_add (400, check_for_interrupt, NULL);
+  g_timeout_add (400, check_for_interrupt, loop);
 
   /* Create gstreamer elements */
   /* Create Pipeline element that will form a connection of other elements */
