@@ -70,7 +70,6 @@ nvvidconv_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
     guint vehicle_count = 0;
     guint person_count = 0;
     guint face_count = 0;
-    guint lp_count = 0;
     NvDsMetaList * l_frame = NULL;
     NvDsMetaList * l_obj = NULL;
     NvDsDisplayMeta *display_meta = NULL;
@@ -102,13 +101,6 @@ nvvidconv_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
                   g_print ("Face found for parent object %p (type=%s)\n",
                       obj_meta->parent, pgie_classes_str[obj_meta->parent->class_id]);
               }
-              if (obj_meta->class_id == SGIE_CLASS_ID_LP) {
-                lp_count++;
-                /* Print this info only when operating in secondary model. */
-                if (SECOND_DETECTOR_IS_SECONDARY)
-                  g_print ("License plate found for parent object %p (type=%s)\n",
-                      obj_meta->parent, pgie_classes_str[obj_meta->parent->class_id]);
-              }
             }
         }
         display_meta = nvds_acquire_display_meta_from_pool(batch_meta);
@@ -118,7 +110,6 @@ nvvidconv_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
         offset = snprintf(txt_params->display_text, MAX_DISPLAY_LEN, "Person = %d ", person_count);
         offset += snprintf(txt_params->display_text + offset , MAX_DISPLAY_LEN, "Vehicle = %d ", vehicle_count);
         offset += snprintf(txt_params->display_text + offset , MAX_DISPLAY_LEN, "Face = %d ", face_count);
-        offset += snprintf(txt_params->display_text + offset , MAX_DISPLAY_LEN, "License Plate = %d ", lp_count);
 
         /* Now set the offsets where the string should appear */
         txt_params->x_offset = 10;
@@ -144,9 +135,9 @@ nvvidconv_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
 
 
     g_print ("Frame Number = %d Vehicle Count = %d Person Count = %d"
-            " Face Count = %d License Plate Count = %d\n",
+            " Face Count = %d\n",
             frame_number, vehicle_count, person_count,
-            face_count, lp_count);
+            face_count);
     frame_number++;
     return GST_PAD_PROBE_OK;
 }
