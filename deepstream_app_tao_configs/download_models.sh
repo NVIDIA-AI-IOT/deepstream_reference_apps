@@ -77,10 +77,24 @@ echo "==================================================================="
 echo "begin download models for peopleSegNet "
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models/peopleSegNet/V2
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplesegnet/versions/deployable_v2.0.2/zip \
--O peoplesegnet_deployable_v2.0.2.zip && \
-unzip peoplesegnet_deployable_v2.0.2.zip -d ../../models/tao_pretrained_models/peopleSegNet/V2 && \
-rm peoplesegnet_deployable_v2.0.2.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplesegnet/versions/deployable_v2.0/zip \
+-O peoplesegnet_deployable_v2.0.zip && \
+unzip peoplesegnet_deployable_v2.0.zip -d ../../models/tao_pretrained_models/peopleSegNet/V2 && \
+rm peoplesegnet_deployable_v2.0.zip
+
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplesegnet/versions/deployable_v1.0/zip \
+-O peoplesegnet_deployable_v1.0.zip && \
+unzip peoplesegnet_deployable_v1.0.zip -d ../../models/tao_pretrained_models/peopleSegNet/ && \
+rm peoplesegnet_deployable_v1.0.zip
+
+echo "==================================================================="
+echo "begin download models for peopleSemSegNet "
+echo "==================================================================="
+mkdir -p ../../models/tao_pretrained_models/peopleSemSegNet
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplesemsegnet/versions/deployable_v1.0/zip \
+-O peoplesemsegnet_deployable_v1.0.zip && \
+unzip peoplesemsegnet_deployable_v1.0.zip -d ../../models/tao_pretrained_models/peopleSemSegNet/ && \
+rm peoplesemsegnet_deployable_v1.0.zip
 
 echo "==================================================================="
 echo "Download models successfully "
