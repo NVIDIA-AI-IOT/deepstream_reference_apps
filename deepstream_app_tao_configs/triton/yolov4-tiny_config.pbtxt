@@ -22,8 +22,8 @@
 
 name: "yolov4-tiny"
 platform: "tensorrt_plan"
-max_batch_size: 1
-default_model_filename: "yolov4_cspdarknet_tiny_397.etlt_b1_gpu0_int8.engine"
+max_batch_size: 4
+default_model_filename: "yolov4_cspdarknet_tiny_397.onnx_b4_gpu0_int8.engine"
 input [
   {
     name: "Input"

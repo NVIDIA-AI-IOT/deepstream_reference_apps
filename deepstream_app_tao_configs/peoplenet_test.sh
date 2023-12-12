@@ -29,7 +29,7 @@ echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models/peopleNet/
 wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.6.1/zip \
 -O peoplenet_deployable_quantized_v2.6.1.zip && \
-unzip peoplenet_deployable_quantized_v2.6.1.zip -d ../../models/tao_pretrained_models/peopleNet/ && \
+unzip -o peoplenet_deployable_quantized_v2.6.1.zip -d ../../models/tao_pretrained_models/peopleNet/ && \
 rm peoplenet_deployable_quantized_v2.6.1.zip
 
 echo "==================================================================="

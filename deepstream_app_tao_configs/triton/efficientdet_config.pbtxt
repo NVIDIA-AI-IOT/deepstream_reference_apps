@@ -23,7 +23,7 @@
 name: "efficientdet"
 platform: "tensorrt_plan"
 max_batch_size: 1
-default_model_filename: "d0_avlp_544_960.etlt_b1_gpu0_int8.engine"
+default_model_filename: "d0_avlp_544_960.onnx_b1_gpu0_int8.engine"
 input [
   {
     name: "image_arrays:0"

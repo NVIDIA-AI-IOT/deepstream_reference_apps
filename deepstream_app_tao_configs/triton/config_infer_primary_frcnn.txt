@@ -28,8 +28,8 @@ infer_config {
       name: "input_image"
     }]
     outputs: [
-      {name: "NMS"},
-      {name: "NMS_1"}
+      {name: "nms_out"},
+      {name: "nms_out_1"}
     ]
     triton {
       model_name: "frcnn"

@@ -22,8 +22,8 @@
 
 name: "retinanet"
 platform: "tensorrt_plan"
-max_batch_size: 1
-default_model_filename: "retinanet_resnet18_epoch_080_its_trt8.etlt_b1_gpu0_int8.engine"
+max_batch_size: 4
+default_model_filename: "retinanet_resnet18_epoch_080_its.onnx_b4_gpu0_int8.engine"
 input [
   {
     name: "Input"

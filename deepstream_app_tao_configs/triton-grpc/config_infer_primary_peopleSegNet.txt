@@ -55,9 +55,15 @@ infer_config {
   }
 
   postprocess {
-    segmentation {
-      threshold:0
-    }
+      labelfile_path: "../peopleSegNet_labels.txt"
+      detection {
+        num_detected_classes: 2
+        custom_parse_bbox_func: "NvDsInferParseCustomMrcnnTLTV2"
+      }
+  }
+
+  custom_lib {
+    path: "/opt/nvidia/deepstream/deepstream/lib/libnvds_infercustomparser.so"
   }
 
   extra {

@@ -23,7 +23,7 @@
 name: "frcnn"
 platform: "tensorrt_plan"
 max_batch_size: 4
-default_model_filename: "frcnn_kitti_resnet18.epoch24_trt8.etlt_b4_gpu0_int8.engine"
+default_model_filename: "frcnn_kitti_resnet18.epoch24_trt8.onnx_b4_gpu0_int8.engine"
 input [
   {
     name: "input_image"
@@ -34,12 +34,12 @@ input [
 ]
 output [
   {
-    name: "NMS"
+    name: "nms_out"
     data_type: TYPE_FP32
     dims: [ 1, 100, 7 ]
   },
   {
-    name: "NMS_1"
+    name: "nms_out_1"
     data_type: TYPE_FP32
     dims: [ 1, 1, 1 ]
   }

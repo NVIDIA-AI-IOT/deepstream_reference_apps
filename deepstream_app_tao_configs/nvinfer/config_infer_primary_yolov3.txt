@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2022-2023, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -26,10 +26,9 @@ net-scale-factor=1.0
 offsets=103.939;116.779;123.68
 model-color-format=1
 labelfile-path=../yolov3_labels.txt
-model-engine-file=../../../models/tao_pretrained_models/yolov3/yolov3_resnet18_398.etlt_b1_gpu0_int8.engine
+model-engine-file=../../../models/tao_pretrained_models/yolov3/yolov3_resnet18_398.onnx_b1_gpu0_int8.engine
 int8-calib-file=../../../models/tao_pretrained_models/yolov3/cal.bin.trt8517
-tlt-encoded-model=../../../models/tao_pretrained_models/yolov3/yolov3_resnet18_398.etlt
-tlt-model-key=nvidia_tlt
+onnx-file=../../../models/tao_pretrained_models/yolov3/yolov3_resnet18_398.onnx
 infer-dims=3;544;960
 maintain-aspect-ratio=1
 uff-input-order=0

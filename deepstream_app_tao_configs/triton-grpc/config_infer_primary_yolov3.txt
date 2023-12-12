@@ -22,7 +22,7 @@
 infer_config {
   unique_id: 1
   gpu_ids: [0]
-  max_batch_size: 1
+  max_batch_size: 4
   backend {
     inputs: [ {
       name: "Input"

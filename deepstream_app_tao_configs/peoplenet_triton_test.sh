@@ -27,13 +27,13 @@ echo "==================================================================="
 echo "begin download models for peopleNet "
 echo "==================================================================="
 mkdir -p ./triton/peopleNet/
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.6.1/zip \
--O peoplenet_deployable_quantized_v2.6.1.zip && \
-unzip peoplenet_deployable_quantized_v2.6.1.zip -d ./triton/peopleNet/ && \
-rm peoplenet_deployable_quantized_v2.6.1.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_decrypted_v2.3.3/zip \
+-O peoplenet_pruned_quantized_decrypted_v2.3.3.zip && \
+unzip -o peoplenet_pruned_quantized_decrypted_v2.3.3.zip -d ./triton/peopleNet/ && \
+rm peoplenet_pruned_quantized_decrypted_v2.3.3.zip
 
 mkdir -p ./triton/peopleNet/1
-./tao-converter -k tlt_encode -t int8 -c ./triton/peopleNet/resnet34_peoplenet_int8.txt -b 1 -d 3,544,960 -e ./triton/peopleNet/1/resnet34_peoplenet_int8.etlt_b1_gpu0_int8.engine ./triton/peopleNet/resnet34_peoplenet_int8.etlt
+trtexec --onnx=./triton/peopleNet/resnet34_peoplenet_int8.onnx --int8 --calib=./triton/peopleNet/resnet34_peoplenet_int8.txt --saveEngine=./triton/peopleNet/1/resnet34_peoplenet_int8.onnx_b1_gpu0_int8.engine --minShapes="input_1:0":1x3x544x960 --optShapes="input_1:0":1x3x544x960 --maxShapes="input_1:0":1x3x544x960 
 cp triton/peopleNet_config.pbtxt ./triton/peopleNet/config.pbtxt
 
 echo "==================================================================="

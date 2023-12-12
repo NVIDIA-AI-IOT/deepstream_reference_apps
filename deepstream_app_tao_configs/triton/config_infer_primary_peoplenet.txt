@@ -25,11 +25,11 @@ infer_config {
   max_batch_size: 1
   backend {
     inputs: [ {
-      name: "input_1"
+      name: "input_1:0"
     }]
     outputs: [
-      {name: "output_bbox/BiasAdd"},
-      {name: "output_cov/Sigmoid"}
+      {name: "output_bbox/BiasAdd:0"},
+      {name: "output_cov/Sigmoid:0"}
     ]
     triton {
       model_name: "peopleNet"
@@ -44,7 +44,7 @@ infer_config {
   preprocess {
     network_format: IMAGE_FORMAT_RGB
     tensor_order: TENSOR_ORDER_LINEAR
-    tensor_name: "input_1"
+    tensor_name: "input_1:0"
     maintain_aspect_ratio: 0
     frame_scaling_hw: FRAME_SCALING_HW_DEFAULT
     frame_scaling_filter: 1

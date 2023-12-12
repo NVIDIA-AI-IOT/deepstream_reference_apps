@@ -24,13 +24,6 @@ infer_config {
   gpu_ids: [0]
   max_batch_size: 1
   backend {
-    inputs: [ {
-      name: "input_1"
-    }]
-    outputs: [
-      {name: "output_bbox/BiasAdd"},
-      {name: "output_cov/Sigmoid"}
-    ]
     triton {
       model_name: "detectnet_v2"
       version: -1

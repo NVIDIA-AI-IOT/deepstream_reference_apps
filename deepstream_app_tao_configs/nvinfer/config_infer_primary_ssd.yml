@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2022-2023, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -26,10 +26,9 @@ property:
   offsets: 103.939;116.779;123.68
   model-color-format: 1
   labelfile-path: ../ssd_labels.txt
-  model-engine-file: ../../../models/tao_pretrained_models/ssd/ssd.etlt_b1_gpu0_int8.engine
-  tlt-encoded-model: ../../../models/tao_pretrained_models/ssd/ssd.etlt
+  model-engine-file: ../../../models/tao_pretrained_models/ssd/ssd_resnet18_epoch_074.onnx_b1_gpu0_int8.engine
+  onnx-file: ../../../models/tao_pretrained_models/ssd/ssd_resnet18_epoch_074.onnx
   int8-calib-file: ../../../models/tao_pretrained_models/ssd/ssd_cal.bin
-  tlt-model-key: nvidia_tlt
   infer-dims: 3;544;960
   uff-input-order: 0
   maintain-aspect-ratio: 1
