@@ -1,4 +1,4 @@
-# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 6.3
+# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 6.4
 
 ## Introduction
 The project contains anomaly detection application and auxiliary plug-ins to show the
@@ -58,8 +58,7 @@ Anomaly detection app pipeline:
  $ cd sources/apps/sample_apps/deepstream_reference_apps/anomaly/
  $ cd apps/deepstream-anomaly-detection-test/
  $ Set CUDA_VER in the MakeFile as per platform.
-     For Jetson, CUDA_VER=11.4
-     For x86, CUDA_VER=12.1
+     For both x86 & Jetson, CUDA_VER=12.2
  $ sudo make
 
  $ ./deepstream-anomaly-detection-app <uri1> [uri2] ... [uriN]

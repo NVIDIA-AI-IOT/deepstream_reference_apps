@@ -1,4 +1,4 @@
-# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 6.3
+# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 6.4
 
 ## Introduction
 The project contains Back to Back detector application to show the
@@ -48,7 +48,7 @@ apps.
 Below steps are applicable if you want to run inference using nvinferserver inside DeepStream Triton based docker:
 
 - Setup Triton model repository:
-  $ cd /opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/
+  $ cd /opt/nvidia/deepstream/deepstream/samples/
 - Run prepare_ds_triton_model_repo.sh script to create Primary infer model "PrimaryDetector"
   $ ./prepare_ds_triton_model_repo.sh
 - Run prepare_ds_triton_tao_model_repo.sh script to create Secondary infer model "FaceNet"
@@ -64,8 +64,7 @@ The result should be like below:
 ## Compilation Steps and Execution:
 ```
   $ Set CUDA_VER in the MakeFile as per platform.
-      For Jetson, CUDA_VER=11.4
-      For x86, CUDA_VER=12.1
+      For both x86 & Jetson, CUDA_VER=12.2
   $ sudo make
 
   $ ./back-to-back-detectors <h264_elementary_stream>
@@ -89,6 +88,7 @@ NOTE:
 - Run the above commands with sudo.
 - Edit the paths in `secondary_detector_config.txt` to the location of the models
   downloaded from the above site.
+- back-to-back-detectors application does not run inside jetson triton docker.
 
 This document shall describe about the sample back-to-back-detectors application.
 

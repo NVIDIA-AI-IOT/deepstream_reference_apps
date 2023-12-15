@@ -1,4 +1,4 @@
-# RUNTIME SOURCE ADDITION DELETION REFERENCE APP USING DEEPSTREAMSDK 6.3
+# RUNTIME SOURCE ADDITION DELETION REFERENCE APP USING DEEPSTREAMSDK 6.4
 
 ## Introduction
 The project contains Runtime source addition/deletion application to show the
@@ -19,8 +19,7 @@ to install the prequisites for Deepstream SDK apps.
 ## Compilation Steps and Execution:
 ```
   $ Set CUDA_VER in the MakeFile as per platform.
-      For Jetson, CUDA_VER=11.4
-      For x86, CUDA_VER=12.1
+      For both x86 & Jetson, CUDA_VER=12.2
   $ sudo make
 
   $ ./deepstream-test-rt-src-add-del <uri> <run forever> <sink> <sync>

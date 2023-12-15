@@ -54,7 +54,7 @@
 [property]
 gpu-id=0
 process-mode=2
-net-scale-factor=0.0039215697906911373
+net-scale-factor=0.00392156862745098
 tlt-model-key=nvidia_tlt
 tlt-encoded-model=../../../../../samples/models/tao_pretrained_models/facenet/model.etlt
 labelfile-path=../../../../../samples/configs/tao_pretrained_models/labels_facenet.txt
