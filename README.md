@@ -1,6 +1,6 @@
-# Reference Apps using DeepStream 6.3
+# Reference Apps using DeepStream 6.4
 
-This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 6.3.
+This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 6.4.
 
 ## Getting Started ##
 We currently provide three different reference applications:

@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2018-2020, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2018-2023, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,12 +54,11 @@
 [property]
 gpu-id=0
 net-scale-factor=1
-model-file=../../../../../samples/models/Secondary_CarMake/resnet18.caffemodel
-proto-file=../../../../../samples/models/Secondary_CarMake/resnet18.prototxt
-mean-file=../../../../../samples/models/Secondary_CarMake/mean.ppm
-labelfile-path=../../../../../samples/models/Secondary_CarMake/labels.txt
-int8-calib-file=../../../../../samples/models/Secondary_CarMake/cal_trt.bin
-model-engine-file=../../../../../samples/models/Secondary_CarMake/resnet18.caffemodel_b16_gpu0_int8.engine
+tlt-model-key=tlt_encode
+model-engine-file=../../../../../samples/models/Secondary_VehicleTypes/resnet18_vehicletypenet.etlt_b16_gpu0_int8.engine
+tlt-encoded-model=../../../../../samples/models/Secondary_VehicleTypes/resnet18_vehicletypenet.etlt
+labelfile-path=../../../../../samples/models/Secondary_VehicleTypes/labels.txt
+int8-calib-file=../../../../../samples/models/Secondary_VehicleTypes/cal_trt.bin
 force-implicit-batch-dim=1
 batch-size=16
 # 0=FP32 and 1=INT8 mode
@@ -73,7 +72,9 @@ gie-unique-id=3
 operate-on-gie-id=1
 operate-on-class-ids=0
 is-classifier=1
+uff-input-blob-name=input_1
 output-blob-names=predictions/Softmax
 classifier-async-mode=0
 classifier-threshold=0.51
 process-mode=2
+infer-dims=3;244;244

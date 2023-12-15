@@ -29,8 +29,8 @@ infer_config {
       name: "input_1"
     }]
     outputs: [
-      {name: "conv2d_bbox"},
-      {name: "conv2d_cov/Sigmoid"}
+      {name: "output_cov/Sigmoid"},
+      {name: "output_bbox/BiasAdd"}
     ]
     triton {
       model_name: "Primary_Detector"
@@ -46,10 +46,10 @@ infer_config {
     tensor_order: TENSOR_ORDER_LINEAR
     tensor_name: "input_1"
     maintain_aspect_ratio: 0
-    frame_scaling_hw: FRAME_SCALING_HW_DEFAULT
+    frame_scaling_hw: FRAME_SCALING_HW_GPU
     frame_scaling_filter: 1
     normalize {
-      scale_factor: 0.0039215697906911373
+      scale_factor: 0.00392156862745098
       channel_offsets: [0, 0, 0]
     }
   }

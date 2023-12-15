@@ -49,7 +49,6 @@ GMainLoop *loop = NULL;
 #define TRACKER_CONFIG_FILE "dstest_tracker_config.txt"
 #define SGIE1_CONFIG_FILE "dstest_sgie1_config.txt"
 #define SGIE2_CONFIG_FILE "dstest_sgie2_config.txt"
-#define SGIE3_CONFIG_FILE "dstest_sgie3_config.txt"
 
 
 #define CONFIG_GPU_ID "gpu-id"
@@ -74,7 +73,7 @@ gchar pgie_classes_str[4][32] = { "Vehicle", "TwoWheeler", "Person",
 };
 
 GstElement *pipeline = NULL, *streammux = NULL, *sink = NULL, *pgie = NULL,
-    *sgie1 = NULL, *sgie2 = NULL, *sgie3 = NULL,
+    *sgie1 = NULL, *sgie2 = NULL,
     *nvvideoconvert = NULL, *nvosd = NULL, *tiler = NULL, *tracker = NULL, *queue = NULL;
 
 gchar *uri = NULL;
@@ -591,7 +590,6 @@ main (int argc, char *argv[])
 
   sgie1 = gst_element_factory_make ("nvinfer", "secondary-nvinference-engine1");
   sgie2 = gst_element_factory_make ("nvinfer", "secondary-nvinference-engine2");
-  sgie3 = gst_element_factory_make ("nvinfer", "secondary-nvinference-engine3");
   queue = gst_element_factory_make ("queue", "queue");
 
   if (display){
@@ -610,7 +608,7 @@ main (int argc, char *argv[])
     }
   }
 
-  if (!pgie || !sgie1 || !sgie2 || !sgie3 || !tiler || !nvvideoconvert || !nvosd
+  if (!pgie || !sgie1 || !sgie2 || !tiler || !nvvideoconvert || !nvosd
       || !sink || !tracker) {
     g_printerr ("One element could not be created. Exiting.\n");
     return -1;
@@ -624,7 +622,6 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (pgie), "config-file-path", PGIE_CONFIG_FILE, NULL);
   g_object_set (G_OBJECT (sgie1), "config-file-path", SGIE1_CONFIG_FILE, NULL);
   g_object_set (G_OBJECT (sgie2), "config-file-path", SGIE2_CONFIG_FILE, NULL);
-  g_object_set (G_OBJECT (sgie3), "config-file-path", SGIE3_CONFIG_FILE, NULL);
 
   /* Set necessary properties of the tracker element. */
   if (!set_tracker_properties(tracker)) {
@@ -646,7 +643,6 @@ main (int argc, char *argv[])
   SET_GPU_ID (pgie, GPU_ID);
   SET_GPU_ID (sgie1, GPU_ID);
   SET_GPU_ID (sgie2, GPU_ID);
-  SET_GPU_ID (sgie3, GPU_ID);
 
   tiler_rows = (guint) sqrt (num_sources);
   tiler_columns = (guint) ceil (1.0 * num_sources / tiler_rows);
@@ -667,13 +663,13 @@ main (int argc, char *argv[])
 
   /* Set up the pipeline */
   /* we add all elements into the pipeline */
-  gst_bin_add_many (GST_BIN (pipeline), pgie, tracker, sgie1, sgie2, sgie3,
+  gst_bin_add_many (GST_BIN (pipeline), pgie, tracker, sgie1, sgie2,
       tiler, nvvideoconvert, nvosd, queue, sink, NULL);
 
   /* we link the elements together */
   /* file-source -> h264-parser -> nvh264-decoder ->
    * nvinfer -> nvvideoconvert -> nvosd -> video-renderer */
-  if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, sgie3,queue,
+  if (!gst_element_link_many (streammux, pgie, tracker, sgie1, sgie2, queue,
           tiler, nvvideoconvert, nvosd, sink, NULL)) {
     g_printerr ("Elements could not be linked. Exiting.\n");
     return -1;
