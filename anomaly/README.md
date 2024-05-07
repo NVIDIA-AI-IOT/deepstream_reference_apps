@@ -1,4 +1,4 @@
-# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 6.4
+# ANOMALY DETECTION REFERENCE APP USING DEEPSTREAMSDK 7.0
 
 ## Introduction
 The project contains anomaly detection application and auxiliary plug-ins to show the

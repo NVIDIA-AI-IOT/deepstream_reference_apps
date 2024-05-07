@@ -257,7 +257,11 @@ main (int argc, char *argv[])
   if(prop.integrated) {
     sink = gst_element_factory_make ("nv3dsink", "nvvideo-renderer");
   } else {
+#ifdef __aarch64__
+    sink = gst_element_factory_make ("nv3dsink", "nvvideo-renderer");
+#else
     sink = gst_element_factory_make ("nveglglessink", "nvvideo-renderer");
+#endif
   }
 
   if (!source || !h264parser || !decoder || !primary_detector || !secondary_detector

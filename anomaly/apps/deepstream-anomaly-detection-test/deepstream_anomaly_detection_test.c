@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2020-2024, NVIDIA CORPORATION.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -360,9 +360,15 @@ main (int argc, char *argv[])
         gst_element_factory_make ("nv3dsink", "nv3dsink-infer");
 
   } else {
+#ifdef __aarch64__
+    sink_of = gst_element_factory_make ("nv3dsink", "nv3dsink-of");
+    sink_infer =
+        gst_element_factory_make ("nv3dsink", "nv3dsink-infer");
+#else
     sink_of = gst_element_factory_make ("nveglglessink", "nvelgglessink-of");
     sink_infer =
         gst_element_factory_make ("nveglglessink", "nvelgglessink-infer");
+#endif
   }
 
   if (!tee) {

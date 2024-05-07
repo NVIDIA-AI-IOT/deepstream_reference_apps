@@ -1,6 +1,6 @@
-# Reference Apps using DeepStream 6.4
+# Reference Apps using DeepStream 7.0
 
-This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 6.4.
+This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 7.0.
 
 ## Getting Started ##
 We currently provide three different reference applications:
@@ -23,6 +23,3 @@ For further details, please see each project's README.
 ### Body Pose 3D: [README](deepstream-bodypose-3d/README.md) ###
   The project demonstrates usage of Body Pose 3D model in Deepstream application
   ![sample anomaly output](deepstream-bodypose-3d/sources/.screenshot.png)
-
-### Single-View 3D Tracking: [README](deepstream-tracker-3d/README.md) ###
-  The sample demostrates usage of single-view 3D tracking with DeepStream nvtracker.
