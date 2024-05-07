@@ -25,3 +25,4 @@ For further details, please see each project's README.
   ![sample anomaly output](deepstream-bodypose-3d/sources/.screenshot.png)
 ### Single-View 3D Tracking: [README](deepstream-tracker-3d/README.md) ###
   The sample demostrates usage of single-view 3D tracking with DeepStream nvtracker.
+  ![sample 3D tracking output](deepstream-tracker-3d/figures/.retail_viz.png)
