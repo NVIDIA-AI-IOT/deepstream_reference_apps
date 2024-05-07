@@ -37,7 +37,7 @@ rm models.zip
 
 echo "==================================================================="
 echo "begin download models for dashcamnet / vehiclemakenet / vehicletypenet"
-echo " / trafficcamnet / facedetectir"
+echo " / trafficcamnet / facedetectir / facenet"
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models/dashcamnet && \
 wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/dashcamnet/versions/pruned_onnx_v1.0.4/zip \
@@ -62,6 +62,11 @@ wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/faced
 -O facedetectir_pruned_v1.0.1.zip && \
 unzip -o facedetectir_pruned_v1.0.1.zip -d ../../models/tao_pretrained_models/facedetectir && \
 rm facedetectir_pruned_v1.0.1.zip
+mkdir -p ../../models/tao_pretrained_models/facenet && \
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/facenet/versions/pruned_quantized_v2.0.1/zip \
+-O facenet_pruned_quantized_v2.0.1.zip && \
+unzip facenet_pruned_quantized_v2.0.1.zip -d ../../models/tao_pretrained_models/facenet && \
+rm facenet_pruned_quantized_v2.0.1.zip
 
 echo "==================================================================="
 echo "begin download models for peopleNet "
