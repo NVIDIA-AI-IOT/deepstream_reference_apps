@@ -23,3 +23,5 @@ For further details, please see each project's README.
 ### Body Pose 3D: [README](deepstream-bodypose-3d/README.md) ###
   The project demonstrates usage of Body Pose 3D model in Deepstream application
   ![sample anomaly output](deepstream-bodypose-3d/sources/.screenshot.png)
+### Single-View 3D Tracking: [README](deepstream-tracker-3d/README.md) ###
+  The sample demostrates usage of single-view 3D tracking with DeepStream nvtracker.
