@@ -1,0 +1,38 @@
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# row-major, so the actual matrix is like
+#  2582.5691623002185   -485.10283397043617   650.27745033162591  89466.605755471101
+# -423.46809686390498   1044.6870098337931   2461.1283636622838 -214284.36100320917
+# -0.25563255317172684 -0.90495941862094287  0.34014768617197644 -1181.960782357068
+
+
+projectionMatrix_3x4:
+  - 2582.5691623002185
+  - -485.10283397043617
+  - 650.27745033162591
+  - -89466.605755471101
+  - -423.46809686390498
+  - 1044.6870098337931
+  - 2461.1283636622838
+  - -214284.36100320917
+  - -0.25563255317172684
+  - -0.90495941862094287
+  - 0.34014768617197644
+  - -1181.960782357068
+
+# the height and radius of the cylinder model
+modelInfo:
+  height: 205
+  radius: 33

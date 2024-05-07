@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2023 NVIDIA Corporation.  All rights reserved.
+# Copyright (c) 2023-2024 NVIDIA Corporation.  All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -23,10 +23,10 @@
 name: "trafficcamnet"
 platform: "tensorrt_plan"
 max_batch_size: 1
-default_model_filename: "resnet18_trafficcamnet_pruned.etlt_b1_gpu0_int8.engine"
+default_model_filename: "resnet18_trafficcamnet_pruned.onnx_b1_gpu0_int8.engine"
 input [
   {
-    name: "input_1"
+    name: "input_1:0"
     data_type: TYPE_FP32
     format: FORMAT_NCHW
     dims: [ 3, 544, 960 ]
@@ -34,12 +34,12 @@ input [
 ]
 output [
   {
-    name: "output_bbox/BiasAdd"
+    name: "output_bbox/BiasAdd:0"
     data_type: TYPE_FP32
     dims: [ 16, 34, 60 ]
   },
   {
-    name: "output_cov/Sigmoid"
+    name: "output_cov/Sigmoid:0"
     data_type: TYPE_FP32
     dims: [ 4, 34, 60 ]
   }

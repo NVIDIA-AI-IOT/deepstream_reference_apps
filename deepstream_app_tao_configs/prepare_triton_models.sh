@@ -23,29 +23,31 @@ trtexec --onnx=./triton/frcnn/frcnn_kitti_resnet18.epoch24_trt8.onnx --int8 --ca
 cp triton/frcnn_config.pbtxt ./triton/frcnn/config.pbtxt
 
 mkdir -p ./triton/dashcamnet
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/dashcamnet/versions/pruned_v1.0.2/zip \
--O dashcamnet_pruned_v1.0.2.zip && unzip -o dashcamnet_pruned_v1.0.2.zip -d ./triton/dashcamnet
-rm dashcamnet_pruned_v1.0.2.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/dashcamnet/versions/pruned_onnx_v1.0.4/zip \
+-O dashcamnet_pruned_onnx_v1.0.4.zip && unzip -o dashcamnet_pruned_onnx_v1.0.4.zip -d ./triton/dashcamnet
+rm dashcamnet_pruned_onnx_v1.0.4.zip
 
 mkdir -p ./triton/dashcamnet/1
-./tao-converter -k tlt_encode -t int8 -c ./triton/dashcamnet/dashcamnet_int8.txt -b 1 -d 3,544,960 -e ./triton/dashcamnet/1/resnet18_dashcamnet_pruned.etlt_b1_gpu0_int8.engine ./triton/dashcamnet/resnet18_dashcamnet_pruned.etlt&
+trtexec --onnx=./triton/dashcamnet/resnet18_dashcamnet_pruned.onnx --int8 --calib=./triton/dashcamnet/resnet18_dashcamnet_pruned.txt \
+ --saveEngine=./triton/dashcamnet/1/resnet18_dashcamnet_pruned.onnx_b1_gpu0_int8.engine --minShapes="input_1:0":1x3x544x960 \
+ --optShapes="input_1:0":1x3x544x960 --maxShapes="input_1:0":1x3x544x960
 cp triton/dashcamnet_config.pbtxt ./triton/dashcamnet/config.pbtxt
 
 mkdir -p ./triton/vehiclemakenet
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehiclemakenet/versions/pruned_v1.0.1/zip \
--O vehiclemakenet_pruned_v1.0.1.zip
-unzip -o vehiclemakenet_pruned_v1.0.1.zip -d ./triton/vehiclemakenet/
-rm vehiclemakenet_pruned_v1.0.1.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehiclemakenet/versions/pruned_v1.0.2/zip \
+-O vehiclemakenet_pruned_v1.0.2.zip
+unzip -o vehiclemakenet_pruned_v1.0.2.zip -d ./triton/vehiclemakenet/
+rm vehiclemakenet_pruned_v1.0.2.zip
 
 mkdir -p ./triton/vehiclemakenet/1
 ./tao-converter -k tlt_encode -t int8 -c ./triton/vehiclemakenet/vehiclemakenet_int8.txt -b 4 -d 3,224,224 -e ./triton/vehiclemakenet/1/resnet18_vehiclemakenet_pruned.etlt_b4_gpu0_int8.engine ./triton/vehiclemakenet/resnet18_vehiclemakenet_pruned.etlt&
 cp triton/vehiclemakenet_config.pbtxt ./triton/vehiclemakenet/config.pbtxt
 
 mkdir -p ./triton/vehicletypenet/
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehicletypenet/versions/pruned_v1.0.1/zip \
--O vehicletypenet_pruned_v1.0.1.zip
-unzip -o vehicletypenet_pruned_v1.0.1.zip -d ./triton/vehicletypenet
-rm -r vehicletypenet_pruned_v1.0.1.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehicletypenet/versions/pruned_v1.0.2/zip \
+-O vehicletypenet_pruned_v1.0.2.zip
+unzip -o vehicletypenet_pruned_v1.0.2.zip -d ./triton/vehicletypenet
+rm -r vehicletypenet_pruned_v1.0.2.zip
 
 mkdir -p ./triton/vehicletypenet/1
 ./tao-converter -k tlt_encode -t int8 -c ./triton/vehicletypenet/vehicletypenet_int8.txt -b 4 -d 3,224,224 -e ./triton/vehicletypenet/1/resnet18_vehicletypenet_pruned.etlt_b4_gpu0_int8.engine ./triton/vehicletypenet/resnet18_vehicletypenet_pruned.etlt&
@@ -78,13 +80,14 @@ trtexec --onnx=./triton/detectnet_v2/detectnetv2_resnet18.onnx --int8 --calib=./
 cp triton/detectnet_config.pbtxt ./triton/detectnet_v2/config.pbtxt
 
 mkdir -p ./triton/trafficcamnet/
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/trafficcamnet/versions/pruned_v1.0.2/zip \
--O trafficcamnet_pruned_v1.0.2.zip
-unzip -o trafficcamnet_pruned_v1.0.2.zip -d ./triton/trafficcamnet/
-rm trafficcamnet_pruned_v1.0.2.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/trafficcamnet/versions/pruned_onnx_v1.0.3/zip -O trafficcamnet_pruned_onnx_v1.0.3.zip && \
+unzip -o trafficcamnet_pruned_onnx_v1.0.3.zip -d ./triton/trafficcamnet/ && \
+rm trafficcamnet_pruned_onnx_v1.0.3.zip
 
 mkdir -p ./triton/trafficcamnet/1
-./tao-converter -k tlt_encode -t int8 -c ./triton/trafficcamnet/trafficcamnet_int8.txt -b 1 -d 3,544,960 -e ./triton/trafficcamnet/1/resnet18_trafficcamnet_pruned.etlt_b1_gpu0_int8.engine ./triton/trafficcamnet/resnet18_trafficcamnet_pruned.etlt&
+trtexec --onnx=./triton/trafficcamnet/resnet18_trafficcamnet_pruned.onnx --int8 --calib=./triton/trafficcamnet/resnet18_trafficcamnet_pruned_int8.txt \
+ --saveEngine=./triton/trafficcamnet/1/resnet18_trafficcamnet_pruned.onnx_b1_gpu0_int8.engine --minShapes="input_1:0":1x3x544x960 \
+ --optShapes="input_1:0":1x3x544x960 --maxShapes="input_1:0":1x3x544x960
 cp triton/trafficcamnet_config.pbtxt ./triton/trafficcamnet/config.pbtxt
 
 mkdir -p ./triton/dssd/1
@@ -125,7 +128,7 @@ trtexec --onnx=./triton/yolov3/yolov3_resnet18_398.onnx --int8 --calib=./triton/
 cp triton/yolov3_config.pbtxt ./triton/yolov3/config.pbtxt
 
 mkdir -p ./triton/yolov4/1
-trtexec --onnx=./triton/yolov4/yolov4_resnet18_epoch_080.onnx --int8 --calib=./triton/yolov4/cal_trt861.bin --saveEngine=./triton/yolov4/1/yolov4_resnet18_epoch_080.onnx_b4_gpu0_int8.engine --minShapes=Input:1x3x544x960 --optShapes=Input:2x3x544x960 --maxShapes=Input:4x3x544x960&
+trtexec --onnx=./triton/yolov4/yolov4_resnet18_epoch_080.onnx --best --calib=./triton/yolov4/cal_trt861.bin --saveEngine=./triton/yolov4/1/yolov4_resnet18_epoch_080.onnx_b4_gpu0_int8.engine --minShapes=Input:1x3x544x960 --optShapes=Input:2x3x544x960 --maxShapes=Input:4x3x544x960&
 cp triton/yolov4_config.pbtxt ./triton/yolov4/config.pbtxt
 
 mkdir -p ./triton/yolov4-tiny/1

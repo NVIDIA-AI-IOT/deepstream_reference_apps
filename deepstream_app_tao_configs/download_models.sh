@@ -1,6 +1,6 @@
 #!/bin/sh
 ################################################################################
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021-2024, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -37,37 +37,31 @@ rm models.zip
 
 echo "==================================================================="
 echo "begin download models for dashcamnet / vehiclemakenet / vehicletypenet"
-echo " / trafficcamnet / facedetectir / facenet"
+echo " / trafficcamnet / facedetectir"
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models/dashcamnet && \
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/dashcamnet/versions/pruned_v1.0.2/zip \
--O dashcamnet_pruned_v1.0.2.zip && unzip -o dashcamnet_pruned_v1.0.2.zip -d ../../models/tao_pretrained_models/dashcamnet \
-&& rm dashcamnet_pruned_v1.0.2.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/dashcamnet/versions/pruned_onnx_v1.0.4/zip \
+-O dashcamnet_pruned_onnx_v1.0.4.zip && unzip -o dashcamnet_pruned_onnx_v1.0.4.zip -d ../../models/tao_pretrained_models/dashcamnet \
+&& rm dashcamnet_pruned_onnx_v1.0.4.zip
 mkdir -p ../../models/tao_pretrained_models/vehiclemakenet && \
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehiclemakenet/versions/pruned_v1.0.1/zip \
--O vehiclemakenet_pruned_v1.0.1.zip && \
-unzip -o vehiclemakenet_pruned_v1.0.1.zip -d ../../models/tao_pretrained_models/vehiclemakenet && \
-rm vehiclemakenet_pruned_v1.0.1.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehiclemakenet/versions/pruned_v1.0.2/zip \
+-O vehiclemakenet_pruned_v1.0.2.zip && \
+unzip -o vehiclemakenet_pruned_v1.0.2.zip -d ../../models/tao_pretrained_models/vehiclemakenet && \
+rm vehiclemakenet_pruned_v1.0.2.zip
 mkdir -p ../../models/tao_pretrained_models/vehicletypenet && \
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehicletypenet/versions/pruned_v1.0.1/zip \
--O vehicletypenet_pruned_v1.0.1.zip && \
-unzip -o vehicletypenet_pruned_v1.0.1.zip -d ../../models/tao_pretrained_models/vehicletypenet && \
-rm vehicletypenet_pruned_v1.0.1.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/vehicletypenet/versions/pruned_v1.0.2/zip \
+-O vehicletypenet_pruned_v1.0.2.zip && \
+unzip -o vehicletypenet_pruned_v1.0.2.zip -d ../../models/tao_pretrained_models/vehicletypenet && \
+rm vehicletypenet_pruned_v1.0.2.zip
 mkdir -p ../../models/tao_pretrained_models/trafficcamnet && \
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/trafficcamnet/versions/pruned_v1.0.2/zip \
--O trafficcamnet_pruned_v1.0.2.zip && \
-unzip -o trafficcamnet_pruned_v1.0.2.zip -d ../../models/tao_pretrained_models/trafficcamnet && \
-rm trafficcamnet_pruned_v1.0.2.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/trafficcamnet/versions/pruned_onnx_v1.0.3/zip -O trafficcamnet_pruned_onnx_v1.0.3.zip && \
+unzip -o trafficcamnet_pruned_onnx_v1.0.3.zip -d ../../models/tao_pretrained_models/trafficcamnet && \
+rm trafficcamnet_pruned_onnx_v1.0.3.zip
 mkdir -p ../../models/tao_pretrained_models/facedetectir && \
 wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/facedetectir/versions/pruned_v1.0.1/zip \
 -O facedetectir_pruned_v1.0.1.zip && \
 unzip -o facedetectir_pruned_v1.0.1.zip -d ../../models/tao_pretrained_models/facedetectir && \
 rm facedetectir_pruned_v1.0.1.zip
-mkdir -p ../../models/tao_pretrained_models/facenet && \
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/facenet/versions/pruned_quantized_v2.0.1/zip \
--O facenet_pruned_quantized_v2.0.1.zip && \
-unzip facenet_pruned_quantized_v2.0.1.zip -d ../../models/tao_pretrained_models/facenet && \
-rm facenet_pruned_quantized_v2.0.1.zip
 
 echo "==================================================================="
 echo "begin download models for peopleNet "

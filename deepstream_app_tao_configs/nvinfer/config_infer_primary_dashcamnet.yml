@@ -23,13 +23,10 @@
 property:
   gpu-id: 0
   net-scale-factor: 0.0039215697906911373
-  tlt-model-key: tlt_encode
-  tlt-encoded-model: ../../../models/tao_pretrained_models/dashcamnet/resnet18_dashcamnet_pruned.etlt
+  onnx-file: ../../../models/tao_pretrained_models/dashcamnet/resnet18_dashcamnet_pruned.onnx
   labelfile-path: ../labels_dashcamnet.txt
-  int8-calib-file: ../../../models/tao_pretrained_models/dashcamnet/dashcamnet_int8.txt
-  model-engine-file: ../../../models/tao_pretrained_models/dashcamnet/resnet18_dashcamnet_pruned.etlt_b1_gpu0_int8.engine
-  infer-dims: 3;544;960
-  uff-input-blob-name: input_1
+  int8-calib-file: ../../../models/tao_pretrained_models/dashcamnet/resnet18_dashcamnet_pruned.txt
+  model-engine-file: ../../../models/tao_pretrained_models/dashcamnet/resnet18_dashcamnet_pruned.onnx_b1_gpu0_int8.engine
   batch-size: 1
   process-mode: 1
   model-color-format: 0
@@ -38,7 +35,7 @@ property:
   num-detected-classes: 4
   interval: 0
   gie-unique-id: 1
-  output-blob-names: output_bbox/BiasAdd;output_cov/Sigmoid
+  output-blob-names: output_cov/Sigmoid:0;output_bbox/BiasAdd:0
   cluster-mode: 2
 
 #Use the config params below for dbscan clustering mode

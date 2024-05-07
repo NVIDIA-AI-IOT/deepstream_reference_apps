@@ -1,6 +1,6 @@
 #!/bin/sh
 ################################################################################
-# Copyright (c) 2021-2022, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021-2024, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -27,10 +27,10 @@ echo "==================================================================="
 echo "begin download models for peopleNet "
 echo "==================================================================="
 mkdir -p ../../models/tao_pretrained_models/peopleNet/
-wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.6.1/zip \
--O peoplenet_deployable_quantized_v2.6.1.zip && \
-unzip -o peoplenet_deployable_quantized_v2.6.1.zip -d ../../models/tao_pretrained_models/peopleNet/ && \
-rm peoplenet_deployable_quantized_v2.6.1.zip
+wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/pruned_quantized_decrypted_v2.3.3/zip \
+-O peoplenet_deployable_quantized_v2.3.3.zip && \
+unzip -o peoplenet_deployable_quantized_v2.3.3.zip -d ../../models/tao_pretrained_models/peopleNet/ && \
+rm peoplenet_deployable_quantized_v2.3.3.zip
 
 echo "==================================================================="
 echo "Run deepstream-app"
