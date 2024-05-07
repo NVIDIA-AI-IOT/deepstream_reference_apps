@@ -6,7 +6,7 @@ The project contains 3D Body Pose application built using  Deepstream SDK.
 This application is built for [KAMA: 3D Keypoint Aware Body Mesh Articulation](https://arxiv.org/abs/2104.13502).
 ![sample pose output](./sources/.screenshot.png)
 ## Prerequisites:
-DeepStream SDK 6.3 installed which is available at  http://developer.nvidia.com/deepstream-sdk
+DeepStream SDK 7.0 installed which is available at  http://developer.nvidia.com/deepstream-sdk
 Please follow instructions in the `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/deepstream-app/README` on how
 to install the prequisites for building Deepstream SDK apps.
 

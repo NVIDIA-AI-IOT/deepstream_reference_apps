@@ -1932,7 +1932,11 @@ are published to the message broker.",
     if (prop.integrated) {
       filesink = gst_element_factory_make("nv3dsink", "nv-sink");
     } else {
+#ifdef __aarch64__
+      filesink = gst_element_factory_make ("nv3dsink", "nv-sink");
+#else
       filesink = gst_element_factory_make("nveglglessink", "nv-sink");
+#endif
     }
   }
 
