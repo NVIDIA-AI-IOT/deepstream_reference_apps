@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v6.js"></script>
+
+<style> 
+
+    .center {
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    body {
+        font: 10px sans-serif;
+    }
+            
+    .bar {
+      fill: steelblue;
+    }
+    
+    .bar:hover {
+      fill: brown;
+    }
+    
+    .axis {
+      font: 10px sans-serif;
+    }
+    
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+    
+    .x.axis path {
+      display: none;
+    }
+    
+</style>
+
+<style>
+    body {
+        font-size: 28px;
+    }
+    
+    ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #333;
+        position: -webkit-sticky; /* Safari */
+        position: sticky;
+        top: 0;
+    }
+    
+    li {
+        float: center;
+    }
+    
+    li a {
+        display: block;
+        color: white;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+    }
+
+    .active {
+        background-color: #4CAF50;
+    }
+</style>
+
+<!-- Create a div where the graph will take place -->
+<head>
+    <ul>
+        <li><a class="active" href="#">End-to-End Retail IVA Dashboard</a></li>
+    </ul>
+
+    <table class="center">
+        <tr>
+          <th style="font-size: 20px;">Number of Visitors Today</th>
+        </tr>
+        <tr>
+            <td><div id="line-chart"></div></td>
+        </tr>
+    </table>
+    
+    <br>
+    <!-- <div id="pie-chart"></div>
+    <div id="aisle-bar"></div> -->
+    <table class="center">
+        <tr>
+          <th style="font-size: 20px;">People w & w/o baskets</th>
+          <th style="font-size: 20px;">Aisle Counts</th>
+          <th style="font-size: 20px;">Number of Customers in the last hour</th>
+        </tr>
+        <tr>
+            <td><div id="pie-chart"></div></td>
+            <td><div id="aisle-bar"></div></td>
+            {%block cust_count%}
+            <td><h1 style="font-size:100px;">{{customer_count}}</h1></td>
+            {%endblock cust_count%}
+        </tr>
+    </table>
+    
+</head>
+
+<script>
+
+    // set the dimensions and margins of the graph
+    const bar_margin = {top: 10, right: 30, bottom: 30, left: 60},
+        bar_width = 1080 - bar_margin.left - bar_margin.right,
+        bar_height = 400 - bar_margin.top - bar_margin.bottom;
+    
+    // append the svg object to the body of the page
+    const bar_svg = d3.select("#line-chart")
+      .append("svg")
+        .attr("width", bar_width + bar_margin.left + bar_margin.right)
+        .attr("height", bar_height + bar_margin.top + bar_margin.bottom)
+      .append("g")
+        .attr("transform", `translate(${bar_margin.left},${bar_margin.top})`);
+    
+    
+    // var data = [{"TIMESTAMP": "2022-07-29 03:43:54", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:43:55", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:43:56", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:43:57", "COUNT_PERSONID": 3}, {"TIMESTAMP": "2022-07-29 03:43:58", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:43:59", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:00", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:01", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:02", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:03", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:04", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:05", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:06", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:07", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:08", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:09", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:10", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:11", "COUNT_PERSONID": 5}, {"TIMESTAMP": "2022-07-29 03:44:12", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:13", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:14", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:15", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:16", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:17", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:18", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:19", "COUNT_PERSONID": 3}, {"TIMESTAMP": "2022-07-29 03:44:20", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:21", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:22", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:23", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:24", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:25", "COUNT_PERSONID": 3}, {"TIMESTAMP": "2022-07-29 03:44:26", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:27", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:28", "COUNT_PERSONID": 4}, {"TIMESTAMP": "2022-07-29 03:44:29", "COUNT_PERSONID": 4}, {"TIMESTAMP": "2022-07-29 03:44:30", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:31", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:32", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:33", "COUNT_PERSONID": 3}, {"TIMESTAMP": "2022-07-29 03:44:34", "COUNT_PERSONID": 3}, {"TIMESTAMP": "2022-07-29 03:44:35", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:36", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:37", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:38", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:39", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:40", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:41", "COUNT_PERSONID": 3}, {"TIMESTAMP": "2022-07-29 03:44:42", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:43", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:44", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:45", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:46", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:47", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:48", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:49", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:50", "COUNT_PERSONID": 3}, {"TIMESTAMP": "2022-07-29 03:44:51", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:52", "COUNT_PERSONID": 1}, {"TIMESTAMP": "2022-07-29 03:44:53", "COUNT_PERSONID": 2}, {"TIMESTAMP": "2022-07-29 03:44:54", "COUNT_PERSONID": 1}];
+    
+    {%block line%}
+        var bar_data = {{time_bar | safe}}
+    {%endblock line%}
+
+    // Add X axis --> it is a date format
+    const x = d3.scaleTime()
+        .domain(d3.extent(bar_data.map(function(d) { return d3.timeParse("%Y-%m-%d %I:%M:%S")(d.TIMESTAMP); })))
+        .range([ 0, bar_width ]);
+    bar_svg.append("g")
+        .attr("transform", `translate(0, ${bar_height})`)
+        .call(d3.axisBottom(x));
+    
+    // Add Y axis
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(bar_data, function(d) { return d.COUNT_PERSONID; })])
+        .range([ bar_height, 0 ]);
+    bar_svg.append("g")
+        .call(d3.axisLeft(y));
+    
+    // Add the line
+    bar_svg.append("path")
+        .datum(bar_data)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+        .x(function(d) { return x(d3.timeParse("%Y-%m-%d %I:%M:%S")(d.TIMESTAMP)); })
+        .y(function(d) { return y(d.COUNT_PERSONID); })
+        );
+    
+</script>
+
+<script>
+
+    // set the dimensions and margins of the graph
+    const width = 450,
+        height = 450,
+        margin = 40;
+    
+    // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
+    const radius = Math.min(width, height) / 2 - margin
+    
+    // append the svg object to the div called 'pie-chart'
+    const svg = d3.select("#pie-chart")
+      .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+      .append("g")
+        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+    
+    // Create dummy data
+    {%block pie %}
+        const data = {{ basket_counts | safe}}
+    {%endblock pie%}
+    // set the color scale
+    const color = d3.scaleOrdinal()
+      .range(d3.schemeSet2);
+    
+    // Compute the position of each group on the pie:
+    const pie = d3.pie()
+      .value(function(d) {return d[1]})
+    const data_ready = pie(Object.entries(data))
+    // Now I know that group A goes from 0 degrees to x degrees and so on.
+    
+    // shape helper to build arcs:
+    const arcGenerator = d3.arc()
+      .innerRadius(0)
+      .outerRadius(radius)
+    
+    // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+    svg
+      .selectAll('mySlices')
+      .data(data_ready)
+      .join('path')
+        .attr('d', arcGenerator)
+        .attr('fill', function(d){ return(color(d.data[0])) })
+        .attr("stroke", "black")
+        .style("stroke-width", "2px")
+        .style("opacity", 0.7)
+    
+    // Now add the annotation. Use the centroid method to get the best coordinates
+    svg
+      .selectAll('mySlices')
+      .data(data_ready)
+      .join('text')
+      .text(function(d){ return d.data[0]})
+      .attr("transform", function(d) { return `translate(${arcGenerator.centroid(d)})`})
+      .style("text-anchor", "middle")
+      .style("font-size", 17)
+</script>
+
+<script>
+
+    // set the dimensions and margins of the graph
+    const aisle_margin = {top: 30, right: 30, bottom: 70, left: 60},
+        aisle_width = 460 - aisle_margin.left - aisle_margin.right,
+        aisle_height = 400 - aisle_margin.top - aisle_margin.bottom;
+    
+    // append the svg object to the body of the page
+    const aisle_svg = d3.select("#aisle-bar")
+      .append("svg")
+        .attr("width", aisle_width + aisle_margin.left + aisle_margin.right)
+        .attr("height", aisle_height + aisle_margin.top + aisle_margin.bottom)
+      .append("g")
+        .attr("transform", `translate(${aisle_margin.left},${aisle_margin.top})`);
+    
+
+    {%block aisle %}
+        const aisle_data = {{ aisle_counts | safe}}
+    {%endblock aisle%}
+    
+    // X axis
+    const aisle_x = d3.scaleBand()
+      .range([ 0, aisle_width ])
+      .domain(aisle_data.map(d => d.aisle))
+      .padding(0.2);
+    aisle_svg.append("g")
+      .attr("transform", `translate(0, ${aisle_height})`)
+      .call(d3.axisBottom(aisle_x))
+      .selectAll("text")
+        .attr("transform", "translate(-10,0)rotate(-45)")
+        .style("text-anchor", "end");
+    
+    // Add Y axis
+    const aisle_y = d3.scaleLinear()
+      .domain([0, d3.max(aisle_data, function(d) { return d.count; })])
+      .range([ aisle_height, 0]);
+    aisle_svg.append("g")
+      .call(d3.axisLeft(aisle_y));
+    
+    // Bars
+    aisle_svg.selectAll("mybar")
+      .data(aisle_data)
+      .join("rect")
+        .attr("x", d => aisle_x(d.aisle))
+        .attr("y", d => aisle_y(d.count))
+        .attr("width", aisle_x.bandwidth())
+        .attr("height", d => aisle_height - aisle_y(d.count))
+        .attr("fill", "#69b3a2")
+</script>

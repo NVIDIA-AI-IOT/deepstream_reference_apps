@@ -26,3 +26,6 @@ For further details, please see each project's README.
 ### Single-View 3D Tracking: [README](deepstream-tracker-3d/README.md) ###
   The sample demostrates usage of single-view 3D tracking with DeepStream nvtracker.
   ![sample 3D tracking output](deepstream-tracker-3d/figures/.retail_viz.png)
+### Retail Analytics: [README](deepstream-retail-analytics/README.md) ###
+  The project shows real-time Intelligent Video Analytics (IVA) in a brick and mortar retail environment.
+

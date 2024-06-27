@@ -1,0 +1,79 @@
+model_config {
+  # Model Architecture can be chosen from:
+  # ['resnet', 'vgg', 'googlenet', 'alexnet']
+  arch: "resnet"
+  # for resnet --> n_layers can be [10, 18, 50]
+  # for vgg --> n_layers can be [16, 19]
+  n_layers: 34
+  use_batch_norm: True
+  use_bias: False
+  all_projections: False
+  use_pooling: True
+  retain_head: True
+  resize_interpolation_method: BICUBIC
+  # if you want to use the pretrained model,
+  # image size should be "3,224,224"
+  # otherwise, it can be "3, X, Y", where X,Y >= 16
+  input_image_size: "3,224,224"
+}
+train_config {
+  val_dataset_path: "/work/basketDetection/classification_data/"
+  train_dataset_path: "/work/basketDetection/classification_data/"
+  pretrained_model_path: "/work/basketDetection/resnet_34.hdf5"
+  # Only ['sgd', 'adam'] are supported for optimizer
+  optimizer {
+      sgd {
+      lr: 0.01
+      decay: 0.0
+      momentum: 0.9
+      nesterov: False
+      }
+  }
+  batch_size_per_gpu: 50
+  n_epochs: 150
+  # Number of CPU cores for loading data
+  n_workers: 16
+  # regularizer
+  reg_config {
+      # regularizer type can be "L1", "L2" or "None".
+      type: "L2"
+      # if the type is not "None",
+      # scope can be either "Conv2D" or "Dense" or both.
+      scope: "Conv2D,Dense"
+      # 0 < weight decay < 1
+      weight_decay: 0.000015
+  }
+  # learning_rate
+  lr_config {
+      cosine {
+      learning_rate: 0.04
+      soft_start: 0.0
+      }
+  }
+  enable_random_crop: False
+  enable_center_crop: False
+  enable_color_augmentation: True
+  mixup_alpha: 0.2
+  label_smoothing: 0.1
+  preprocess_mode: "caffe"
+  image_mean {
+    key: 'b'
+    value: 103.9
+  }
+  image_mean {
+    key: 'g'
+    value: 116.8
+  }
+  image_mean {
+    key: 'r'
+    value: 123.7
+  }
+}
+eval_config {
+  eval_dataset_path: "/work/basketDetection/classification_data/"
+  model_path: "/work/basketDetection/classification_model/weights/resnet_150.tlt"
+  top_k: 3
+  batch_size: 256
+  n_workers: 8
+  enable_center_crop: False
+}
