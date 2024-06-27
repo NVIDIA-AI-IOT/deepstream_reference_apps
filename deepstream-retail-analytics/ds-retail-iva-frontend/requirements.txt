@@ -4,7 +4,7 @@ backports.zoneinfo==0.2.1
 charset-normalizer==2.1.0
 cycler==0.11.0
 distlib==0.3.4
-Django==4.1
+Django==4.1.13
 filelock==3.7.0
 fonttools==4.34.4
 h11==0.12.0
