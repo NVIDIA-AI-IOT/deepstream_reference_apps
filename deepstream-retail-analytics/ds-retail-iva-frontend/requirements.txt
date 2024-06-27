@@ -13,7 +13,7 @@ hpack==4.0.0
 httpcore==0.15.0
 httpx==0.23.0
 hyperframe==6.0.1
-idna==3.3
+idna==3.7
 kiwisolver==1.4.4
 matplotlib==3.5.2
 numpy==1.23.1
