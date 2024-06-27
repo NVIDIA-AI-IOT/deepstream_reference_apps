@@ -32,4 +32,4 @@ six==1.16.0
 sniffio==1.2.0
 sqlparse==0.4.2
 tqdm==4.64.0
-urllib3==1.26.11
+urllib3==1.26.19
