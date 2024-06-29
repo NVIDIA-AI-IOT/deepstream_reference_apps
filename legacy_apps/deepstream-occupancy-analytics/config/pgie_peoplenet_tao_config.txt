@@ -1,0 +1,58 @@
+################################################################################
+# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+################################################################################
+[property]
+gpu-id=0
+net-scale-factor=0.0039215697906911373
+tlt-model-key=tlt_encode
+tlt-encoded-model=peoplenet/resnet34_peoplenet_pruned_int8.etlt
+labelfile-path=peoplenet/labels.txt
+# model-engine-file=peoplenet/resnet34_peoplenet_pruned_int8.etlt_b1_gpu0_int8.engine
+int8-calib-file=peoplenet/resnet34_peoplenet_pruned_int8.txt
+input-dims=3;544;960;0
+uff-input-blob-name=input_1
+batch-size=1
+process-mode=1
+model-color-format=0
+## 0=FP32, 1=INT8, 2=FP16 mode
+network-mode=1
+num-detected-classes=3
+cluster-mode=1
+interval=0
+gie-unique-id=1
+output-blob-names=output_bbox/BiasAdd;output_cov/Sigmoid
+
+[class-attrs-all]
+pre-cluster-threshold=0.4
+## Set eps=0.7 and minBoxes for cluster-mode=1(DBSCAN)
+eps=0.7
+minBoxes=1
+
+[class-attrs-1]
+pre-cluster-threshold=1.4
+## Set eps=0.7 and minBoxes for cluster-mode=1(DBSCAN)
+eps=0.7
+minBoxes=1
+[class-attrs-2]
+pre-cluster-threshold=1.4
+## Set eps=0.7 and minBoxes for cluster-mode=1(DBSCAN)
+eps=0.7
+minBoxes=1
