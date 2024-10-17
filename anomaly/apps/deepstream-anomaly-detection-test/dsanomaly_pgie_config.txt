@@ -1,11 +1,12 @@
 ################################################################################
-# Copyright (c) 2019-2023, NVIDIA CORPORATION.  All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +16,6 @@
 ################################################################################
 
 # Following properties are mandatory when engine files are not specified:
-#   int8-calib-file(Only in INT8)
-#   Caffemodel mandatory properties: model-file, proto-file, output-blob-names
-#   UFF: uff-file, input-dims, uff-input-blob-name, output-blob-names
 #   ONNX: onnx-file
 #
 # Mandatory properties for detectors:
@@ -54,12 +52,10 @@
 [property]
 gpu-id=0
 net-scale-factor=0.00392156862745098
-tlt-model-key=tlt_encode
-tlt-encoded-model=../../../../../../../samples/models/Primary_Detector/resnet18_trafficcamnet.etlt
-model-engine-file=../../../../../../../samples/models/Primary_Detector/resnet18_trafficcamnet.etlt_b30_gpu0_int8.engine
+onnx-file=../../../../../../../samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx
+model-engine-file=../../../../../../../samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx_b1_gpu0_int8.engine
 labelfile-path=../../../../../../../samples/models/Primary_Detector/labels.txt
 int8-calib-file=../../../../../../../samples/models/Primary_Detector/cal_trt.bin
-force-implicit-batch-dim=1
 batch-size=1
 process-mode=1
 model-color-format=0
@@ -67,10 +63,6 @@ network-mode=1
 num-detected-classes=4
 interval=0
 gie-unique-id=1
-uff-input-order=0
-uff-input-blob-name=input_1
-output-blob-names=output_cov/Sigmoid;output_bbox/BiasAdd
-infer-dims=3;544;960
 cluster-mode=2
 
 [class-attrs-all]

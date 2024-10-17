@@ -1,0 +1,53 @@
+################################################################################
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
+sensor0:
+  enable: 1
+  type: Camera
+  id: CAMERA_ID
+  location: 45.293701447;-75.8303914499;48.1557479338
+  description: "Entrance of Garage Right Lane"
+  coordinate: 5.2;10.1;11.2
+
+place0:
+  enable: 1
+  id: 1
+  type: garage
+  name: XYZ
+  location: 30.32;-40.55;100.0
+  coordinate: 1.0;2.0;3.0
+  place-sub-field1: walsh
+  place-sub-field2: lane1
+  place-sub-field3: P2
+
+place1:
+  enable: 1
+  id: 1
+  type: garage
+  name: XYZ
+  location: 28.47;47.46;1.53
+  coordinate: 1.0;2.0;3.0
+  place-sub-field1: "C-76-2"
+  place-sub-field2: "LEV/EV/CP/ADA"
+  place-sub-field3: P2
+
+analytics0:
+  enable: 1
+  id: XYZ
+  description: "Vehicle Detection and License Plate Recognition"
+  source: OpenALR
+  version: 1.0

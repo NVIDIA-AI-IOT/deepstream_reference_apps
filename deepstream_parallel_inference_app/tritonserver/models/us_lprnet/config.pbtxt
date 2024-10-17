@@ -1,0 +1,50 @@
+################################################################################
+# SPDX-FileCopyrightText: Copyright (c) 2020-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
+name: "us_lprnet"
+platform: "tensorrt_plan"
+max_batch_size: 16
+default_model_filename: "us_lprnet_baseline18_deployable.onnx_b16_gpu0_fp16.engine"
+input [
+  {
+    name: "image_input"
+    data_type: TYPE_FP32
+    format: FORMAT_NCHW
+    dims: [ 3, 48, 96]
+  }
+]
+output [
+  {
+    name: "tf_op_layer_ArgMax"
+    data_type: TYPE_INT32
+    dims: [24]
+  },
+
+  {
+    name: "tf_op_layer_Max"
+    data_type: TYPE_FP32
+    dims: [ 24 ]
+  }
+]
+
+instance_group [
+  {
+    kind: KIND_GPU
+    count: 1
+    gpus: 0
+  }
+]

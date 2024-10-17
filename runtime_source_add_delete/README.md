@@ -19,7 +19,7 @@ to install the prequisites for Deepstream SDK apps.
 ## Compilation Steps and Execution:
 ```
   $ Set CUDA_VER in the MakeFile as per platform.
-      For both x86 & Jetson, CUDA_VER=12.2
+      For both x86 & Jetson, CUDA_VER=12.6
   $ sudo make
 
   $ ./deepstream-test-rt-src-add-del <uri> <run forever> <sink> <sync>

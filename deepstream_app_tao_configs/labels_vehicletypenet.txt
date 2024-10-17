@@ -1,1 +1,0 @@
-coupe;largevehicle;sedan;suv;truck;van

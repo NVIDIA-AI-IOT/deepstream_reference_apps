@@ -6,50 +6,27 @@ The project contains 3D Body Pose application built using  Deepstream SDK.
 This application is built for [KAMA: 3D Keypoint Aware Body Mesh Articulation](https://arxiv.org/abs/2104.13502).
 ![sample pose output](./sources/.screenshot.png)
 ## Prerequisites:
-DeepStream SDK 7.0 installed which is available at  http://developer.nvidia.com/deepstream-sdk
+DeepStream SDK 7.1 installed which is available at  http://developer.nvidia.com/deepstream-sdk
 Please follow instructions in the `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/deepstream-app/README` on how
 to install the prequisites for building Deepstream SDK apps.
+
+The pretrained TAO models [PeopleNet](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet) and [BodyPose3DNet](https://ngc.nvidia.com/models/nvstaging:tao:bodypose3dnet) from NGC.
 
 ## Installation
 Follow https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_Quickstart.html to setup the DeepStream SDK
 
 1. Preferably clone the app in
   `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/`
-and define project home as `export BODYPOSE3D_HOME=<parent-path>/deepstream-bodypose-3d`.
+and define project home as `export BODYPOSE3D_HOME=<parent-path>/3d-bodypose-deepstream`.
 
-2. Install [NGC CLI](https://ngc.nvidia.com/setup/installers/cli) and download [PeopleNet](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet) and [BodyPose3DNet](https://ngc.nvidia.com/models/nvstaging:tao:bodypose3dnet) from NGC.
-```bash
-$ mkdir -p $BODYPOSE3D_HOME/models
-$ cd $BODYPOSE3D_HOME/models
-# Download PeopleNet
-$ ngc registry model download-version "nvidia/tao/peoplenet:deployable_quantized_v2.5"
-# Download BodyPose3DNet
-$ ngc registry model download-version "nvidia/tao/bodypose3dnet:deployable_accuracy_v1.0"
+2. Install Eigen development packages
+```
+  sudo apt install libeigen3-dev
+  cd /usr/include
+  sudo ln -sf eigen3/Eigen Eigen
 ```
 
-By now the directory tree should look like this
-```bash
-$ tree $BODYPOSE3D_HOME -d
-$BODYPOSE3D_HOME
-├── configs
-├── models
-│   ├── bodypose3dnet_vdeployable_accuracy_v1.0
-│   └── peoplenet_vdeployable_quantized_v2.5
-├── sources
-│   ├── deepstream-sdk
-│   └── nvdsinfer_custom_impl_BodyPose3DNet
-└── streams
-```
-
-3. Download and extract [Eigen 3.4.0](https://eigen.tuxfamily.org/index.php?title=Main_Page) under the project foler.
-```bash
-$ cd $BODYPOSE3D_HOME
-$ wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz
-$ tar xvzf eigen-3.4.0.tar.gz
-$ ln eigen-3.4.0 eigen -s
-```
-
-4. For Deepstream SDK version older than 6.2, copy and build custom `NvDsEventMsgMeta` into Deepstream SDK installation path. Copy and build custom `NvDsEventMsgMeta` into Deepstream SDK installation path.
+3. For Deepstream SDK version older than 6.2, copy and build custom `NvDsEventMsgMeta` into Deepstream SDK installation path. Copy and build custom `NvDsEventMsgMeta` into Deepstream SDK installation path.
 The custom `NvDsEventMsgMeta` structure handles pose3d and pose25d meta data.
 ```bash
 # Copy deepstream sources
@@ -73,6 +50,12 @@ If the above steps are successful, `deepstream-pose-estimation-app` shall be bui
 
 ## Run the applications
 ### `deepstream-pose-estimation-app`
+Download the pretrained TAO models with the download script
+```
+cd $BODYPOSE3D_HOME
+bash ./download_models.sh
+```
+
 The command line options of this application are listed below:
 ```bash
 $ ./deepstream-pose-estimation-app -h

@@ -1,0 +1,119 @@
+############################################################################
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#############################################################################
+sensor0:
+  enable: 1
+  type: Camera
+  id: HWY_20_AND_LOCUST__EBA__4_11_2018_4_59_59_508_AM_UTC-07_00
+  location: 45.293701447;-75.8303914499;48.1557479338
+  description: Aisle Camera
+  coordinate: 5.2;10.1;11.2
+
+sensor1:
+  enable: 1
+  type: Camera
+  id: HWY_20_AND_LOCUST__WBA__4_11_2018_4_59_59_379_AM_UTC-07_00
+  location: 45.293701447;-75.8303914499;48.1557479338
+  description: Aisle Camera
+  coordinate: 5.2;10.1;11.2
+
+sensor2:
+  enable: 1
+  type: Camera
+  id: HWY_20_AND_DEVON__WBA__4_11_2018_4_59_59_134_AM_UTC-07_00
+  location: 45.293701447;-75.8303914499;48.1557479338
+  description: Aisle Camera
+  coordinate: 5.2;10.1;11.2
+
+sensor3:
+  enable: 1
+  type: Camera
+  id: HWY_20_AND_LOCUST__4_11_2018_4_59_59_320_AM_UTC-07_00
+  location: 45.293701447;-75.8303914499;48.1557479338
+  description: Aisle Camera
+  coordinate: 5.2;10.1;11.2
+
+place0:
+  enable: 1
+  id: 0
+  type: intersection/road
+  name: HWY_20_AND_LOCUST__EBA
+  location: 30.32;-40.55;100.0
+  coordinate: 1.0;2.0;3.0
+  place-sub-field1: C_127_158
+  place-sub-field2: Lane 1
+  place-sub-field3: P1
+
+place1:
+  enable: 1
+  id: 1
+  type: intersection/road
+  name: HWY_20_AND_LOCUST__WBA
+  location: 30.32;-40.55;100.0
+  coordinate: 1.0;2.0;3.0
+  place-sub-field1: C_127_158
+  place-sub-field2: Lane 1
+  place-sub-field3: P1
+
+place2:
+  enable: 1
+  id: 2
+  type: intersection/road
+  name: HWY_20_AND_DEVON__WBA
+  location: 30.32;-40.55;100.0
+  coordinate: 1.0;2.0;3.0
+  place-sub-field1: C_127_158
+  place-sub-field2: Lane 1
+  place-sub-field3: P1
+
+place3:
+  enable: 1
+  id: 3
+  type: intersection/road
+  name: HWY_20_AND_LOCUST
+  location: 30.32;-40.55;100.0
+  coordinate: 1.0;2.0;3.0
+  place-sub-field1: C_127_158
+  place-sub-field2: Lane 1
+  place-sub-field3: P1
+
+analytics0:
+  enable: 1
+  id: XYZ_1
+  description: Vehicle Detection and License Plate Recognition
+  source: OpenALR
+  version: 1.0
+
+analytics1:
+  enable: 1
+  id: XYZ_2
+  description: Vehicle Detection and License Plate Recognition 1
+  source: OpenALR
+  version: 1.0
+
+analytics2:
+  enable: 1
+  id: XYZ_3
+  description: Vehicle Detection and License Plate Recognition 2
+  source: OpenALR
+  version: 1.0
+
+analytics3:
+  enable: 1
+  id: XYZ_4
+  description: Vehicle Detection and License Plate Recognition 4
+  source: OpenALR
+  version: 1.0

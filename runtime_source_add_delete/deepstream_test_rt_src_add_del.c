@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.  All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -657,7 +658,9 @@ main (int argc, char *argv[])
   SET_GPU_ID (nvvideoconvert, GPU_ID);
   SET_GPU_ID (nvosd, GPU_ID);
   if(!prop.integrated) {
+#ifndef __aarch64__
     SET_GPU_ID (sink, GPU_ID);
+#endif
   }
 
   /* we add a message handler */

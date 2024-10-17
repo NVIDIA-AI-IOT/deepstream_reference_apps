@@ -1,5 +1,0 @@
-Bicycle
-Car
-Person
-Roadsign
-background

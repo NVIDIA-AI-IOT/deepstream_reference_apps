@@ -5,9 +5,9 @@ This sample application demonstrates the single-view 3D tracking with DeepStream
 
 ## Prerequisites
 This sample application can be run on both x86 and Jetson platforms inside DeepStream container. Check [here](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_docker_containers.html#prerequisites) for DeepStream container setup.
-1. Download the latest DeepStream container image from NGC (e.g., DS 7.0 in the example below)
+1. Download the latest DeepStream container image from NGC (e.g., DS 7.1 in the example below)
     ```bash
-    export DS_IMG_NAME="nvcr.io/nvidia/deepstream:7.0-triton-multiarch"
+    export DS_IMG_NAME="nvcr.io/nvidia/deepstream:7.1-triton-multiarch"
     docker pull $DS_IMG_NAME
     ```
 
@@ -17,14 +17,14 @@ This sample application can be run on both x86 and Jetson platforms inside DeepS
     cd deepstream_reference_apps/deepstream-tracker-3d
     ```
 
-3. Download NVIDIA pretrained `PeopleNet` for detection from [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet/files?version=deployable_quantized_v2.6.1) (e.g., PeopleNet v2.6.1 in the example below).
+3. Download NVIDIA pretrained `PeopleNet` for detection from [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet/files?version=deployable_quantized_onnx_v2.6.3(e.g., PeopleNet v2.6.3 in the example below).
 
     ```bash
     # current directory: deepstream_reference_apps/deepstream-tracker-3d
     mkdir -p models/PeopleNet
     cd models/PeopleNet
-    wget --no-check-certificate --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_v2.6.1/zip -O peoplenet_deployable_quantized_v2.6.1.zip
-    unzip peoplenet_deployable_quantized_v2.6.1.zip
+    wget --no-check-certificate --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_onnx_v2.6.3/zip -O peoplenet_deployable_quantized_onnx_v2.6.3.zip
+    unzip peoplenet_deployable_quantized_onnx_v2.6.3.zip
     ```
 
     The model files are now stored in `PeopleNet` directory as

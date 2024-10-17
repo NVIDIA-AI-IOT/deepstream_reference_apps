@@ -1,11 +1,12 @@
 ################################################################################
-# Copyright (c) 2018-2023, NVIDIA CORPORATION.  All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2018-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +16,6 @@
 ################################################################################
 
 # Following properties are mandatory when engine files are not specified:
-#   int8-calib-file(Only in INT8)
-#   Caffemodel mandatory properties: model-file, proto-file, output-blob-names
-#   UFF: uff-file, input-dims, uff-input-blob-name, output-blob-names
 #   ONNX: onnx-file
 #
 # Mandatory properties for detectors:
@@ -54,12 +52,10 @@
 [property]
 gpu-id=0
 net-scale-factor=1
-tlt-model-key=tlt_encode
-model-engine-file=../../../../../samples/models/Secondary_VehicleTypes/resnet18_vehicletypenet.etlt_b16_gpu0_int8.engine
-tlt-encoded-model=../../../../../samples/models/Secondary_VehicleTypes/resnet18_vehicletypenet.etlt
+onnx-file=../../../../../samples/models/Secondary_VehicleTypes/resnet18_vehicletypenet_pruned.onnx
+model-engine-file=../../../../../samples/models/Secondary_VehicleTypes/resnet18_vehicletypenet_pruned.onnx_b16_gpu0_int8.engine
 labelfile-path=../../../../../samples/models/Secondary_VehicleTypes/labels.txt
 int8-calib-file=../../../../../samples/models/Secondary_VehicleTypes/cal_trt.bin
-force-implicit-batch-dim=1
 batch-size=16
 # 0=FP32 and 1=INT8 mode
 network-mode=1
@@ -72,9 +68,6 @@ gie-unique-id=3
 operate-on-gie-id=1
 operate-on-class-ids=0
 is-classifier=1
-uff-input-blob-name=input_1
-output-blob-names=predictions/Softmax
 classifier-async-mode=0
 classifier-threshold=0.51
 process-mode=2
-infer-dims=3;244;244

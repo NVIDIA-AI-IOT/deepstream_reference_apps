@@ -1,0 +1,4 @@
+enable,type,uri,num-sources,gpu-id,cudadec-memtype
+1,3,file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4,2,0,0
+1,3,file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_qHD.mp4,1,0,0
+1,4,rtsp://10.19.225.227/media/video1,1,0,0

@@ -1,0 +1,53 @@
+name: "yolov4"
+platform: "tensorrt_plan"
+max_batch_size: 32
+input [
+    {
+        name: "input"
+        data_type: TYPE_FP32
+        dims: [
+            3,
+            416,
+            416
+        ]
+    }
+]
+output [
+    {
+    name: "num_detections"
+    data_type: TYPE_INT32
+    dims: [
+                1
+        ]
+    },
+    {
+        name: "nmsed_boxes"
+        data_type: TYPE_FP32
+        dims: [
+            1000,
+            4
+        ]
+    },
+    {
+        name: "nmsed_scores"
+        data_type: TYPE_FP32
+        dims: [
+            1000
+        ]
+    },
+    {
+        name: "nmsed_classes"
+        data_type: TYPE_FP32
+        dims: [
+            1000
+        ]
+    }
+]
+instance_group [
+    {
+      count: 1
+      kind: KIND_GPU
+      gpus: [ 0 ]
+    }
+]
+default_model_filename: "yolov4_-1_3_416_416_dynamic.onnx_b32_gpu0.engine"

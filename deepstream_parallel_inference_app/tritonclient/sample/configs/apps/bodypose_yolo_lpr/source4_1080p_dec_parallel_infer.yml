@@ -1,0 +1,289 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+application:
+  enable-perf-measurement: 1
+  perf-measurement-interval-sec: 5
+  ##gie-kitti-output-dir=streamscl
+
+tiled-display:
+  enable: 1
+  rows: 2
+  columns: 2
+  width: 1280
+  height: 720
+  gpu-id: 0
+  #(0): nvbuf-mem-default - Default memory allocated, specific to particular platform
+  #(1): nvbuf-mem-cuda-pinned - Allocate Pinned/Host cuda memory, applicable for Tesla
+  #(2): nvbuf-mem-cuda-device - Allocate Device cuda memory, applicable for Tesla
+  #(3): nvbuf-mem-cuda-unified - Allocate Unified cuda memory, applicable for Tesla
+  #(4): nvbuf-mem-surface-array - Allocate Surface Array memory, applicable for Jetson
+  nvbuf-memory-type: 0
+
+source:
+  #csv-file-path: sources_4.csv
+  csv-file-path: sources_4_different_source.csv
+  #csv-file-path: sources_4_rtsp.csv
+
+sink0:
+  enable: 0
+  #Type - 1=FakeSink 2=EglSink 3=File 7=nv3dsink (Jetson only)
+  type: 2
+  sync: 1
+  source-id: 0
+  gpu-id: 0
+  nvbuf-memory-type: 0
+
+sink1:
+  enable: 1
+  type: 3
+  #1=mp4 2=mkv
+  container: 1
+  #1=h264 2=h265
+  codec: 1
+  #encoder type 0=Hardware 1=Software
+  enc-type: 1
+  sync: 1
+  #iframeinterval=10
+  bitrate: 2000000
+  #H264 Profile - 0=Baseline 2=Main 4=High
+  #H265 Profile - 0=Main 1=Main10
+  profile: 0
+  output-file: out.mp4
+  source-id: 0
+
+sink2:
+  enable: 0
+  #Type - 1=FakeSink 2=EglSink 3=File 4=RTSPStreaming
+  type: 4
+  #1=h264 2=h265
+  codec: 1
+  #encoder type 0=Hardware 1=Software
+  enc-type: 1
+  sync: 0
+  bitrate: 4000000
+  #H264 Profile - 0=Baseline 2=Main 4=High
+  #H265 Profile - 0=Main 1=Main10
+  profile: 0
+  # set below properties in case of RTSPStreaming
+  rtsp-port: 8554
+  udp-port: 5400
+
+sink3:
+  enable: 0
+  #Type - 1=FakeSink 2=EglSink 3=File 4=UDPSink 5=nvdrmvideosink 6=MsgConvBroker
+  type: 6
+  msg-conv-config: dstest5_msgconv_sample_config.yml
+  #(0): PAYLOAD_DEEPSTREAM - Deepstream schema payload
+  #(1): PAYLOAD_DEEPSTREAM_MINIMAL - Deepstream schema payload minimal
+  #(256): PAYLOAD_RESERVED - Reserved type
+  #(257): PAYLOAD_CUSTOM   - Custom schema payload
+  msg-conv-payload-type: 0
+  msg-broker-proto-lib: /opt/nvidia/deepstream/deepstream/lib/libnvds_kafka_proto.so
+  #Provide your msg-broker-conn-str here
+  msg-broker-conn-str: <host>;<port>;<topic>
+  topic: <topic>
+  #Optional:
+  #msg-broker-config: ../../deepstream-test4/cfg_kafka.txt
+ 
+sink4:
+  enable: 0
+  #Type - 1=FakeSink 2=EglSink 3=File 4=UDPSink 5=nvdrmvideosink 6=MsgConvBroker
+  type: 6
+  msg-conv-config: dstest5_msgconv_sample_config.yml
+  #(0): PAYLOAD_DEEPSTREAM - Deepstream schema payload
+  #(1): PAYLOAD_DEEPSTREAM_MINIMAL - Deepstream schema payload minimal
+  #(256): PAYLOAD_RESERVED - Reserved type
+  #(257): PAYLOAD_CUSTOM   - Custom schema payload
+  msg-conv-payload-type: 0
+  msg-conv-msg2p-new-api: 0
+  #Frame interval at which payload is generated
+  msg-conv-frame-interval: 30
+  msg-broker-proto-lib: /opt/nvidia/deepstream/deepstream/lib/libnvds_kafka_proto.so
+  #Provide your msg-broker-conn-str here
+  msg-broker-conn-str: 10.23.136.84;9092
+  topic: dstest
+  disable-msgconv: 1
+  #Optional:
+  #msg-broker-config: ../../deepstream-test4/cfg_kafka.txt
+
+
+# sink type = 6 by default creates msg converter + broker.
+# To use multiple brokers use this group for converter and use
+# sink type = 6 with disable-msgconv :  1
+message-converter:
+  enable: 0
+  msg-conv-config: dstest5_msgconv_sample_config.yml
+  #(0): PAYLOAD_DEEPSTREAM - Deepstream schema payload
+  #(1): PAYLOAD_DEEPSTREAM_MINIMAL - Deepstream schema payload minimal
+  #(256): PAYLOAD_RESERVED - Reserved type
+  #(257): PAYLOAD_CUSTOM   - Custom schema payload
+  msg-conv-payload-type: 0
+  # Name of library having custom implementation.
+  msg-conv-msg2p-lib: /opt/nvidia/deepstream/deepstream/lib/libnvds_msgconv.so
+  # Id of component in case only selected message to parse.
+  #msg-conv-comp-id: <val>
+  
+osd:
+  enable: 1
+  gpu-id: 0
+  border-width: 1
+  text-size: 15
+  #value changed
+  text-color: 1;1;1;1
+  text-bg-color: 0.3;0.3;0.3;1
+  font: Serif
+  show-clock: 0
+  clock-x-offset: 800
+  clock-y-offset: 820
+  clock-text-size: 12
+  clock-color: 1;0;0;0
+  nvbuf-memory-type: 0
+
+streammux:
+  gpu-id: 0
+  ##Boolean property to inform muxer that sources are live
+  live-source: 0
+  buffer-pool-size: 4
+  batch-size: 4
+  ##time out in usec, to wait after the first buffer is available
+  ##to push the batch even if the complete batch is not formed
+  batched-push-timeout: 400000
+  ## Set muxer output width and height
+  width: 1920
+  height: 1080
+  ##Enable to maintain aspect ratio wrt source, and allow black borders, works
+  ##along with width, height properties
+  enable-padding: 0
+  nvbuf-memory-type: 0
+
+primary-gie0:
+  enable: 1
+  #(0): nvinfer; (1): nvinferserver
+  plugin-type: 0
+  gpu-id: 0
+  #input-tensor-meta: 1
+  batch-size: 4
+  #Required by the app for OSD, not a plugin property
+  bbox-border-color0: 1;0;0;1
+  bbox-border-color1: 0;1;1;1
+  bbox-border-color2: 0;0;1;1
+  bbox-border-color3: 0;1;0;1
+  #interval: 0
+  gie-unique-id: 1
+  nvbuf-memory-type: 0
+  config-file: ../../yolov4/config_yolov4_infer.txt
+  #config-file: ../../yolov4/config_yolov4_inferserver.txt
+
+branch0:
+  ## pgie's id
+  pgie-id: 1
+  ## select sources by sourceid
+  src-ids: 0;1;2
+
+tracker0:
+  enable: 0
+  cfg-file-path: tracker0.yml
+
+nvds-analytics0:
+  enable: 0
+  cfg-file-path: analytics0.txt  
+  
+secondary-gie0:
+  enable: 0
+  ##support mulptiple sgie.
+  cfg-file-path: secondary-gie0.yml
+
+primary-gie1:
+  enable: 1
+  #(0): nvinfer; (1): nvinferserver
+  plugin-type: 1
+  gpu-id: 0
+  #input-tensor-meta: 1
+  batch-size: 4
+  #Required by the app for OSD, not a plugin property
+  bbox-border-color0: 1;0;0;1
+  bbox-border-color1: 0;1;1;1
+  bbox-border-color2: 0;0;1;1
+  bbox-border-color3: 0;1;0;1
+  interval: 0
+  gie-unique-id: 2
+  nvbuf-memory-type: 0
+  #config-file: ../../bodypose2d/config_body2_infer.txt
+  config-file: ../../bodypose2d/config_body2_inferserver.txt
+
+branch1:
+  ## pgie's id
+  pgie-id: 2
+  ## select sources by sourceid
+  src-ids: 1;2;3
+
+tracker1:
+  enable: 0      
+  cfg-file-path: tracker1.yml
+  
+nvds-analytics1:
+  enable: 0
+  cfg-file-path: analytics1.txt
+
+secondary-gie1:
+  enable: 0
+  ##supoort multiple sgie
+  cfg-file-path: secondary-gie1.yml  
+
+primary-gie2:
+  enable: 1
+  #(0): nvinfer; (1): nvinferserver
+  plugin-type: 1
+  gpu-id: 0
+  #input-tensor-meta: 1
+  batch-size: 4
+  #Required by the app for OSD, not a plugin property
+  bbox-border-color0: 1;0;0;1
+  bbox-border-color1: 0;1;1;1
+  bbox-border-color2: 0;0;1;1
+  bbox-border-color3: 0;1;0;1
+  interval: 0
+  gie-unique-id: 3
+  nvbuf-memory-type: 0
+  config-file: ../../trafficcamnet/config_trafficcamnet_inferserver.txt
+
+branch2:
+  ## pgie's id
+  pgie-id: 3
+  ## select sources by sourceid
+  src-ids: 1;2;3
+
+tracker2:
+  enable: 1
+  cfg-file-path: tracker2.yml
+
+nvds-analytics2:
+  enable: 1
+  cfg-file-path: analytics2.txt
+  
+secondary-gie2:
+  enable: 1
+  ##supoort multiple sgie
+  cfg-file-path: secondary-gie2.yml
+
+  
+meta-mux:
+  enable: 1
+  config-file: ../../metamux/config_metamux0.txt
+
+
+tests:
+  file-loop: 0

@@ -1,0 +1,41 @@
+name: "bodypose2d"
+platform: "onnxruntime_onnx"
+backend: "onnxruntime"
+max_batch_size: 4
+input [
+    {
+        name: "input"
+        data_type: TYPE_FP32
+        dims: [
+            3,
+            224,
+            224
+        ]
+    }
+]
+output [
+    {
+        name: "266"
+        data_type: TYPE_FP32
+        dims: [
+            18,
+            56,
+            56
+        ]
+    },
+    {
+        name: "268",
+        data_type: TYPE_FP32
+        dims: [
+            42,
+            56,
+            56
+        ]
+    }
+]
+
+instance_group {
+  count: 1
+  gpus: 0
+  kind: KIND_GPU
+}
