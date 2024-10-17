@@ -1,4 +1,4 @@
-# RUNTIME SOURCE ADDITION DELETION REFERENCE APP USING DEEPSTREAMSDK 7.0
+# RUNTIME SOURCE ADDITION DELETION REFERENCE APP USING DEEPSTREAMSDK
 
 ## Introduction
 The project contains Runtime source addition/deletion application to show the
