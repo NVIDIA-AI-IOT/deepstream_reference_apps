@@ -1513,6 +1513,7 @@ int main(int argc, char *argv[])
     str->context = perf_ctx;
     enable_perf_measurement (str, osd_sink_pad, config->num_source_sub_bins, 1, 0, perf_cb);
     gst_object_unref(osd_sink_pad);
+  }
 
   if (config->osd_config.enable) {
     if (!create_osd_bin (&config->osd_config, &instance_bin->osd_bin)) {
