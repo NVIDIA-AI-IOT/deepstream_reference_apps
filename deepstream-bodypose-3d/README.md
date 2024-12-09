@@ -17,7 +17,7 @@ Follow https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_Quickstar
 
 1. Preferably clone the app in
   `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/`
-and define project home as `export BODYPOSE3D_HOME=<parent-path>/3d-bodypose-deepstream`.
+and define project home as `export BODYPOSE3D_HOME=<parent-path>/deepstream-bodypose-3d`.
 
 2. Install Eigen development packages
 ```
