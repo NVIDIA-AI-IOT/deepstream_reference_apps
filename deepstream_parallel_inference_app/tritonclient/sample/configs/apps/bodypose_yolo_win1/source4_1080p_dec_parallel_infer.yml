@@ -192,7 +192,6 @@ primary-gie0:
   gie-unique-id: 1
   nvbuf-memory-type: 0
   config-file: ../../yolov4/config_yolov4_infer.txt
-  #config-file: ../../yolov4/config_yolov4_inferserver.txt
 
 branch0:
   ## pgie's id

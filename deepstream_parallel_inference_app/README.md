@@ -37,10 +37,11 @@ The sample should be downloaded and built with **root** permission.
    ```
    apt install git-lfs
    git lfs install --skip-repo
-   git clone https://github.com/NVIDIA-AI-IOT/deepstream_parallel_inference_app.git
+   cd deepstream_parallel_inference_app
+   git lfs pull
    ```
 
-   If git-lfs download fails for bodypose2d and YoloV4 models, get them from Google Drive [link](https://drive.google.com/drive/folders/1GJEGQSg6qlWuNqUVVlNOxR6AGMNLfkYN?usp=sharing)  
+   If git-lfs download fails for bodypose2d and YoloV4 models, get them from download [link](https://nvidia.box.com/s/rqb5t5koigvpmobkxj1245gv09d9u2sx)
 
 2. Generate Inference Engines
 
@@ -169,7 +170,7 @@ There are five sample configurations in current project for reference.
 
   - Pipeline Graph:
 
-    ![LPR_Vehicle_peopleNet](new_pipe.jpg)
+    ![LPR_Vehicle_peopleNet](new_pipe.png)
 
   - App Command:
 
@@ -186,7 +187,7 @@ There are five sample configurations in current project for reference.
 
   - Pipeline Graph:
 
-    ![LPR_Vehicle_peopleNet](new_pipe.jpg)
+    ![LPR_Vehicle_peopleNet](new_pipe.png)
 
   - App Command:
 

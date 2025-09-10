@@ -29,7 +29,6 @@ network-mode=1
 num-detected-classes=3
 interval=0
 gie-unique-id=1
-output-blob-names=output_cov/Sigmoid;output_bbox/BiasAdd
 ## 0=Group Rectangles, 1=DBSCAN, 2=NMS, 3= DBSCAN+NMS Hybrid, 4 = None(No clustering)
 cluster-mode=3
 #enable-dla=1

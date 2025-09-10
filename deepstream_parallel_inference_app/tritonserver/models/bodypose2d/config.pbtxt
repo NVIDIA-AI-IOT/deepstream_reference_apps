@@ -18,18 +18,14 @@ output [
         name: "266"
         data_type: TYPE_FP32
         dims: [
-            18,
-            56,
-            56
+            1
         ]
     },
     {
         name: "268",
         data_type: TYPE_FP32
         dims: [
-            42,
-            56,
-            56
+            1
         ]
     }
 ]

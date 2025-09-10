@@ -6,11 +6,11 @@ The project contains 3D Body Pose application built using  Deepstream SDK.
 This application is built for [KAMA: 3D Keypoint Aware Body Mesh Articulation](https://arxiv.org/abs/2104.13502).
 ![sample pose output](./sources/.screenshot.png)
 ## Prerequisites:
-DeepStream SDK 7.1 installed which is available at  http://developer.nvidia.com/deepstream-sdk
+DeepStream SDK 8.0 installed which is available at  http://developer.nvidia.com/deepstream-sdk
 Please follow instructions in the `/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/deepstream-app/README` on how
 to install the prequisites for building Deepstream SDK apps.
 
-The pretrained TAO models [PeopleNet](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet) and [BodyPose3DNet](https://ngc.nvidia.com/models/nvstaging:tao:bodypose3dnet) from NGC.
+The pretrained TAO models [PeopleNet](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet) and [BodyPose3DNet](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/bodypose3dnet) from NGC.
 
 ## Installation
 Follow https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_Quickstart.html to setup the DeepStream SDK

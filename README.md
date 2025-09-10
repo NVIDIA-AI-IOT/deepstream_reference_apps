@@ -1,6 +1,6 @@
-# Reference Apps using DeepStream 7.1
+# Reference Apps using DeepStream 8.0
 
-This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 7.1.
+This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 8.0.
 
 ## Getting Started ##
 We currently provide three different reference applications:
@@ -25,6 +25,8 @@ For further details, please see each project's README.
 ### Bodypose 3D Model Inferencing: [README](deepstream-bodypose-3d/README.md) ###
   The sample demonstrate how to customize the multiple input layers model preprocessing and the customization of the bodypose 3D model postprocessing.
   ![Bodypose 3D sample output](deepstream-bodypose-3d/sources/.screenshot.png)
+### MaskTracker: [README](deepstream-masktracker/README.md) ###
+  The sample demostrates usage of MaskTracker in DeepStream. It uses vision foundation model like Segment Anything Model 2 to perform multi-object segmentation and tracking.
 
 ## Legacy DeepStream Reference Samples
 Some old samples are not supported any more for different reasons. The legacy samples are moved to the legacy folder /legacy_apps.

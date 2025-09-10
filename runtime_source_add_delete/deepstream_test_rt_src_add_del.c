@@ -152,7 +152,7 @@ cb_newpad (GstElement * decodebin, GstPad * pad, gpointer data)
     gchar pad_name[16] = { 0 };
     GstPad *sinkpad = NULL;
     g_snprintf (pad_name, 15, "sink_%u", source_id);
-    sinkpad = gst_element_get_request_pad (streammux, pad_name);
+    sinkpad = gst_element_request_pad_simple (streammux, pad_name);
     if (gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK) {
       g_print ("Failed to link decodebin to pipeline\n");
     } else {
@@ -411,7 +411,12 @@ set_tracker_properties (GstElement *nvtracker)
 
   if (!g_key_file_load_from_file (key_file, TRACKER_CONFIG_FILE, G_KEY_FILE_NONE,
           &error)) {
-    g_printerr ("Failed to load config file: %s\n", error->message);
+    if (error) {
+      g_printerr ("Failed to load config file: %s\n", error->message);
+      g_error_free (error);
+    } else {
+      g_printerr ("Failed to load config file.\n");
+    }
     return FALSE;
   }
 
@@ -444,6 +449,7 @@ set_tracker_properties (GstElement *nvtracker)
                     CONFIG_GROUP_TRACKER_LL_CONFIG_FILE, &error));
       CHECK_ERROR (error);
       g_object_set (G_OBJECT (nvtracker), "ll-config-file", ll_config_file, NULL);
+      g_free(ll_config_file);
     } else if (!g_strcmp0 (*key, CONFIG_GROUP_TRACKER_LL_LIB_FILE)) {
       char* ll_lib_file = get_absolute_file_path (TRACKER_CONFIG_FILE,
                 g_key_file_get_string (key_file,
@@ -451,6 +457,7 @@ set_tracker_properties (GstElement *nvtracker)
                     CONFIG_GROUP_TRACKER_LL_LIB_FILE, &error));
       CHECK_ERROR (error);
       g_object_set (G_OBJECT (nvtracker), "ll-lib-file", ll_lib_file, NULL);
+      g_free(ll_lib_file);
     } else if (!g_strcmp0 (*key, CONFIG_GROUP_TRACKER_ENABLE_BATCH_PROCESS)) {
       gboolean enable_batch_process =
           g_key_file_get_integer (key_file, CONFIG_GROUP_TRACKER,
@@ -471,6 +478,9 @@ done:
   }
   if (keys) {
     g_strfreev (keys);
+  }
+  if (key_file) {
+    g_key_file_free (key_file);
   }
   if (!ret) {
     g_printerr ("%s failed", __func__);

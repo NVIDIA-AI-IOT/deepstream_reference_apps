@@ -5,9 +5,9 @@ This sample application demonstrates the single-view 3D tracking with DeepStream
 
 ## Prerequisites
 This sample application can be run on both x86 and Jetson platforms inside DeepStream container. Check [here](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_docker_containers.html#prerequisites) for DeepStream container setup.
-1. Download the latest DeepStream container image from NGC (e.g., DS 7.1 in the example below)
+1. Download the latest DeepStream container image from NGC (e.g., DS 8.0 in the example below)
     ```bash
-    export DS_IMG_NAME="nvcr.io/nvidia/deepstream:7.1-triton-multiarch"
+    export DS_IMG_NAME="nvcr.io/nvidia/deepstream:8.0-triton-multiarch"
     docker pull $DS_IMG_NAME
     ```
 
@@ -46,7 +46,7 @@ Launch the container from current directory, and execute the 3D tracking pipelin
 cd ../..
 sudo xhost + # give container access to display
 # current directory: deepstream_reference_apps/deepstream-tracker-3d
-docker run --gpus all -it --rm --net=host --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd):/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/deepstream-tracker-3d -e DISPLAY=$DISPLAY $DS_IMG_NAME
+docker run --runtime=nvidia -it --rm --net=host --privileged -v /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd):/opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/deepstream-tracker-3d -e DISPLAY=$DISPLAY $DS_IMG_NAME
 ```
 
 Inside container, run the following commands. Please note that when `deepstream-app` is launched for the first time, it tries to create model engine files, which may take a couple minutes, depending on HW platforms.

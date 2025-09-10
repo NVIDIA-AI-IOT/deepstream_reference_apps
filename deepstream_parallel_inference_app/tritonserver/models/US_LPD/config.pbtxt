@@ -18,7 +18,7 @@
 name: "US_LPD"
 platform: "tensorrt_plan"
 max_batch_size: 16
-default_model_filename: "LPDNet_usa_pruned_tao5.onnx_b16_gpu0_int8.engine"
+default_model_filename: "LPDNet_usa_pruned_tao5.onnx_b16_gpu0_fp16.engine"
 input [
   {
     name: "input_1:0"

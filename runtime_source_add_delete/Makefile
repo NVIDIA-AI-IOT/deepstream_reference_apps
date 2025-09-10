@@ -39,9 +39,9 @@ OBJS:= $(SRCS:.c=.o)
 CFLAGS+= -I$(DS_SDK_ROOT)/sources/includes \
  -I /usr/local/cuda-$(CUDA_VER)/include
 
-CFLAGS+= `pkg-config --cflags $(PKGS)`
+CFLAGS+= $(shell pkg-config --cflags $(PKGS))
 
-LIBS:= `pkg-config --libs $(PKGS)`
+LIBS:= $(shell pkg-config --libs $(PKGS))
 
 LIBS+= -L$(LIB_INSTALL_DIR) -lnvdsgst_helper -lm -lnvdsgst_meta \
  -L/usr/local/cuda-$(CUDA_VER)/lib64/ -lcudart \

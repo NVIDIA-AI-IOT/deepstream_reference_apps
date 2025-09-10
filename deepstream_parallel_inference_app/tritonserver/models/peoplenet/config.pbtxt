@@ -18,7 +18,7 @@
 name: "peoplenet"
 platform: "tensorrt_plan"
 max_batch_size: 8
-default_model_filename: "resnet34_peoplenet.onnx_b8_gpu0_int8.engine"
+default_model_filename: "resnet34_peoplenet.onnx_b8_gpu0_fp16.engine"
 input [
   {
     name: "input_1:0"
