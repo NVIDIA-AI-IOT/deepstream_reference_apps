@@ -31,7 +31,7 @@ NOTE: To compile the sources, run make with "sudo" or root permission.
 
 ## Generate super resolution model
 
-The model is from pytorch [code](https://github.com/pytorch/tutorials/blob/main/advanced_source/super_resolution_with_onnxruntime.py). 
+The model is from pytorch [code](https://github.com/pytorch/tutorials/blob/2f4e5c368a2754276d70cf4aed4a97bcf01ed551/advanced_source/super_resolution_with_onnxruntime.py). 
 Here are the steps to generate the model.
 
 ```bash
