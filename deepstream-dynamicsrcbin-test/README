@@ -1,0 +1,177 @@
+*****************************************************************************
+* SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+* SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+*
+* NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+* property and proprietary rights in and to this material, related
+* documentation and any modifications thereto. Any use, reproduction,
+* disclosure or distribution of this material and related documentation
+* without an express license agreement from NVIDIA CORPORATION or
+* its affiliates is strictly prohibited.
+*****************************************************************************
+
+*****************************************************************************
+                deepstream-dynamicsrcbin-test-app
+                             README
+*****************************************************************************
+
+===============================================================================
+1. Prerequisites:
+===============================================================================
+Please follow instructions in the apps/sample_apps/deepstream-app/README on how
+to install the prerequisites for Deepstream SDK, the DeepStream SDK itself and the
+apps.
+
+You must have the following development packages installed:
+   GStreamer-1.0
+   GStreamer-1.0 Base Plugins
+   GStreamer-1.0 gstrtspserver
+   X11 client-side library
+
+To install these packages, execute the following command:
+   sudo apt-get install libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev \
+   libgstrtspserver-1.0-dev libx11-dev
+
+===============================================================================
+2. Purpose:
+===============================================================================
+
+This application demonstrates the capabilities of the **nvdsdynamicsrcbin** element,
+specifically designed for high decoder throughput scenarios. The key innovation
+of this element is that it creates a single pipeline that keeps the decoder
+active at all times, avoiding decoder initialization overhead for every new stream.
+
+**Key Benefits:**
+- **Eliminates Decoder Initialization Overhead**: When you add N streams to a
+  traditional pipeline, each stream typically requires its own decoder instance
+  with initialization time. The nvdsdynamicsrcbin element maintains a single
+  active decoder, significantly reducing latency when switching between streams.
+
+- **Improved Throughput**: By keeping the decoder warm and ready, the element
+  can handle rapid stream switching without the performance penalty of repeated
+  decoder initialization.
+
+- **Dynamic Source Management**: The element supports real-time addition and
+  removal of video sources without pipeline reconstruction.
+
+===============================================================================
+3. Element Architecture:
+===============================================================================
+
+The **nvdsdynamicsrcbin** element is a custom GStreamer bin that contains:
+- **filesrc**: Source element for reading video files
+- **queue_filesrc**: Buffering queue for source data
+- **parsebin**: Media format detection and parsing
+- **queue_parsebin**: Buffering queue for parsed data
+- **nvv4l2decoder**: Hardware decoder (kept active throughout)
+
+The element maintains internal queues and maps to track active sources and their
+corresponding file paths, enabling seamless switching between multiple video streams.
+
+===============================================================================
+4. Supported Signals:
+===============================================================================
+
+The nvdsdynamicsrcbin element supports three key signals for dynamic source management:
+
+### 4.1 add-source Signal
+**Purpose**: Adds a new video source to the dynamic source bin
+**Parameters**: 
+- `file_path` (string): Path to the video file
+- `source_id` (integer): Unique identifier for the source
+
+**Usage**:
+```c
+g_signal_emit_by_name(dynamicsrcbin, "add-source", "/path/to/video.mp4", source_id);
+```
+
+**Behavior**:
+- Validates the file path exists
+- Prevents duplicate source IDs
+- Stores source_id -> file_path mapping
+- Adds source to internal tracking queues
+- For the first source, links elements to the pipeline
+- Subsequent sources are queued for processing
+
+### 4.2 remove-source Signal
+**Purpose**: Removes a video source from the dynamic source bin
+**Parameters**:
+- `source_id` (integer): ID of the source to remove
+
+**Usage**:
+```c
+g_signal_emit_by_name(dynamicsrcbin, "remove-source", source_id);
+```
+
+**Behavior**:
+- If the source is currently active (head of queue), sends EOS event
+- If the source is queued but not active, removes it from tracking
+- Cleans up internal data structures
+- Posts file change message to notify downstream elements
+
+### 4.3 terminate Signal
+**Purpose**: Terminates the entire pipeline gracefully
+**Parameters**: None
+
+**Usage**:
+```c
+g_signal_emit_by_name(dynamicsrcbin, "terminate");
+```
+
+**Behavior**:
+- Sends EOS event from the decoder element
+- Posts termination message to exit the pipeline
+- Cleans up all resources and stops processing
+
+===============================================================================
+5. Custom Events and Metadata:
+===============================================================================
+
+The element generates custom events to track source changes:
+
+### 5.1 Custom Stream Start Event
+- **Event Name**: "custom-stream-start-event"
+- **Contains**: source-id parameter
+- **Purpose**: Notifies downstream elements when a new source begins processing
+
+### 5.2 Custom EOS Event
+- **Event Name**: "custom-eos-event"
+- **Contains**: source-id parameter
+- **Purpose**: Notifies when a source completes processing
+
+### 5.3 Source Metadata
+The element attaches custom metadata to each buffer containing:
+- **chunk_id**: The source ID that generated the buffer
+- **frame_id**: Sequential frame counter for the current source
+
+===============================================================================
+6. To compile:
+===============================================================================
+
+  $ Set CUDA_VER in the MakeFile as per platform.
+     For x86, CUDA_VER=12.8
+     For jetson, CUDA_VER=13.0
+  $ sudo make (sudo not required in case of docker containers)
+
+===============================================================================
+7. Usage:
+===============================================================================
+
+The application demonstrates dynamic source management with the following workflow:
+
+1. **Pipeline Setup**: Creates a pipeline with nvdsdynamicsrcbin and fakesink
+2. **Source Addition**: Adds multiple video sources with unique IDs
+3. **Dynamic Processing**: Processes sources sequentially with active decoder
+4. **Monitoring**: Tracks frame processing and source changes
+5. **Cleanup**: Terminates pipeline gracefully
+
+**Running the Application**:
+```bash
+$ ./deepstream-dynamicsrcbin-test-app
+```
+
+**Configuration**:
+- Modify `N_CHUNKS` in the source code to change the number of sources
+- Update `VIDEO_FILE` path to use different video files
+- Adjust timing parameters in the signal thread for different test scenarios
+
