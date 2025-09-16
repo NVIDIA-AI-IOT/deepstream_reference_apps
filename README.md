@@ -17,8 +17,11 @@ For further details, please see each project's README.
   ![sample anomaly output](anomaly/.opticalflow.png)
 ### Runtime Source Addition Deletion: [README](runtime_source_add_delete/README.md) ###
   The project demonstrates addition and deletion of video sources in a live Deepstream pipeline.
+### MaskTracker: [README](deepstream-masktracker/README.md) ###
+  This sample app demonstrates DeepStream MaskTracker for multi-object tracking and segmentation using SAM2.
+  ![sample MaskTracker output](deepstream-masktracker/figures/.retail_osd.gif)
 ### Single-View 3D Tracking: [README](deepstream-tracker-3d/README.md) ###
-  The sample demostrates usage of single-view 3D tracking with DeepStream nvtracker.
+  The sample app demonstrates single-view 3D tracking with DeepStream multi-object tracking to reconstruct 3D human model in world coordinates under occlusion.
   ![sample 3D tracking output](deepstream-tracker-3d/figures/.retail_viz.png)
 ### Parallel Multiple Models Inferencing: [README](deepstream_parallel_inference_app/README.md) ###
   The project demonstrate how to implement multiple models inferencing in parallel with DeepStream APIs.

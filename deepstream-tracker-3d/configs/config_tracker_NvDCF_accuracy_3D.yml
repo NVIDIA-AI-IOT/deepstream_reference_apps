@@ -140,3 +140,18 @@ ReID:
   tltEncodedModel: "/opt/nvidia/deepstream/deepstream/samples/models/Tracker/resnet50_market1501.etlt" # NVIDIA TAO model path
   tltModelKey: "nvidia_tao" # NVIDIA TAO model key
   modelEngineFile: "/opt/nvidia/deepstream/deepstream/samples/models/Tracker/resnet50_market1501.etlt_b100_gpu0_fp16.engine" # Engine file path
+
+PoseEstimator:
+  poseEstimatorType: 1  # Type of pose estimator used
+  useVPICropScaler: 1  # Use VPI backend for cropping and scaling
+  batchSize: 1  # Batch size for pose estimation
+  workspaceSize: 1000  # Workspace size in MB for the pose estimator engine
+  inferDims: [3, 256, 192]  # Input dimensions for the pose estimator network (C, H, W)
+  networkMode: 1  # Inference precision mode (fp32=0, fp16=1, int8=2)
+  inputOrder: 0  # Input order for the network (NCHW=0, NHWC=1)
+  colorFormat: 0  # Input color format (RGB=0, BGR=1)
+  offsets: [123.6750, 116.2800, 103.5300]  # Channel-wise mean subtraction values
+  netScaleFactor: 0.00392156  # Scaling factor for input normalization
+  onnxFile: "/opt/nvidia/deepstream/deepstream/samples/models/Tracker/bodypose3dnet_accuracy.onnx"  # Path to the ONNX model file
+  modelEngineFile: "/opt/nvidia/deepstream/deepstream/samples/models/Tracker/bodypose3dnet_accuracy.onnx_b1_gpu0_fp16.engine"  # Path to the engine file
+  poseInferenceInterval: -1  #  Pose inference frame interval. -1 means only for the first frame of each target and use it to determine the target height.

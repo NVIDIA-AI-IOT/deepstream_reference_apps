@@ -3,6 +3,8 @@
 ## Introduction
 This sample application demonstrates the single-view 3D tracking with DeepStream SDK. Given the [camera matrix and human model](configs/camInfo.yml) of a static camera, this application estimates and keeps tracking of object states in the 3D physical world. It can recover the complete bounding box, foot location and body convex hulls precisely from partial occlusions. For algorithm and setup details, please refer to [DeepStream Single View 3D Tracking Documentation](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_plugin_gst-nvtracker.html#single-view-3d-tracking-alpha).
 
+The currnet SV3DT configuration in this sample uses an 2D pose estimator, which estimates human key-points on the 2D image plane. The SV3DT algorithm uses height and waist key-points as anchor to precisely estimate each person's 3D human height. If setting `poseEstimatorType: 0` in `configs/config_tracker_NvDCF_accuracy_3D.yml`, pose estimator will be disabled, and the algorithm uses 2D detection bounding boxes and a human model with fixed height. It estimates the 3D location by matching the head with 2D bounding box's top edge.
+
 ## Prerequisites
 This sample application can be run on both x86 and Jetson platforms inside DeepStream container. Check [here](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_docker_containers.html#prerequisites) for DeepStream container setup.
 1. Download the latest DeepStream container image from NGC (e.g., DS 8.0 in the example below)
@@ -17,14 +19,12 @@ This sample application can be run on both x86 and Jetson platforms inside DeepS
     cd deepstream_reference_apps/deepstream-tracker-3d
     ```
 
-3. Download NVIDIA pretrained `PeopleNet` for detection from [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet/files?version=deployable_quantized_onnx_v2.6.3(e.g., PeopleNet v2.6.3 in the example below).
+3. Download NVIDIA pretrained [`PeopleNet`](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet/files?version=deployable_quantized_onnx_v2.6.3) for 2D detection.
 
     ```bash
     # current directory: deepstream_reference_apps/deepstream-tracker-3d
     mkdir -p models/PeopleNet
-    cd models/PeopleNet
-    wget --no-check-certificate --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_onnx_v2.6.3/zip -O peoplenet_deployable_quantized_onnx_v2.6.3.zip
-    unzip peoplenet_deployable_quantized_onnx_v2.6.3.zip
+    cd models/PeopleNet; wget --no-check-certificate --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tao/peoplenet/versions/deployable_quantized_onnx_v2.6.3/zip -O peoplenet_deployable_quantized_onnx_v2.6.3.zip; unzip peoplenet_deployable_quantized_onnx_v2.6.3.zip
     ```
 
     The model files are now stored in `PeopleNet` directory as
@@ -56,10 +56,11 @@ Inside container, run the following commands. Please note that when `deepstream-
 cd /opt/nvidia/deepstream/deepstream/
 bash user_additional_install.sh
 
-# Download ReID model
-export REID_DIR="/opt/nvidia/deepstream/deepstream/samples/models/Tracker"
-mkdir -p $REID_DIR
-wget 'https://api.ngc.nvidia.com/v2/models/nvidia/tao/reidentificationnet/versions/deployable_v1.0/files/resnet50_market1501.etlt' -P $REID_DIR
+# Download ReID and BodyPose3DNet model
+export MODEL_DIR="/opt/nvidia/deepstream/deepstream/samples/models/Tracker"
+mkdir -p $MODEL_DIR
+wget 'https://api.ngc.nvidia.com/v2/models/nvidia/tao/reidentificationnet/versions/deployable_v1.0/files/resnet50_market1501.etlt' -P $MODEL_DIR
+wget 'https://api.ngc.nvidia.com/v2/models/nvidia/tao/bodypose3dnet/versions/deployable_accuracy_onnx_1.0/files/bodypose3dnet_accuracy.onnx' -P $MODEL_DIR
 
 # Run 3D tracking pipeline
 cd /opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/deepstream-tracker-3d/configs
@@ -70,7 +71,7 @@ deepstream-app -c deepstream_app_source1_3d_tracking.txt
 ## Output Retrival and Visualization
 
 ### DeepStream Direct Visualization
-When the pipeline is launced, DeepStream shows the output video like below while processing the input video. The bounding boxes are reprojected from 3D to 2D and correspond to full human body even though there are partial occlusions. The result video is saved as `out.mp4`.
+When the pipeline is launced, DeepStream shows the output video like below while processing the input video. The 3D bounding boxes of the people are reconstructed and plotted even though there are partial occlusions. The result video is saved as `out.mp4`.
 
 ![sample 3d tracking results](figures/.retail_osd.png)
 
