@@ -21,7 +21,7 @@ Users need to install Ubuntu 24.04 and NVIDIA driver 570.133.20 on x86 with dGPU
     cd deepstream_reference_apps/deepstream-masktracker
     ```
 
-3. Download NVIDIA pretrained `PeopleNet` for detection from [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet/files?version=deployable_quantized_onnx_v2.6.3(e.g., PeopleNet v2.6.3 in the example below).
+3. Download NVIDIA pretrained `PeopleNet` for detection from [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet/files?version=deployable_quantized_onnx_v2.6.3) (v2.6.3).
 
     ```bash
     # current directory: deepstream_reference_apps/deepstream-masktracker
