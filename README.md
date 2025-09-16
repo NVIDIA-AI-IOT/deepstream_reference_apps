@@ -23,6 +23,10 @@ For further details, please see each project's README.
 ### Single-View 3D Tracking: [README](deepstream-tracker-3d/README.md) ###
   The sample app demonstrates single-view 3D tracking with DeepStream multi-object tracking to reconstruct 3D human model in world coordinates under occlusion.
   ![sample 3D tracking output](deepstream-tracker-3d/figures/.retail_viz.png)
+### Multi-View 3D Tracking: [README](deepstream-tracker-3d-multi-view) ###
+  The samples demonstrate multi-view 3D tracking in DeepStream, a distributed, real-time framework designed for large-scale, calibrated camera networks.
+
+  <img src="deepstream-tracker-3d-multi-view/figures/4cam_osd.png" alt="sample mulit-view 3D tracking output" width="684"> <img src="deepstream-tracker-3d-multi-view/figures/4cam_bev_fused.png" alt="sample BEV output from multi-view 3D tracking" width="383">
 ### Parallel Multiple Models Inferencing: [README](deepstream_parallel_inference_app/README.md) ###
   The project demonstrate how to implement multiple models inferencing in parallel with DeepStream APIs.
 ### Bodypose 3D Model Inferencing: [README](deepstream-bodypose-3d/README.md) ###

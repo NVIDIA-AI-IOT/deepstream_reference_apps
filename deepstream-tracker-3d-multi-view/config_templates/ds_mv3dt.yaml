@@ -1,0 +1,53 @@
+name: "deepstream-app"
+model_repo: "/workspace/models"
+models:
+- name: PeopleNetTransformer
+  backend: deepstream/nvinfer
+  max_batch_size: 4
+  input:
+  - name: media_url
+    data_type: TYPE_CUSTOM_BINARY_URLS
+    dims: [ -1 ]
+    optional: true
+  - name: mime
+    data_type: TYPE_CUSTOM_DS_MIME
+    dims: [ -1 ]
+    optional: true
+  - name: source_config
+    data_type: TYPE_CUSTOM_DS_SOURCE_CONFIG
+    dims: [ 1 ]
+    optional: true
+  output:
+  - name: output
+    data_type: TYPE_CUSTOM_DS_METADATA
+    dims: [ -1 ]
+  parameters:
+    infer_config_path:
+      - nvdsinfer_config.yaml
+    resize_video: [1080, 1920]
+    tracker_config:
+      ll_lib_file: /opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
+      ll_config_file: /workspace/experiments/config_tracker.yml
+      width: 1920
+      height: 1088
+      display_tracking_id: true
+    msgbroker_config:
+      msgbroker_proto_lib_path: /opt/nvidia/deepstream/deepstream/lib/libnvds_kafka_proto.so
+      msgconv_config_path: /workspace/experiments/config_msgconv.txt
+      msgbroker_conn_str: localhost;9092;mv3dt
+      msgbroker_topic: mv3dt
+      msgconv_payload_type: 2
+      msgconv_msg2p_new_api: 0
+      msgconv_frame_interval: 1
+      msgconv_msg2p_lib: /opt/nvidia/deepstream/deepstream/lib/libnvds_msgconv_mega.so
+    perf_config:
+      enable_fps_logs: true
+      enable_latency_logs: true
+    kitti_output_path:
+      infer: /workspace/experiments/infer-kitti-dump/
+      tracker: /workspace/experiments/tracker-kitti-dump/
+    inference_timeout: 1000
+    batch_timeout: -1
+    render_config:
+      enable_display: true
+      enable_osd: true

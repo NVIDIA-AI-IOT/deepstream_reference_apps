@@ -1,0 +1,15 @@
+MultiViewAssociator:
+  multiViewAssociatorType: 1
+  enableLatePeerReAssoc: 1
+  enableIDCorrection: 1
+  enableSeeThrough: 1
+  enableMsgSync: 1
+  maxPeerTrackletSize: 50
+  recentlyActiveAge: 178
+  minCommonFrames4MatchScore: 2
+  minPeerToPredDistance4Fusion: 1.35
+  minPeerVisibility4Fusion: 0.15
+  minPeerTrackletMatchScore: 0.48
+  maxTrackletMatchingTimeSearchRange: 1
+  maxPeerFrameDiff4NoDet: 2
+  communicatorInitSleepTime: 0

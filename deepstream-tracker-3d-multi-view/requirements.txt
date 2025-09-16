@@ -1,0 +1,6 @@
+kafka-python>=2.0.2
+protobuf>=3.20.0
+numpy>=1.21.0
+PyYAML>=6.0
+opencv-python>=4.5.0
+tqdm>=4.64.0

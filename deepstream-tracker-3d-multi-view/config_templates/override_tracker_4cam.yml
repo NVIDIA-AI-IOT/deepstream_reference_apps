@@ -1,0 +1,6 @@
+MultiViewAssociator:
+  multiViewAssociatorType: 1
+  minPeerToPredDistance4Fusion: 4.0 # mtmc 4.0 # 1.0 # sdg 1.3475168402461755
+  minPeerTrackletMatchScore: 0.3 # mtmc 0.3 # sdg 0.48 # 0.48177346044415703
+  minPeerVisibility4Fusion: 0.15 # sdg 0.1575362440818593
+  recentlyActiveAge: 178
