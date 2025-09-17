@@ -34,7 +34,7 @@ For further details, please see each project's README.
   ![Bodypose 3D sample output](deepstream-bodypose-3d/sources/.screenshot.png)
 ### Video Buffers sharing between pipelines through IPC: [README](deepstream-ipc-test-sr/README.md) ###
   This sample demonstrates how to share video buffers over IPC and how to change output video buffers.
-### Multiple Dynamic Sources with Single Decoder:[README](deepstream-dynamicsrcbin-test/README.md) ###
+### Multiple Dynamic Sources with Single Decoder:[README](deepstream-dynamicsrcbin-test/README) ###
  The sample demonstrates the usage of nvdsdynamicsrcbin in DeepStream pipeline.It helps to construct the application of multiple dynamic sources with a single video decoder to adapt to the high decoder throughput scenarios.
 
 ## Legacy DeepStream Reference Samples
