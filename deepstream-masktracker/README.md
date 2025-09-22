@@ -1,7 +1,5 @@
 #  MaskTracker in DeepStream
 
-Note: We are using internal DS docker image and GitLab links for review. For DS 8.0 release, the docker image will be published to NGC, and GitLab repos will be published to GitHub. We will replace all the internal links with public links.
-
 ## Introduction
 This sample application demonstrates using MaskTracker with DeepStream SDK. MaskTracker simultaneously performs multi-object tracking and segmentation using advanced vision foundation models such as Segment Anything Model 2 (SAM2). It uses SAM2 to visually track and segment targets across frames, while automatically adding and removing targets as needed. It stores visual features in previous frames in a memory bank and use them to localize targets in a new frame.  For algorithm and setup details, please refer to [DeepStream MaskTracker Documentation](https://deepstreamsdk.gitlab-master-pages.nvidia.com/docs-template/text/DS_plugin_gst-nvtracker.html#masktracker-developer-preview).
 
@@ -98,4 +96,6 @@ person 1 0.0 0 0.0 964.094116 263.143738 1177.927734 851.131775 0.0 0.0 0.0 0.0 
 person 2 0.0 0 0.0 1298.530762 234.894257 1637.269897 844.630981 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.966797
 person 0 0.0 0 0.0 614.902649 227.807709 911.121948 852.950439 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.981934
 ...
+
+The segmentation mask for each target is generated in the `mask_params` field of `NvDsObjectMeta` in DeepStream meta data. As defined in `/opt/nvidia/deepstream/deepstream/sources/includes/nvll_osd_struct.h`, this data structure stores the segmentation mask as a float array with dimensions matching the target’s bounding box (rounded to integer values). In plugins or probes downstream to tracker, users can implement customized functions to access and store this data.
 ```
