@@ -97,5 +97,6 @@ person 2 0.0 0 0.0 1298.530762 234.894257 1637.269897 844.630981 0.0 0.0 0.0 0.0
 person 0 0.0 0 0.0 614.902649 227.807709 911.121948 852.950439 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.981934
 ...
 
-The segmentation mask for each target is generated in the `mask_params` field of `NvDsObjectMeta` in DeepStream meta data. As defined in `/opt/nvidia/deepstream/deepstream/sources/includes/nvll_osd_struct.h`, this data structure stores the segmentation mask as a float array with dimensions matching the target’s bounding box (rounded to integer values). In plugins or probes downstream to tracker, users can implement customized functions to access and store this data.
 ```
+
+The segmentation mask for each target is generated in the `mask_params` field of `NvDsObjectMeta` in DeepStream meta data. As defined in `/opt/nvidia/deepstream/deepstream/sources/includes/nvll_osd_struct.h`, this data structure stores the segmentation mask as a float array with dimensions matching the target’s bounding box (rounded to integer values). In plugins or probes downstream to tracker, users can implement customized functions to access and store this data.
