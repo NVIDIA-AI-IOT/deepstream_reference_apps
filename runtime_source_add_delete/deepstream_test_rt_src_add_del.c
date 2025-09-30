@@ -515,9 +515,8 @@ main (int argc, char *argv[])
     while (fgets(device_name, 50, ptr) != NULL) {
       if (strstr(device_name,"Orin") && (strstr(device_name,"Nano")))
         enc_hw_support = FALSE;
-      }
-  }
-	fclose(ptr);
+    }
+    fclose(ptr);
   }
 
   /* Check input arguments */
