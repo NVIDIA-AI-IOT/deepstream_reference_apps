@@ -518,6 +518,7 @@ main (int argc, char *argv[])
     }
     fclose(ptr);
   }
+  } 
 
   /* Check input arguments */
   if ((argc != 5)) {
