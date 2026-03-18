@@ -25,7 +25,6 @@ source mv3dt_venv/bin/activate
 python utils/inference_builder_auto_configurator.py \
     --dataset-dir=$DATASET_DIR \
     --tracker-config=config_tracker_2d.yml \
-    --config-overrides=override_tracker_12cam.yml \
     --output-dir=$EXPERIMENT_DIR
 
 cp $EXPERIMENT_DIR/nvdsinfer_config.yaml $MODEL_REPO/PeopleNetTransformer/

@@ -1,0 +1,14 @@
+[property]
+net-scale-factor=0.0039215697906911373
+offsets=0.0;0.0;0.0
+labelfile-path=/workspace/models/PeopleNet2.6.3/detector_labels.txt
+onnx-file=/workspace/models/PeopleNet2.6.3/resnet34_peoplenet.onnx
+gie-unique-id=1
+network-type=0
+network-mode=2
+num-detected-classes=3
+filter-out-class-ids=1;2
+infer-dims=3;544;960
+model-color-format=0
+maintain-aspect-ratio=0
+output-tensor-meta=0

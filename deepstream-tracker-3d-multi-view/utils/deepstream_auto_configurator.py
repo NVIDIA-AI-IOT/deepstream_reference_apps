@@ -40,8 +40,22 @@ class DeepStreamAutoConfigurator:
             raise RuntimeError(f"Invalid resolution detected: {width}x{height}")
         return width, height
     
+    def get_engine_file_from_detector_config(self, detector_config: str, num_videos: int) -> str:
+        """Extract onnx-file from detector config and generate engine file path."""
+        config_path = Path("config_templates") / detector_config
+        if not config_path.exists():
+            return None
+        
+        with open(config_path, 'r') as f:
+            for line in f:
+                if line.strip().startswith('onnx-file='):
+                    onnx_file = line.strip().split('=', 1)[1]
+                    engine_file = f"{onnx_file}_b{num_videos}_gpu0_fp16.engine"
+                    print(f"Generated engine file: {engine_file}")
+                    return engine_file
+        return None
     
-    def generate_deepstream_config(self, video_files: List[str], enabled_sinks: List[str]) -> str:
+    def generate_deepstream_config(self, video_files: List[str], enabled_sinks: List[str], detector_config: str = None) -> str:
         template_path = Path("config_templates/config_deepstream.txt")
         if not template_path.exists():
             raise FileNotFoundError(f"Template not found: {template_path}")
@@ -58,6 +72,11 @@ class DeepStreamAutoConfigurator:
         
         print(f"Detected video resolution: {video_width}x{video_height}")
         
+        # Get engine file path from detector config
+        engine_file_path = self.get_engine_file_from_detector_config(detector_config, num_videos) if detector_config else None
+        print (f"Detector config: {detector_config}")
+        print (f"Engine file path: {engine_file_path}")
+
         # Update source sections and URIs
         content = self._update_sources(content, video_files)
         
@@ -73,7 +92,7 @@ class DeepStreamAutoConfigurator:
             elif stripped.startswith('batch-size='):
                 lines[i] = f"batch-size={num_videos}"
             elif stripped.startswith('model-engine-file='):
-                lines[i] = re.sub(r'_b\d+_', f'_b{num_videos}_', line)
+                lines[i] = f"model-engine-file={engine_file_path}" if engine_file_path else re.sub(r'_b\d+_', f'_b{num_videos}_', line)
             elif stripped.startswith('rows='):
                 lines[i] = f"rows={rows}"
             elif stripped.startswith('columns='):
@@ -377,7 +396,7 @@ class DeepStreamAutoConfigurator:
                 '  maxPeerTrackletSize: 50',
                 '  recentlyActiveAge: 178',
                 '  minCommonFrames4MatchScore: 2',
-                '  minPeerToPredDistance4Fusion: 1.35',
+                '  maxPeerToPredDistance4Fusion: 1.35',
                 '  minPeerVisibility4Fusion: 0.15',
                 '  minPeerTrackletMatchScore: 0.48',
                 '  maxTrackletMatchingTimeSearchRange: 1',
@@ -520,7 +539,7 @@ class DeepStreamAutoConfigurator:
         except Exception as e:
             print(f"Unexpected error during pub_sub generation: {e}")
     
-    def generate_configs(self, enabled_sinks: List[str] = None, config_overrides: str = None, tracker_config: str = None) -> Dict[str, str]:
+    def generate_configs(self, enabled_sinks: List[str] = None, config_overrides: str = None, tracker_config: str = None, detector_config: str = None) -> Dict[str, str]:
         if enabled_sinks is None:
             enabled_sinks = ['sink0']
         
@@ -538,7 +557,7 @@ class DeepStreamAutoConfigurator:
         # Note: num_peers will be passed from main function
         
         return {
-            'config_deepstream.txt': self.generate_deepstream_config(video_files, enabled_sinks),
+            'config_deepstream.txt': self.generate_deepstream_config(video_files, enabled_sinks, detector_config),
             'config_tracker.yml': self.generate_tracker_config(video_files, calib_files, config_overrides, tracker_config),
             'config_msgconv.txt': self.generate_msgconv_config(video_files)
         }
@@ -551,22 +570,28 @@ class DeepStreamAutoConfigurator:
                 f.write(content)
             print(f"Generated: {path}")
     
-    def copy_static_configs(self):
+    def copy_static_configs(self, detector_config: str = None):
         """Copy static config files from templates to output directory."""
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-        # List of static config files to copy
-        static_files = ['config_mqtt.txt', 'config_pgie.txt']
+        # copy mqtt config
+        src_path = Path('config_templates') / 'config_mqtt.txt'
+        dst_path = self.output_dir / 'config_mqtt.txt'
+        if src_path.exists():
+            shutil.copy2(src_path, dst_path)
+            print(f"Copied: {dst_path}")
+        else:
+            print(f"Warning: Template file not found: {src_path}")
         
-        for filename in static_files:
-            src_path = Path('config_templates') / filename
-            dst_path = self.output_dir / filename
-            
-            if src_path.exists():
-                shutil.copy2(src_path, dst_path)
-                print(f"Copied: {dst_path}")
-            else:
-                print(f"Warning: Template file not found: {src_path}")
+        # copy detector config
+        src_path = Path('config_templates') / detector_config
+        dst_path = self.output_dir / 'config_pgie.txt'
+        if src_path.exists():
+            shutil.copy2(src_path, dst_path)
+            print(f"Copied: {dst_path}")
+        else:
+            print(f"Warning: Template file not found: {src_path}")
+
 
 def main():
     parser = argparse.ArgumentParser(description='DeepStream Auto-Configurator')
@@ -579,7 +604,8 @@ def main():
     parser.add_argument('--use_debug_communicator', action='store_true', help='Use debug communicator for pub_sub config')
     parser.add_argument('--config-overrides', type=str, help='YAML file with section overrides (e.g., override_tracker_4cam.yml, override_tracker_12cam.yml)')
     parser.add_argument('--tracker-config', type=str, default='config_tracker.yml', help='Tracker configuration template (e.g., config_tracker_2d.yml)')
-    
+    parser.add_argument('--detector-config', type=str, default='config_pgie.txt', help='Detector configuration template (e.g., config_pgie.txt, config_pgie_rt_deter.txt)')
+
     args = parser.parse_args()
     
     enabled_sinks = ['sink0']  # sink0 always enabled (fake sink, type=1)
@@ -596,9 +622,9 @@ def main():
             args.num_vision_neighbor = len(video_files) - 1
         configurator.generate_pub_sub_config(args.dataset_dir, video_files, args.num_vision_neighbor, args.use_debug_communicator)
         
-        configs = configurator.generate_configs(enabled_sinks, args.config_overrides, args.tracker_config)
+        configs = configurator.generate_configs(enabled_sinks, args.config_overrides, args.tracker_config, args.detector_config)
         configurator.save_configs(configs)
-        configurator.copy_static_configs()
+        configurator.copy_static_configs(args.detector_config)
         
         # Get video count for summary
         num_videos = len([f for f in glob.glob(str(Path(args.dataset_dir) / "videos" / "*.mp4"))])

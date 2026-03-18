@@ -92,11 +92,12 @@ StateEstimator:
   measurementNoiseVar4Tracker: 293.3238    # Measurement noise variance for tracker's localization
 
 ObjectModelProjection:
+  minPoseConfidence: 0.925
   cameraModelFilepath: # camera calibration file for each stream
   - /opt/nvidia/deepstream/deepstream/sources/apps/sample_apps/deepstream-tracker-3d/configs/camInfo.yml
   outputVisibility: 1 # output visibility by occlusion
   outputFootLocation: 1 # output foot location estimated from 3D model
-  outputConvexHull: 1 # output convex hull for each object estimated from 3D cylinder model
+  outputConvexHull: 0 # output convex hull for each object estimated from 3D cylinder model
 
 VisualTracker:
   visualTrackerType: 2   # the type of visual tracker among { DUMMY=0, NvDCF=1, NvDCF_VPI=2 }

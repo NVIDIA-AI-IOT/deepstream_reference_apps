@@ -17,14 +17,25 @@ class InferenceBuilderAutoConfigurator(DeepStreamAutoConfigurator):
     Generates ds_mv3dt.yaml and source_list_static.yaml instead of config_deepstream.txt.
     """
     
-    def generate_ds_mv3dt_config(self, video_files: List[str]) -> str:
-        """Generate ds_mv3dt.yaml with correct max_batch_size."""
+    @staticmethod
+    def parse_model_name(detector_config: str) -> str:
+        """Extract model name from the onnx-file path in the detector config."""
+        config_path = Path("config_templates") / detector_config
+        if not config_path.exists():
+            raise FileNotFoundError(f"Detector config not found: {config_path}")
+        with open(config_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('onnx-file='):
+                    onnx_path = Path(line.split('=', 1)[1])
+                    return onnx_path.parent.name
+        raise ValueError(f"No onnx-file entry found in {detector_config}")
+
+    def generate_ds_mv3dt_config(self, video_files: List[str], detector_config: str = None) -> str:
+        """Generate ds_mv3dt.yaml with correct max_batch_size and model name."""
         template_path = Path("config_templates/ds_mv3dt.yaml")
         if not template_path.exists():
-            # If no template exists, use the 4cam sample as template
-            template_path = Path("samples/inference_builder/4cam/ds_mv3dt.yaml")
-            if not template_path.exists():
-                raise FileNotFoundError(f"Template not found: ds_mv3dt.yaml")
+            raise FileNotFoundError(f"Template not found: {template_path}")
         
         with open(template_path, 'r') as f:
             config = yaml.safe_load(f)
@@ -39,6 +50,10 @@ class InferenceBuilderAutoConfigurator(DeepStreamAutoConfigurator):
         model_config = config['models'][0]
         model_config['max_batch_size'] = num_videos
         model_config['parameters']['resize_video'] = [video_height, video_width]
+
+        detector_config = detector_config or "config_pgie.txt"
+        model_name = self.parse_model_name(detector_config)
+        model_config['name'] = model_name
         
         # Update tracker resolution
         if 'tracker_config' in model_config['parameters']:
@@ -67,9 +82,10 @@ class InferenceBuilderAutoConfigurator(DeepStreamAutoConfigurator):
         
         return '\n'.join([header] + source_entries + [footer])
     
-    def generate_nvdsinfer_config(self, video_files: List[str]) -> str:
-        """Generate nvdsinfer_config.yaml based on config_pgie.txt template."""
-        template_path = Path("config_templates/config_pgie.txt")
+    def generate_nvdsinfer_config(self, video_files: List[str], detector_config: str = None) -> str:
+        """Generate nvdsinfer_config.yaml based on detector config template."""
+        detector_config = detector_config or "config_pgie.txt"
+        template_path = Path("config_templates") / detector_config
         if not template_path.exists():
             raise FileNotFoundError(f"Template not found: {template_path}")
         
@@ -98,7 +114,7 @@ class InferenceBuilderAutoConfigurator(DeepStreamAutoConfigurator):
         
         return '\n'.join(yaml_lines)
     
-    def generate_configs(self, enabled_sinks: List[str] = None, config_overrides: str = None, tracker_config: str = None) -> Dict[str, str]:
+    def generate_configs(self, enabled_sinks: List[str] = None, config_overrides: str = None, tracker_config: str = None, detector_config: str = None) -> Dict[str, str]:
         """Generate inference-builder configs instead of DeepStream configs."""
         # Detect MP4 video files
         video_files = sorted([os.path.basename(f) for f in glob.glob(str(self.dataset_dir / "videos" / "*.mp4"))])
@@ -111,10 +127,10 @@ class InferenceBuilderAutoConfigurator(DeepStreamAutoConfigurator):
         print(f"Found {len(video_files)} videos, {len(calib_files)} calibration files")
         
         return {
-            'ds_mv3dt.yaml': self.generate_ds_mv3dt_config(video_files),
+            'ds_mv3dt.yaml': self.generate_ds_mv3dt_config(video_files, detector_config),
             'config_tracker.yml': self.generate_tracker_config(video_files, calib_files, config_overrides, tracker_config),
             'source_list_static.yaml': self.generate_source_list_static(video_files),
-            'nvdsinfer_config.yaml': self.generate_nvdsinfer_config(video_files),
+            'nvdsinfer_config.yaml': self.generate_nvdsinfer_config(video_files, detector_config),
             'config_msgconv.txt': self.generate_msgconv_config(video_files)
         }
 
@@ -125,6 +141,7 @@ def main():
     parser.add_argument('--output-dir', default='temp_outputs', help='Output directory')
     parser.add_argument('--config-overrides', type=str, help='YAML file with section overrides (e.g., override_tracker_4cam.yml, override_tracker_12cam.yml)')
     parser.add_argument('--tracker-config', type=str, default='config_tracker.yml', help='Tracker configuration template (e.g., config_tracker_2d.yml)')
+    parser.add_argument('--detector-config', type=str, default='config_pgie.txt', help='Detector configuration template (e.g., config_pgie.txt, config_pgie_rt_detr.txt)')
     parser.add_argument('--num_vision_neighbor', type=int, default=None, help='Number of vision neighbors per camera')
     parser.add_argument('--use_debug_communicator', action='store_true', help='Use debug communicator for pub_sub config')
     
@@ -140,9 +157,9 @@ def main():
         configurator.generate_pub_sub_config(args.dataset_dir, video_files, args.num_vision_neighbor, args.use_debug_communicator)
         
         # Generate inference-builder configs
-        configs = configurator.generate_configs(config_overrides=args.config_overrides, tracker_config=args.tracker_config)
+        configs = configurator.generate_configs(config_overrides=args.config_overrides, tracker_config=args.tracker_config, detector_config=args.detector_config)
         configurator.save_configs(configs)
-        configurator.copy_static_configs()
+        configurator.copy_static_configs(args.detector_config)
         
         # Get video count for summary
         num_videos = len(video_files)
@@ -150,6 +167,7 @@ def main():
         print(f"✅ Generated inference-builder configs for {num_videos} videos")
         print(f"📁 Output: {args.output_dir}")
         print(f"🤝 Vision neighbors: {args.num_vision_neighbor}")
+        print(f"🔍 Detector config: {args.detector_config}")
         print(f"🐛 Debug communicator: {'enabled' if args.use_debug_communicator else 'disabled'}")
         if args.config_overrides:
             print(f"🔧 Config overrides: {args.config_overrides}")

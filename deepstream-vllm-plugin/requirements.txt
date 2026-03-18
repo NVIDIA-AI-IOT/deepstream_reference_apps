@@ -1,0 +1,5 @@
+vllm==0.15.1
+torch==2.9.1
+kafka-python
+PyYAML
+Pillow

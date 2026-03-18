@@ -3,6 +3,22 @@ export DATASET_DIR=$PWD/datasets/mtmc_4cam/
 export EXPERIMENT_DIR=$PWD/experiments/deepstream/4cam
 export MODEL_REPO=$PWD/models
 
+# Select detector model: PeopleNetTransformer (default), RTDETR, or PeopleNet2.6.3
+export DETECTOR_MODEL=${DETECTOR_MODEL:-PeopleNetTransformer}
+
+if [ "$DETECTOR_MODEL" = "RTDETR" ]; then
+    DETECTOR_CONFIG="config_pgie_rt_detr.txt"
+    TRACKER_CONFIG="config_tracker.yml"
+elif [ "$DETECTOR_MODEL" = "PeopleNet2.6.3" ]; then
+    DETECTOR_CONFIG="config_pgie_peoplenet.txt"
+    TRACKER_CONFIG="config_tracker.yml"
+else
+    DETECTOR_CONFIG="config_pgie.txt"
+    TRACKER_CONFIG="config_tracker.yml"
+fi
+
+echo "Using detector model: $DETECTOR_MODEL (detector=$DETECTOR_CONFIG, tracker=$TRACKER_CONFIG)"
+
 # Set correct GPU flag considering diffent platforms
 if docker info | grep -q 'Runtimes.*nvidia'; then
     GPU_FLAG="--runtime=nvidia"
@@ -24,6 +40,8 @@ python utils/deepstream_auto_configurator.py \
     --dataset-dir=$DATASET_DIR \
     --enable-msg-broker \
     --enable-osd \
+    --detector-config=$DETECTOR_CONFIG \
+    --tracker-config=$TRACKER_CONFIG \
     --config-overrides=override_tracker_4cam.yml \
     --output-dir=$EXPERIMENT_DIR
 
@@ -34,6 +52,7 @@ python utils/kafka_bev_visualizer.py \
     --average-multi-cam \
     --show-ids &
 
+
 # Launch MV3DT pipeline
 docker run -t --privileged --rm --net=host $GPU_FLAG \
     -v $MODEL_REPO:/workspace/models \
@@ -42,5 +61,5 @@ docker run -t --privileged --rm --net=host $GPU_FLAG \
     -v /tmp/.X11-unix/:/tmp/.X11-unix \
     -e DISPLAY=$DISPLAY \
     -w /workspace/experiments \
-    ${DEEPSTREAM_IMAGE:-nvcr.io/nvidia/deepstream:8.0-triton-multiarch} \
+    ${DEEPSTREAM_IMAGE:-nvcr.io/nvidia/deepstream:9.0-triton-multiarch} \
     deepstream-test5-app -c config_deepstream.txt

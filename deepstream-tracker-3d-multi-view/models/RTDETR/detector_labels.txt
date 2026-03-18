@@ -1,0 +1,7 @@
+person
+agility_digit
+gr1_t2
+nova_carter
+transporter
+forklift
+pallet

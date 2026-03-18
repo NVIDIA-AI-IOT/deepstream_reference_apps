@@ -1,4 +1,4 @@
-# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 7.0
+# BACK-TO-BACK-DETECTORS REFERENCE APP USING DEEPSTREAMSDK 9.0
 
 ## Introduction
 The project contains Back to Back detector application to show the
@@ -62,7 +62,8 @@ The result should be like below:
 ## Compilation Steps and Execution:
 ```
   $ Set CUDA_VER in the MakeFile as per platform.
-      For both x86 & Jetson, CUDA_VER=12.6
+      For x86, CUDA_VER=13.1
+      For Jetson, CUDA_VER=13.0
   $ sudo make
 
   $ ./back-to-back-detectors <h264_elementary_stream>

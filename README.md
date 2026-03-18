@@ -1,6 +1,6 @@
-# Reference Apps using DeepStream 8.0
+# Reference Apps using DeepStream 9.0
 
-This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 8.0.
+This repository contains the reference applications for video analytics tasks using TensorRT and DeepSTream SDK 9.0.
 
 ## Getting Started ##
 We currently provide three different reference applications:
@@ -36,6 +36,10 @@ For further details, please see each project's README.
   This sample demonstrates how to share video buffers over IPC and how to change output video buffers.
 ### Multiple Dynamic Sources with Single Decoder:[README](deepstream-dynamicsrcbin-test/README) ###
  The sample demonstrates the usage of nvdsdynamicsrcbin in DeepStream pipeline.It helps to construct the application of multiple dynamic sources with a single video decoder to adapt to the high decoder throughput scenarios.
+### Custom Video Tiling Config: [README](deepstream-custom-tile-config/README.md) ###
+ This sample demonstrates the usage of "custom-tile-config" of nvmultistreamtiler to customize the tiling positions and sizes of multiple videos in batch.
+### DeepStream VLLM Plugin: [README](deepstream-vllm-plugin/README.md) ###
+ A GStreamer plugin for NVIDIA DeepStream that integrates Vision-Language Models (VLM) using VLLM for real-time video understanding and analysis.
 
 ## Pyservicemaker Sample apps
 The apps in pyservicemaker_sample_apps are additional samples demonstrating usage of the Python API for DeepStream Service Maker, either by flow API or by pipeline API. See the [Python Service Maker documentation](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_service_maker_python.html) for details.

@@ -105,7 +105,7 @@ bool NvDsInferParseCustomNMSTLT (std::vector<NvDsInferLayerInfo> const &outputLa
                   << det[0] << " " << det[1] << " " << det[2] << " "
                   << det[3] << " " << det[4] << " " << det[5] << " " << det[6] << std::endl;
 #endif
-        NvDsInferObjectDetectionInfo object;
+        NvDsInferObjectDetectionInfo object = {};
             object.classId = (int) det[1];
             object.detectionConfidence = det[2];
 
@@ -168,7 +168,7 @@ bool NvDsInferParseCustomBatchedNMSTLT (
         if((unsigned int) p_classes[i] >= detectionParams.numClassesConfigured) continue;
         if(p_bboxes[4*i+2] < p_bboxes[4*i] || p_bboxes[4*i+3] < p_bboxes[4*i+1]) continue;
 
-        NvDsInferObjectDetectionInfo object;
+        NvDsInferObjectDetectionInfo object = {};
         object.classId = (int) p_classes[i];
         object.detectionConfidence = p_scores[i];
 
@@ -295,7 +295,7 @@ bool NvDsInferParseCustomDDETRTAO (std::vector<NvDsInferLayerInfo> const &output
     std::map<float, NvDsInferObjectDetectionInfo> ordered_objects;
 
     for (unsigned int idx = 0; idx < numDetections; idx += 1) {
-        NvDsInferObjectDetectionInfo res;
+        NvDsInferObjectDetectionInfo res = {};
 
         unsigned int class_layer_idx = idx * numClasses;
 
@@ -393,7 +393,7 @@ bool NvDsInferParseCustomEfficientDetTAO (std::vector<NvDsInferLayerInfo> const 
             if(p_bboxes[4*i+2] < p_bboxes[4*i] || p_bboxes[4*i+3] < p_bboxes[4*i+1])
                 continue;
 
-            NvDsInferObjectDetectionInfo object;
+            NvDsInferObjectDetectionInfo object = {};
             object.classId = (int) p_classes[i];
             object.detectionConfidence = p_scores[i];
 

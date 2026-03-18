@@ -7,9 +7,9 @@ The currnet SV3DT configuration in this sample uses an 2D pose estimator, which 
 
 ## Prerequisites
 This sample application can be run on both x86 and Jetson platforms inside DeepStream container. Check [here](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_docker_containers.html#prerequisites) for DeepStream container setup.
-1. Download the latest DeepStream container image from NGC (e.g., DS 8.0 in the example below)
+1. Download the latest DeepStream container image from NGC (e.g., DS 9.0 in the example below)
     ```bash
-    export DS_IMG_NAME="nvcr.io/nvidia/deepstream:8.0-triton-multiarch"
+    export DS_IMG_NAME="nvcr.io/nvidia/deepstream:9.0-triton-multiarch"
     docker pull $DS_IMG_NAME
     ```
 

@@ -3,7 +3,7 @@
 # Global variables - same as setup script
 BASE_DIR=${BASE_DIR:-$HOME}
 USE_INFERENCE_BUILDER=${USE_INFERENCE_BUILDER:-false}
-KAFKA_VERSION="4.0.0"
+KAFKA_VERSION="4.2.0"
 SCALA_VERSION="2.13"
 
 # Standardized paths
@@ -104,6 +104,18 @@ else
     fi
     if [ ! -f "$PWD/models/PeopleNetTransformer/custom_parser/libnvds_infercustomparser_tao.so" ]; then
         echo "PeopleNetTransformer custom parser libnvds_infercustomparser_tao.so not found"
+        DATASETS_MODELS_STATUS="✗"
+    fi
+    if [ ! -d "$PWD/models/RTDETR" ]; then
+        echo "RTDETR model not found"
+        DATASETS_MODELS_STATUS="✗"
+    fi
+    if [ ! -f "$PWD/models/RTDETR/custom_parser/libnvds_infercustomparser_tao.so" ]; then
+        echo "RTDETR custom parser libnvds_infercustomparser_tao.so not found"
+        DATASETS_MODELS_STATUS="✗"
+    fi
+    if [ ! -d "$PWD/models/PeopleNet2.6.3" ]; then
+        echo "PeopleNet2.6.3 model not found"
         DATASETS_MODELS_STATUS="✗"
     fi
 fi

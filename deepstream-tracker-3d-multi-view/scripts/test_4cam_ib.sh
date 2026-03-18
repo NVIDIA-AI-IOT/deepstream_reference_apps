@@ -6,6 +6,22 @@ export MODEL_REPO=$PWD/models
 REPO_DIR=$PWD
 INFERENCE_BUILDER_DIR=${INFERENCE_BUILDER_DIR:-$HOME/inference_builder}
 
+# Select detector model: PeopleNetTransformer (default), RTDETR, or PeopleNet2.6.3
+export DETECTOR_MODEL=${DETECTOR_MODEL:-PeopleNetTransformer}
+
+if [ "$DETECTOR_MODEL" = "RTDETR" ]; then
+    DETECTOR_CONFIG="config_pgie_rt_detr.txt"
+    TRACKER_CONFIG="config_tracker.yml"
+elif [ "$DETECTOR_MODEL" = "PeopleNet2.6.3" ]; then
+    DETECTOR_CONFIG="config_pgie_peoplenet.txt"
+    TRACKER_CONFIG="config_tracker.yml"
+else
+    DETECTOR_CONFIG="config_pgie.txt"
+    TRACKER_CONFIG="config_tracker.yml"
+fi
+
+echo "Using detector model: $DETECTOR_MODEL (detector=$DETECTOR_CONFIG, tracker=$TRACKER_CONFIG)"
+
 # Set correct GPU flag considering diffent platforms
 if docker info | grep -q 'Runtimes.*nvidia'; then
     GPU_FLAG="--runtime=nvidia"
@@ -24,10 +40,12 @@ mkdir -p $EXPERIMENT_DIR/tracker-kitti-dump
 source mv3dt_venv/bin/activate
 python utils/inference_builder_auto_configurator.py \
     --dataset-dir=$DATASET_DIR \
+    --detector-config=$DETECTOR_CONFIG \
+    --tracker-config=$TRACKER_CONFIG \
     --config-overrides=override_tracker_4cam.yml \
     --output-dir=$EXPERIMENT_DIR
 
-cp $EXPERIMENT_DIR/nvdsinfer_config.yaml $MODEL_REPO/PeopleNetTransformer/
+cp $EXPERIMENT_DIR/nvdsinfer_config.yaml $MODEL_REPO/$DETECTOR_MODEL/
 
 # Generate Python package for MV3DT inference flow using Inference Builder
 cd $INFERENCE_BUILDER_DIR
@@ -36,7 +54,7 @@ python builder/main.py $EXPERIMENT_DIR/ds_mv3dt.yaml \
     -o builder/samples/mv3dt_app \
     --server-type serverless
 
-# Launch real-time BEV visualization
+# # Launch real-time BEV visualization
 cd $REPO_DIR
 source mv3dt_venv/bin/activate
 python utils/kafka_bev_visualizer.py \

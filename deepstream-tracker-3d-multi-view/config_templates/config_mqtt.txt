@@ -10,4 +10,4 @@ password = password
 #share-connection = 1
 #loop-timeout = 2000
 #keep-alive = 60
-#set-threaded = 1
+set-threaded = 0

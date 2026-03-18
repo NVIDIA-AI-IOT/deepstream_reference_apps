@@ -149,7 +149,7 @@ The element attaches custom metadata to each buffer containing:
 ===============================================================================
 
   $ Set CUDA_VER in the MakeFile as per platform.
-     For x86, CUDA_VER=12.8
+     For x86, CUDA_VER=13.1
      For jetson, CUDA_VER=13.0
   $ sudo make (sudo not required in case of docker containers)
 

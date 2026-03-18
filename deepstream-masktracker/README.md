@@ -1,13 +1,13 @@
 #  MaskTracker in DeepStream
 
 ## Introduction
-This sample application demonstrates using MaskTracker with DeepStream SDK. MaskTracker simultaneously performs multi-object tracking and segmentation using advanced vision foundation models such as Segment Anything Model 2 (SAM2). It uses SAM2 to visually track and segment targets across frames, while automatically adding and removing targets as needed. It stores visual features in previous frames in a memory bank and use them to localize targets in a new frame.  For algorithm and setup details, please refer to [DeepStream MaskTracker Documentation](https://deepstreamsdk.gitlab-master-pages.nvidia.com/docs-template/text/DS_plugin_gst-nvtracker.html#masktracker-developer-preview).
+This sample application demonstrates using MaskTracker with DeepStream SDK. MaskTracker simultaneously performs multi-object tracking and segmentation using advanced vision foundation models such as Segment Anything Model 2 (SAM2). It uses SAM2 to visually track and segment targets across frames, while automatically adding and removing targets as needed. It stores visual features in previous frames in a memory bank and use them to localize targets in a new frame.  For algorithm and setup details, please refer to [DeepStream MaskTracker Documentation](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_plugin_gst-nvtracker.html#masktracker-developer-preview).
 
 ## Prerequisites
-Users need to install Ubuntu 24.04 and NVIDIA driver 570.133.20 on x86 with dGPUs supported by DeepStream. Jetson devices may not support running the entire SAM2 network due to resource limitation. Check [here](https://deepstreamsdk.gitlab-master-pages.nvidia.com/docs-template/text/DS_docker_containers.html#prerequisites) for DeepStream container setup.
-1. Download the latest DeepStream container image from NGC (e.g., DS 8.0 in the example below)
+Users need to install Ubuntu 24.04 and NVIDIA driver 570.133.20 on x86 with dGPUs supported by DeepStream. Jetson devices may not support running the entire SAM2 network due to resource limitation. Check [here](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_docker_containers.html#prerequisites) for DeepStream container setup.
+1. Download the latest DeepStream container image from NGC (e.g., DS 9.0 in the example below)
     ```bash
-    export DS_IMG_NAME="nvcr.io/nvidia/deepstream:8.0-triton-multiarch"
+    export DS_IMG_NAME="nvcr.io/nvidia/deepstream:9.0-triton-multiarch"
     docker pull $DS_IMG_NAME
     ```
 
@@ -19,7 +19,7 @@ Users need to install Ubuntu 24.04 and NVIDIA driver 570.133.20 on x86 with dGPU
     cd deepstream_reference_apps/deepstream-masktracker
     ```
 
-3. Download NVIDIA pretrained `PeopleNet` for detection from [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet/files?version=deployable_quantized_onnx_v2.6.3) (v2.6.3).
+3. Download NVIDIA pretrained `PeopleNet` for detection from [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet/files?version=deployable_quantized_onnx_v2.6.3(e.g., PeopleNet v2.6.3 in the example below).
 
     ```bash
     # current directory: deepstream_reference_apps/deepstream-masktracker
@@ -96,7 +96,6 @@ person 1 0.0 0 0.0 964.094116 263.143738 1177.927734 851.131775 0.0 0.0 0.0 0.0 
 person 2 0.0 0 0.0 1298.530762 234.894257 1637.269897 844.630981 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.966797
 person 0 0.0 0 0.0 614.902649 227.807709 911.121948 852.950439 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.981934
 ...
-
 ```
 
 The segmentation mask for each target is generated in the `mask_params` field of `NvDsObjectMeta` in DeepStream meta data. As defined in `/opt/nvidia/deepstream/deepstream/sources/includes/nvll_osd_struct.h`, this data structure stores the segmentation mask as a float array with dimensions matching the target’s bounding box (rounded to integer values). In plugins or probes downstream to tracker, users can implement customized functions to access and store this data.

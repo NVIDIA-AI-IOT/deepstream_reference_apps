@@ -1,24 +1,33 @@
 #  Multi-View 3D Tracking in DeepStream
 
+<img src="figures/MV3DT_12cam_live.gif" alt="MV3DT 12-camera live demo" width="100%"/>
 
 ## Introduction
 
-This repository provides sample applications for Multi-View 3D Tracking (MV3DT) with DeepStream 8.0 SDK. MV3DT is a distributed, real-time multi-view multi-target 3D tracking framework built for large-scale, calibrated camera networks. It is designed to deliver robust object tracking and identity consistency across complex environments, leveraging camera calibration data as a prerequisite for accurate geometric reasoning. 
+This repository provides sample applications for Multi-View 3D Tracking (MV3DT) with DeepStream 9.0 SDK. MV3DT is a distributed, real-time multi-view multi-target 3D tracking framework built for large-scale, calibrated camera networks. It is designed to deliver robust object tracking and identity consistency across complex environments, leveraging camera calibration data as a prerequisite for accurate geometric reasoning. The sample applications support three detector models: [PeopleNet Transformer](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet_transformer_v2?version=deployable_v1.0), a general-purpose people detection transformer model, [PeopleNet v2.6.3](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet), a high-performance people detection model based on DetectNet_v2, and [RT-DETR 2D Warehouse](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/rtdetr_2d_warehouse?version=deployable_efficientvit_l2_v1.0), a real-time DETR model optimized for warehouse environments with multiple object classes.
 
 This repository aims to demonstrate MV3DT through live visualization of 3D tracking results, and is structured as follows:
 - **[Prerequisites](#prerequisites)** - System requirements and setup instructions
 - **[Option 1: Sample applications using DeepStream Container](#option-1-running-mv3dt-using-deepstream-container)** - The DeepStream Container has the DeepStream SDK pre-installed. The samples automate MV3DT config generation and launch the DeepStream app inside the container.
 - **[Option 2: Sample applications using Inference Builder](#option-2-running-mv3dt-using-inference-builder)** - Inference Builder is an open-source tool that automates inference pipeline generation across AI frameworks and packages them as deployable containers. The samples in this repo are solely intended to demonstrate building and running MV3DT using Inference Builder. For additional capabilities, see the [Inference Builder README](https://github.com/NVIDIA-AI-IOT/inference_builder).
 - **[Output Visualization Explanations](#output-visualization)** - Expected visualization from DeepStream On-Screen Display (OSD) and real-time Bird's Eye View (BEV) app
+- **[Receiving 3D Tracking Metadata from Kafka](#receiving-3d-tracking-metadata-from-kafka)** - How to consume MV3DT tracking metadata from Kafka broker for downstream applications
 - **[Customization](#customization)** - How to use MV3DT on custom datasets, and how to convert existing 2D DeepStream tracking pipelines to MV3DT pipeline
 
 As shown in the repo structure, MV3DT can be run using either DeepStream Container or Inference Builder. You can choose either approach to run the sample applications. We recommend starting with DeepStream Container for quick start and optionally trying out Inference Builder for advanced use cases, for example, integrating it with other AI frameworks or microservices.
 
 ## Prerequisites
-The sample applications in this repository require Ubuntu 24.04 and NVIDIA driver version 570.86.15 (or higher 570 release); both x86 and Jetson platforms are supported. A graphical display server (e.g., X11) is required to view visualization results. If no physical display is available, a remote desktop solution such as VNC Viewer can be used as an alternative.
+The sample applications in this repository require Ubuntu 24.04 and NVIDIA driver version 580.xx or higher; both x86 and Jetson platforms are supported. A graphical display server (e.g., X11) is required to view visualization results. If no physical display is available, a remote desktop solution such as VNC Viewer can be used as an alternative.
 
-Known issue: On Jetson Thor, Option 2 Sample 2 (with Inference Builder, on 12-camera dataset) may hang due to file descriptor limitation in the third-party library libmosquitto. This issue is planned to be fixed in the next release.
+#### Known Issues
 
+> On **Jetson Thor**, Option 2 Sample 2 (with Inference Builder, on 12-camera dataset) may hang due to file descriptor limitation in the third-party library libmosquitto. This issue is planned to be fixed in the next release.
+
+> On **DGX Spark**, the RT-DETR model requires TensorRT strongly-typed mode to produce valid inference outputs. Without it, detections may be missing and no bounding boxes will be shown. If you are running on DGX Spark with the RT-DETR detector, please add `strongly-typed=1` to the `[property]` section of `config_templates/config_pgie_rt_detr.txt` before launching the pipeline.
+
+> On **B200**, the sample apps with PeopleNetTransformer model may occasionally crash with a segmentation fault during inference. If this occurs, add `-e MALLOC_CHECK_=3` to the `docker run` command in launch scripts to mitigate the issue.
+
+#### Setup
 
 1. Please check [DeepStream Container Prerequisites](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_docker_containers.html#prerequisites) for DeepStream container setup.
 
@@ -51,7 +60,7 @@ Known issue: On Jetson Thor, Option 2 Sample 2 (with Inference Builder, on 12-ca
     **Environment Variables:**
     - `USE_INFERENCE_BUILDER` - Enable Inference Builder setup (default: false, DeepStream Container only)
     - `BASE_DIR` - Base directory for Kafka and Inference Builder installations (default: `$HOME`)
-    - `DEEPSTREAM_IMAGE` - DeepStream Docker image (default: `nvcr.io/nvidia/deepstream:8.0-triton-multiarch` for x86 and Jetson platforms)
+    - `DEEPSTREAM_IMAGE` - DeepStream Docker image (default: `nvcr.io/nvidia/deepstream:9.0-triton-multiarch` for x86 and Jetson platforms)
 
     * **Use case 1: If you want to use a different base directory** for Kafka and Inference Builder installations other than `$HOME`, you can set the `BASE_DIR` environment variable before running the script.
         ```bash
@@ -63,7 +72,7 @@ Known issue: On Jetson Thor, Option 2 Sample 2 (with Inference Builder, on 12-ca
         ```
     * **Use case 2: If you are on ARM SBSA platforms**, the DeepStream docker image will be different from the default one. Please set the `DEEPSTREAM_IMAGE` environment variable before running the script.
         ```bash
-        export DEEPSTREAM_IMAGE=nvcr.io/nvidia/deepstream:8.0-triton-arm-sbsa
+        export DEEPSTREAM_IMAGE=nvcr.io/nvidia/deepstream:9.0-triton-arm-sbsa
         # If you want to use Inference Builder (Option 2), uncomment the line below
         # export USE_INFERENCE_BUILDER=true
         ./scripts/setup_prerequisites.sh
@@ -91,6 +100,12 @@ sudo xhost + # give container access to display, only need to run once per sessi
 
 # chmod +x scripts/test_4cam_ds.sh
 ./scripts/test_4cam_ds.sh
+
+# To use RT-DETR detector instead of the default PeopleNetTransformer:
+# DETECTOR_MODEL=RTDETR ./scripts/test_4cam_ds.sh
+
+# To use PeopleNet v2.6.3 detector:
+# DETECTOR_MODEL=PeopleNet2.6.3 ./scripts/test_4cam_ds.sh
 ```
 
 Two separate windows will be launched. One named **Bird-Eye View of Multi-View 3D Tracking**, and the other named **DeepStreamTest5App**. You may need to toggle, arrange, or resize the windows to see both views. If anything goes wrong or the windows are not showing, please follow the step-by-step instructions below; otherwise, the quick-start script covers the same processes. 
@@ -123,81 +138,7 @@ Two separate windows will be launched. One named **Bird-Eye View of Multi-View 3
 <img src="figures/screenshot_quickstart_4cam_ds.png" alt="Screenshot" width="800"/>
 
 #### Step-by-step Instructions
-1. Set up environment variables and prepare experiment directories
-    ```bash
-    export DATASET_DIR=$PWD/datasets/mtmc_4cam/
-    export EXPERIMENT_DIR=$PWD/experiments/deepstream/4cam
-    export MODEL_REPO=$PWD/models
-
-    mkdir -p $EXPERIMENT_DIR/infer-kitti-dump
-    mkdir -p $EXPERIMENT_DIR/tracker-kitti-dump
-    mkdir -p $EXPERIMENT_DIR/outVideos
-    ```
-2. Generate DeepStream configuration files using the auto-configurator
-   
-   The auto-configurator automatically generates all necessary configuration files based on your dataset. It supports various output options (OSD display, video file output, Kafka streaming) and can work with both 2D and 3D tracker configurations. 
-   
-   **About Override Files:** The `--config-overrides` parameter allows you to apply dataset-specific settings. For example, `override_tracker_4cam.yml` is optimized for the sample 4-camera dataset (which uses feet as world coordinate units), while `override_tracker_12cam.yml` is optimized for the sample 12-camera dataset (which uses meters). You can create custom override files for your own datasets.
-   
-   For more info on the auto-configurator, see [`utils/README.md`](utils/README.md#deepstream_auto_configuratorpy).
-   
-    ```bash
-    # Activate the Python environment
-    source mv3dt_venv/bin/activate
-    
-    # Generate configs with 4-camera overrides
-    python utils/deepstream_auto_configurator.py \
-        --dataset-dir=$DATASET_DIR \
-        --enable-msg-broker \
-        --enable-osd \
-        --config-overrides=override_tracker_4cam.yml \
-        --output-dir=$EXPERIMENT_DIR
-    
-    # [Expected output] You should see
-    #   Generated files:
-    #     - config_deepstream.txt (main pipeline config)
-    #     - config_tracker.yml (3D tracker config)
-    #     - config_msgconv.txt (message converter config)
-    #     - pub_sub_info_config_0.yml (communication config)
-
-    ```
-3. (Optional) Launch real-time BEV visualization
-    
-    Before launching the main MV3DT pipeline, optionally start the bird's-eye view visualizer to see real-time 3D tracking results. Please keep it running in a separate terminal window or add `&` to the end of the command to run it in the background.
-    
-    ```bash
-    # Start BEV visualization
-    python utils/kafka_bev_visualizer.py \
-        --dataset-path=$DATASET_DIR \
-        --msgconv-config=$EXPERIMENT_DIR/config_msgconv.txt \
-        --average-multi-cam \
-        --show-ids 
-
-    # [Expected output] You should see a window named "Bird-Eye View of Multi-View 3D Tracking" pop up and will display the live tracking results.
-    # Select the window and press 'q' to quit.
-    ```
-
-4. Launch MV3DT
-
-    The following command mounts the necessary folders into the DeepStream container and starts the `deepstream-test5-app` with MV3DT configs. 
-
-    ```bash
-    sudo xhost + # give container access to display
-
-    docker run -t --privileged --rm --net=host --runtime=nvidia \
-        -v $MODEL_REPO:/workspace/models \
-        -v $DATASET_DIR:/workspace/inputs \
-        -v $EXPERIMENT_DIR:/workspace/experiments \
-        -v /tmp/.X11-unix/:/tmp/.X11-unix \
-        -e DISPLAY=$DISPLAY \
-        -w /workspace/experiments \
-        nvcr.io/nvidia/deepstream:8.0-triton-multiarch \
-        deepstream-test5-app -c config_deepstream.txt
-
-    # [Expected output] You should see a window named "DeepStreamTest5App" pop up and will display 4 camera views in a grid.
-    # Select the window and press 'q' to quit early.
-    # The pipeline will quit automatically with "App run succesful" as the last line from the logs.
-    ```
+For detailed step-by-step instructions, see [DeepStream Container: Step-by-step Instructions](docs/step-by-step-deepstream.md#sample-1-4-camera-dataset).
 
 ### Sample 2: 12-camera dataset
 ---
@@ -210,23 +151,15 @@ Run the provided script to quickly launch the 12-camera DeepStream pipeline. For
 
 # chmod +x scripts/test_12cam_ds.sh
 ./scripts/test_12cam_ds.sh
+
+# To use RT-DETR detector instead of the default PeopleNetTransformer:
+# DETECTOR_MODEL=RTDETR ./scripts/test_12cam_ds.sh
+
+# To use PeopleNet v2.6.3 detector:
+# DETECTOR_MODEL=PeopleNet2.6.3 ./scripts/test_12cam_ds.sh
 ```
 #### Step-by-step Instructions
-The steps are the same as for the 4-camera dataset, except setting `DATASET_DIR` and `EXPERIMENT_DIR` to the 12-camera directories. The auto-configurator automatically detects the number of cameras in your dataset and generates required config files for 12-camera dataset.
-
-```bash
-export DATASET_DIR=$PWD/datasets/mtmc_12cam/
-export EXPERIMENT_DIR=$PWD/experiments/deepstream/12cam
-
-# Generate configs with 12-camera overrides
-# Note: override_tracker_12cam.yml contains dataset-specific settings (12-cam uses meters as world coordinates)
-python utils/deepstream_auto_configurator.py \
-    --dataset-dir=$DATASET_DIR \
-    --enable-msg-broker \
-    --enable-osd \
-    --config-overrides=override_tracker_12cam.yml \
-    --output-dir=$EXPERIMENT_DIR
-```
+For detailed step-by-step instructions, see [DeepStream Container: Step-by-step Instructions](docs/step-by-step-deepstream.md#sample-2-12-camera-dataset).
 
 ## Option 2: Running MV3DT using Inference Builder
 
@@ -248,6 +181,12 @@ Run the provided script to quickly start the 4-camera DeepStream Inference Build
 
 # chmod +x scripts/test_4cam_ib.sh
 ./scripts/test_4cam_ib.sh
+
+# To use RT-DETR detector instead of the default PeopleNetTransformer:
+# DETECTOR_MODEL=RTDETR ./scripts/test_4cam_ib.sh
+
+# To use PeopleNet v2.6.3 detector:
+# DETECTOR_MODEL=PeopleNet2.6.3 ./scripts/test_4cam_ib.sh
 ```
 
 For detailed window explanations and important notes, see the [4-camera DeepStream Quick Start section](#quick-start) above. Additional notes:
@@ -268,91 +207,7 @@ If you are not able to see camera view or BEV view, please follow the step-by-st
 <img src="figures/screenshot_quickstart_4cam_ib.png" alt="Screenshot" width="800"/>
 
 #### Step-by-step Instructions
-
-1. Set up environment variables and prepare experiment directories
-    ```bash
-    export DATASET_DIR=$PWD/datasets/mtmc_4cam/
-    export EXPERIMENT_DIR=$PWD/experiments/inference_builder/4cam
-    export MODEL_REPO=$PWD/models
-
-    mkdir -p $EXPERIMENT_DIR/infer-kitti-dump
-    mkdir -p $EXPERIMENT_DIR/tracker-kitti-dump
-    ```
-
-2. Generate Inference Builder configuration files using the auto-configurator
-    
-    ```bash
-    # Activate the Python environment
-    source mv3dt_venv/bin/activate
-    
-    # Generate configs with 4-camera overrides
-    python utils/inference_builder_auto_configurator.py \
-        --dataset-dir=$DATASET_DIR \
-        --config-overrides=override_tracker_4cam.yml \
-        --output-dir=$EXPERIMENT_DIR
-    # [Expected output] You should see 
-    #   Generated files:
-    #     - ds_mv3dt.yaml (inference config with max_batch_size: 4)
-    #     - config_tracker.yml (3D tracker config)
-    #     - source_list_static.yaml (source configuration)
-    #     - nvdsinfer_config.yaml (inference engine config with batch_size: 4)
-    #     - config_msgconv.txt (message converter config)
-    #     - pub_sub_info_config_0.yml (communication config)
-
-    # Copy the generated nvdsinfer config to the model directory
-    cp $EXPERIMENT_DIR/nvdsinfer_config.yaml $MODEL_REPO/PeopleNetTransformer/
-    ```
-
-3. Generate a Python package at `$INFERENCE_BUILDER_DIR/builder/samples/mv3dt_app` containing the MV3DT inference flow.
-    ```bash
-    export INFERENCE_BUILDER_DIR=<path to inference builder repo>
-    cd $INFERENCE_BUILDER_DIR
-    source ib_venv/bin/activate
-    python builder/main.py $EXPERIMENT_DIR/ds_mv3dt.yaml \
-        -o builder/samples/mv3dt_app \
-        --server-type serverless
-    ```
-
-4. (Optional) Launch real-time BEV visualization.
-    Please keep it running in a separate terminal window or add `&` to the end of the command to run it in the background.
-    
-    ```bash
-    # Return to the repo directory and activate the Python environment
-    cd <path to current repo, i.e. deepstream-tracker-3d-multi-view>
-    source mv3dt_venv/bin/activate
-    
-    # Start BEV visualization
-    python utils/kafka_bev_visualizer.py \
-        --dataset-path=$DATASET_DIR \
-        --msgconv-config=$EXPERIMENT_DIR/config_msgconv.txt \
-        --average-multi-cam \
-        --show-ids
-
-    # [Expected output] You should see a window named "Bird-Eye View of Multi-View 3D Tracking" pop up and will display the live tracking results. 
-    # Select the window and press 'q' to quit.
-    ```
-
-5. Launch the `inference-builder-mv3dt:latest` container with volume mounts, including the Python package generated in the previous step.
-
-    Note that this container is built during prerequisites setup. Please refer to the Inference Builder setup step in [Manual Setup Instructions](docs/manual-setup.md) for more details.
-    ```bash
-    sudo xhost + # give container access to display
-
-    docker run --privileged --rm -it --net=host --runtime=nvidia \
-    -v $INFERENCE_BUILDER_DIR/builder/samples/mv3dt_app/deepstream-app:/mv3dt_app \
-    -v $MODEL_REPO:/workspace/models \
-    -v $DATASET_DIR:/workspace/inputs \
-    -v $EXPERIMENT_DIR:/workspace/experiments \
-    -v /tmp/.X11-unix/:/tmp/.X11-unix \
-    -e DISPLAY=$DISPLAY \
-    -w /mv3dt_app \
-    inference-builder-mv3dt:latest \
-    python3 __main__.py --source-config /workspace/experiments/source_list_static.yaml -s /dev/null
-
-    # [Expected output] You should see a window named "python3" pop up and will display 4 camera views in a grid.
-    # Run this command to quit early: `docker ps -q --filter "ancestor=inference-builder-mv3dt" | xargs docker stop`.
-    # By default, the application waits up to **1000 seconds** if there is no data being streamed before exiting gracefully. You should see "Inference completed" as the last line from the logs.
-    ```
+For detailed step-by-step instructions, see [Inference Builder: Step-by-step Instructions](docs/step-by-step-inference-builder.md#sample-1-4-camera-dataset).
 
 
 ### Sample 2: 12-camera dataset
@@ -371,22 +226,16 @@ For detailed window explanations and important notes, see the [4-camera DeepStre
 
 # chmod +x scripts/test_12cam_ib.sh
 ./scripts/test_12cam_ib.sh
+
+# To use RT-DETR detector instead of the default PeopleNetTransformer:
+# DETECTOR_MODEL=RTDETR ./scripts/test_12cam_ib.sh
+
+# To use PeopleNet v2.6.3 detector:
+# DETECTOR_MODEL=PeopleNet2.6.3 ./scripts/test_12cam_ib.sh
 ```
 
 #### Step-by-step Instructions
-
-The steps are the same as for the 4-camera dataset, except setting `DATASET_DIR` and `EXPERIMENT_DIR` to the 12-camera directories.
-
-```bash
-export DATASET_DIR=$PWD/datasets/mtmc_12cam/
-export EXPERIMENT_DIR=$PWD/experiments/inference_builder/12cam
-
-# Generate configs with 12-camera overrides
-python utils/inference_builder_auto_configurator.py \
-    --dataset-dir=$DATASET_DIR \
-    --config-overrides=override_tracker_12cam.yml \
-    --output-dir=$EXPERIMENT_DIR
-```
+For detailed step-by-step instructions, see [Inference Builder: Step-by-step Instructions](docs/step-by-step-inference-builder.md#sample-2-12-camera-dataset).
 
 
 ## Output Visualization
@@ -396,16 +245,17 @@ Whether you use Option 1 (DeepStream Container) or Option 2 (Inference Builder),
 ---
 When the pipeline is launched, DeepStream shows the output video like below while processing the input video. In the example frames below, you can see that objects detected across different cameras are assigned globally consistent IDs. And both 2D and 3D bounding boxes are visualized for each tracked object.
 
-The example below shows per-camera visualization results from the MV3DT Inference Builder pipeline. Note that the on-screen display (OSD) output from the DeepStream container may appear slightly different. To view a specific camera view in the DeepStream OSD window, left-click on the desired view. To return to the multi-camera grid view, simply right-click anywhere in the window.
+In the Inference Builder OSD window, object IDs are visible directly in the grid view. In the DeepStream Container OSD window, object IDs are only visible when viewing a single camera. To enter single camera view with object IDs, left-click on the desired camera view. And to return to the multi-camera grid view, simply right-click anywhere in the window.
 
 <p align="center">
-  <b>4-camera Example:</b><br>
+  <b>Example 1: 4-cam dataset, with PeopleNetTransformer, Inference Builder OSD</b><br>
   <img src="figures/4cam_osd.png" alt="Sample 4-camera cam-view tracking results" width="800"/>
 </p>
 
 <p align="center">
-  <b>12-camera Example:</b><br>
-  <img src="figures/12cam_osd.png" alt="Sample 12-camera cam-view tracking results" width="800"/>
+  <b>Example 2: 12-cam dataset, with RT-DETR, Deepstream OSD</b><br>
+  <img src="figures/12cam_osd_rtdetr.png" alt="Sample 12-camera cam-view tracking results with RT-DETR" width="800"/><br>
+  <i>Note: a forklift is also detected in the 2nd camera view (row 1, column 2).</i>
 </p>
 
 #### Disabling DeepStream Direct Visualization
@@ -447,6 +297,20 @@ Note that the BEV visualization script should be launched before launching the M
       <img src="figures/4cam_bev.png" alt="Sample 4-camera BEV tracking results" width="400" height="400" style="display:inline-block; margin:0 20px;"/>
       <img src="figures/12cam_bev.png" alt="Sample 12-camera BEV tracking results" width="400" height="400" style="display:inline-block; margin:0 20px;"/>
     </div>
+
+# Receiving 3D Tracking Metadata from Kafka
+
+MV3DT streams tracking metadata (frame ID, sensor ID, object IDs, 3D bounding boxes, etc.) to a Kafka topic as protobuf messages. The `kafka_client.py` script demonstrates how to connect to the Kafka broker, deserialize the protobuf messages, and print them as JSON. For building downstream applications using MV3DT tracking metadata, this can be a reference implementation.
+
+```bash
+source mv3dt_venv/bin/activate
+
+# Default: connects to localhost:9092, topic 'mv3dt'
+python utils/kafka_client.py
+
+# Custom broker and topic
+python utils/kafka_client.py --broker localhost:9092 --topic mv3dt
+```
 
 # Customization
 
@@ -549,7 +413,6 @@ If you have an existing 2D detection and tracking pipeline using DeepStream, the
     python utils/deepstream_auto_configurator.py \
         --dataset-dir=$DATASET_DIR \
         --tracker-config=config_tracker_2d.yml \
-        --config-overrides=override_tracker_12cam.yml \
         --enable-msg-broker \
         --enable-osd \
         --output-dir=$EXPERIMENT_DIR
@@ -566,7 +429,7 @@ If you have an existing 2D detection and tracking pipeline using DeepStream, the
         -v /tmp/.X11-unix/:/tmp/.X11-unix \
         -e DISPLAY=$DISPLAY \
         -w /workspace/experiments \
-        nvcr.io/nvidia/deepstream:8.0-triton-multiarch \
+        nvcr.io/nvidia/deepstream:9.0-triton-multiarch \
         deepstream-test5-app -c config_deepstream.txt
     ```
 

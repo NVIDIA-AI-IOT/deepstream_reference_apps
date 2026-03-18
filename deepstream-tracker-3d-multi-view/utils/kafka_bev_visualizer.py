@@ -46,11 +46,22 @@ def extract_expected_sensors(msgconv_config):
         
 
 class FrameBuffer:
-    def __init__(self, expected_sensors=None, timeout=0.5):
+    def __init__(self, expected_sensors=None, timeout=0.5, lookahead_frames=1):
+        """
+        For a frame t to be considered complete, 1 of the 3 conditions must be met:
+            1. Messages from all expected sensors are received at frame t
+            2. Current time - message sent time of any sensor at frame t > timeout
+            3. At least 1 of the future frames (t+lookahead_frames) are received
+
+        The current settings is designed for single-container MV3DT.
+        For multi-container MV3DT, consider increasing the timeout and lookahead_frames.
+        """
+
         self.frame_data = defaultdict(dict)
         self.expected_sensors = expected_sensors or set()
         self.timeout = timeout
         self.timestamps = {}
+        self.lookahead_frames = lookahead_frames
         
     def add_frame(self, frame_id, sensor_id, frame_dict):
         try:
@@ -65,11 +76,33 @@ class FrameBuffer:
     
     def get_complete_frame(self):
         current_time = time.time()
-        for frame_id in list(self.frame_data.keys()):
+        num_expected = len(self.expected_sensors)
+        # Process frames in ascending order when possible
+        def _key_fn(x):
+            try:
+                return int(x)
+            except Exception:
+                return float('inf')
+        for frame_id in sorted(list(self.frame_data.keys()), key=_key_fn):
             sensors = set(self.frame_data[frame_id].keys())
             frame_time = self.timestamps.get(frame_id, current_time)
-            if (len(sensors) >= len(self.expected_sensors) and sensors.issubset(self.expected_sensors)) or \
-               (current_time - frame_time) > self.timeout:
+            # Condition 1: full set received for this frame
+            full_received = (num_expected > 0 and len(sensors) >= num_expected and sensors.issubset(self.expected_sensors))
+            # Condition 2: timeout
+            timed_out = (current_time - frame_time) > self.timeout
+            # Condition 3: at least 1 of future frame (t+lookahead_frames) received
+            future_received = False
+            if num_expected > 0:
+                try:
+                    base_id = int(frame_id)
+                    future_id = base_id + self.lookahead_frames
+                    future_data = self.frame_data.get(future_id)
+                    if future_data is not None:
+                        future_received = True
+                except Exception:
+                    pass
+            if full_received or timed_out or future_received:
+                # print ('frame_id', frame_id, 'full_received', full_received, 'timed_out', timed_out, 'future_received', future_received)
                 frame_data = self.frame_data.pop(frame_id)
                 self.timestamps.pop(frame_id, None)
                 return frame_id, frame_data
@@ -86,16 +119,76 @@ class FrameBuffer:
         complete_frames.sort(key=lambda x: x[0])
         return [(frame_id, data) for _, frame_id, data in complete_frames]
     
-    def get_latest_frame(self):
-        if not self.frame_data:
-            return None, None
-        try:
-            latest_id = max(self.frame_data.keys(), key=lambda x: int(x) if str(x).isdigit() else 0)
-        except:
-            latest_id = list(self.frame_data.keys())[-1]
-        frame_data = self.frame_data.pop(latest_id)
-        self.timestamps.pop(latest_id, None)
-        return latest_id, frame_data
+    def get_frame(self, frame_id):
+        """Get frame data for specific frame_id without waiting for conditions, and remove it from buffer"""
+        if frame_id in self.frame_data:
+            frame_data = self.frame_data.pop(frame_id)
+            self.timestamps.pop(frame_id, None)
+            return frame_id, frame_data
+        return None, None
+
+def display_frame(vis_img, frame_id, video_writer):
+    """Add frame info, display frame, and write to video"""
+    recording = "REC" if video_writer else ""
+    info = f"Frame: {frame_id} {recording}"
+    cv2.putText(vis_img, info, (10, vis_img.shape[0] - 20), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+    
+    cv2.imshow('Bird-Eye View of Multi-View 3D Tracking', vis_img)
+
+    if video_writer:
+        video_writer.write(vis_img)
+
+def load_map_and_transforms(dataset_path):
+    """Load map image and transformation matrix from dataset"""
+    map_path = os.path.join(dataset_path, 'map.png')
+    transforms_path = os.path.join(dataset_path, 'transforms.yml')
+
+    with open(transforms_path, 'r') as f:
+        transforms = yaml.safe_load(f)
+    T_ov2px = np.array(transforms['T_ov2px']).reshape(3, 3)
+
+    map_img = cv2.imread(map_path)
+    if map_img is None:
+        raise FileNotFoundError(f"Map image not found at {map_path}")
+    
+    return map_img, T_ov2px
+
+def setup_map_scaling(map_img, target_width_ratio=0.8, target_height_ratio=0.8):
+    """Setup map scaling based on screen size"""
+    root = tk.Tk()
+    screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
+    root.destroy()
+
+    target_width = int(screen_width * target_width_ratio)
+    target_height = int(screen_height * target_height_ratio)
+
+    map_height, map_width = map_img.shape[:2]
+    scale = min(target_width / map_width, target_height / map_height)
+    new_width, new_height = int(map_width * scale), int(map_height * scale)
+
+    map_img_resized = cv2.resize(map_img, (new_width, new_height))
+    scale_matrix = np.array([[scale, 0, 0], [0, scale, 0], [0, 0, 1]])
+
+    return map_img_resized, scale_matrix, new_width, new_height
+
+def create_kafka_consumer(group_id, consumer_timeout_ms=None):
+    """Create and configure Kafka consumer"""
+    config = {
+        'bootstrap_servers': 'localhost:9092',
+        'auto_offset_reset': 'earliest',
+        'value_deserializer': lambda x: x,
+        'group_id': group_id,
+        'enable_auto_commit': True
+    }
+
+    if consumer_timeout_ms is not None:
+        config['consumer_timeout_ms'] = consumer_timeout_ms
+
+    consumer = KafkaConsumer(**config)
+    consumer.subscribe(['mv3dt'])
+    print("Connected to Kafka and subscribed to 'mv3dt' topic")
+    return consumer
 
 def draw_objects_on_map(frame_data, T_ov2px, map_img, trajectories, object_colors, frame_id, frame_history, show_ids=False, average_multi_cam=False):
     vis_img = map_img.copy()
@@ -234,7 +327,7 @@ def draw_objects_on_map(frame_data, T_ov2px, map_img, trajectories, object_color
                         label_x = px_x + 8
                         label_y = px_y - 8
                         cv2.putText(vis_img, str(object_id), (label_x, label_y), 
-                                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
                 except:
                     continue
     else:
@@ -259,17 +352,18 @@ def draw_objects_on_map(frame_data, T_ov2px, map_img, trajectories, object_color
                             label_x = px_x + 8
                             label_y = px_y - 8
                             cv2.putText(vis_img, str(object_id), (label_x, label_y), 
-                                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
                 except:
                     continue
     
     return vis_img, frame_history
 
-def collect_all_messages(consumer, expected_sensors, max_timeout=300):
+def collect_all_messages(consumer, expected_sensors, max_timeout=300, verbose=False):
     frame_buffer = FrameBuffer(expected_sensors=expected_sensors)
     start_time = time.time()
     last_msg_time = start_time
     count = 0
+    first_frame = True
     
     consumer._consumer_timeout_ms = 1000
     
@@ -288,8 +382,20 @@ def collect_all_messages(consumer, expected_sensors, max_timeout=300):
                     frame = Frame()
                     frame.ParseFromString(msg.value)
                     frame_dict = MessageToDict(frame)
-                    frame_buffer.add_frame(frame_dict.get('id', 'unknown'), 
-                                         frame_dict.get('sensorId', 'unknown'), frame_dict)
+                    frame_id = frame_dict.get('id', 'unknown')
+                    
+                    if first_frame and frame_id != 'unknown':
+                        try:
+                            if int(frame_id) > 100:
+                                if verbose:
+                                    print(f"Discarding frame {frame_id} (from previous run)")
+                                first_frame = False
+                                continue
+                        except (ValueError, TypeError):
+                            pass
+                        first_frame = False
+
+                    frame_buffer.add_frame(frame_id, frame_dict.get('sensorId', 'unknown'), frame_dict)
                     count += 1
                     last_msg_time = current_time
                 except:
@@ -298,46 +404,20 @@ def collect_all_messages(consumer, expected_sensors, max_timeout=300):
     print(f"Collected {count} messages")
     return frame_buffer
 
-def generate_video(dataset_path, output_path, show_ids, expected_sensors, average_multi_cam):
+def generate_video(dataset_path, output_path, show_ids, expected_sensors, average_multi_cam, verbose=False):
     os.makedirs(output_path, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     video_output_path = os.path.join(output_path, f"trajectory_video_{timestamp}.mp4")
     
-    map_path = os.path.join(dataset_path, 'map.png')
-    transforms_path = os.path.join(dataset_path, 'transforms.yml')
-    
-    with open(transforms_path, 'r') as f:
-        transforms = yaml.load(f, Loader=yaml.FullLoader)
-    T_ov2px = np.array(transforms['T_ov2px']).reshape(3, 3)
-    
-    map_img = cv2.imread(map_path)
-    if map_img is None:
-        raise FileNotFoundError(f"Map image not found at {map_path}")
-    
-    root = tk.Tk()
-    screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
-    root.destroy()
-    
-    map_height, map_width = map_img.shape[:2]
-    scale = min(screen_width * 0.8 / map_width, screen_height * 0.8 / map_height)
-    new_width, new_height = int(map_width * scale), int(map_height * scale)
-    
-    map_img_resized = cv2.resize(map_img, (new_width, new_height))
-    scale_matrix = np.array([[scale, 0, 0], [0, scale, 0], [0, 0, 1]])
+    # Setup common components
+    map_img, T_ov2px = load_map_and_transforms(dataset_path)
+    map_img_resized, scale_matrix, new_width, new_height = setup_map_scaling(map_img)
     T_ov2px_scaled = np.dot(scale_matrix, T_ov2px)
     
     try:
-        consumer = KafkaConsumer(
-            bootstrap_servers='localhost:9092',
-            auto_offset_reset='earliest',
-            value_deserializer=lambda x: x,
-            group_id='mv3dt_bev_video',
-            enable_auto_commit=True
-        )
-        consumer.subscribe(['mv3dt'])
-        print("Connected to Kafka and subscribed to 'mv3dt' topic")
+        consumer = create_kafka_consumer('mv3dt_bev_video')
         
-        frame_buffer = collect_all_messages(consumer, expected_sensors)
+        frame_buffer = collect_all_messages(consumer, expected_sensors, verbose=verbose)
         complete_frames = frame_buffer.get_all_complete_frames()
         print(frame_buffer.frame_data)
         
@@ -354,7 +434,7 @@ def generate_video(dataset_path, output_path, show_ids, expected_sensors, averag
                 frame_data, T_ov2px_scaled, map_img_resized, trajectories, object_colors, frame_id, frame_history, show_ids, average_multi_cam)
             
             cv2.putText(vis_img, f"Frame: {frame_id}", 
-                       (10, vis_img.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                       (10, vis_img.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
             video_writer.write(vis_img)
         
         video_writer.release()
@@ -366,54 +446,28 @@ def generate_video(dataset_path, output_path, show_ids, expected_sensors, averag
         if 'consumer' in locals():
             consumer.close()
 
-def real_time_visualization(dataset_path, output_path, show_ids, expected_sensors, average_multi_cam):
-    map_path = os.path.join(dataset_path, 'map.png')
-    transforms_path = os.path.join(dataset_path, 'transforms.yml')
-    
-    with open(transforms_path, 'r') as f:
-        transforms = yaml.load(f, Loader=yaml.FullLoader)
-    T_ov2px = np.array(transforms['T_ov2px']).reshape(3, 3)
-    
-    map_img = cv2.imread(map_path)
-    if map_img is None:
-        raise FileNotFoundError(f"Map image not found at {map_path}")
-    
-    root = tk.Tk()
-    screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
-    root.destroy()
-    
-    window_width, window_height = int(screen_width * 0.8), int(screen_height * 0.8)
-    
-    map_height, map_width = map_img.shape[:2]
-    scale = min(window_width / map_width, window_height / map_height)
-    new_width, new_height = int(map_width * scale), int(map_height * scale)
-    
-    map_img_resized = cv2.resize(map_img, (new_width, new_height))
-    scale_matrix = np.array([[scale, 0, 0], [0, scale, 0], [0, 0, 1]])
+def real_time_visualization(dataset_path, output_path, show_ids, expected_sensors, average_multi_cam, verbose=False):
+    # Setup common components
+    map_img, T_ov2px = load_map_and_transforms(dataset_path)
+    map_img_resized, scale_matrix, new_width, new_height = setup_map_scaling(map_img)
     T_ov2px_scaled = np.dot(scale_matrix, T_ov2px)
     
     frame_buffer = FrameBuffer(expected_sensors=expected_sensors)
     trajectories, object_colors, frame_history = defaultdict(list), {}, []
     
     cv2.namedWindow('Bird-Eye View of Multi-View 3D Tracking', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('Bird-Eye View of Multi-View 3D Tracking', window_width, window_height)
+    cv2.resizeWindow('Bird-Eye View of Multi-View 3D Tracking', new_width, new_height)
     
+    # Display blank map initially
+    initial_img = map_img_resized.copy()
+    cv2.imshow('Bird-Eye View of Multi-View 3D Tracking', initial_img)
+    cv2.waitKey(1)  # Process window events
+
     consumer = None
     video_writer = None
     
     try:
-        consumer = KafkaConsumer(
-            bootstrap_servers='localhost:9092',
-            auto_offset_reset='earliest',
-            value_deserializer=lambda x: x,
-            consumer_timeout_ms=50,
-            group_id='mv3dt_visualizer',  # Add consumer group
-            enable_auto_commit=True
-        )
-        
-        # Subscribe to the topic
-        consumer.subscribe(['mv3dt'])
-        print("Connected to Kafka and subscribed to 'mv3dt' topic")
+        consumer = create_kafka_consumer('mv3dt_visualizer', consumer_timeout_ms=50)
         
         # Wait for partition assignment (up to 5 seconds)
         assignment_timeout = 5.0
@@ -442,11 +496,10 @@ def real_time_visualization(dataset_path, output_path, show_ids, expected_sensor
     except Exception as e:
         print(f"Kafka connection failed: {e}")
     
-    print("Controls: 'q'-quit, 's'-save, 'c'-clear, 'r'-record")
+    print("Controls: 'q'-quit, 'c'-clear, 'r'-record")
     
-    last_vis_img = map_img_resized.copy()
     last_update = time.time()
-    
+    last_frame_id = None
     try:
         while True:
             current_time = time.time()
@@ -460,6 +513,7 @@ def real_time_visualization(dataset_path, output_path, show_ids, expected_sensor
                                 frame = Frame()
                                 frame.ParseFromString(msg.value)
                                 frame_dict = MessageToDict(frame)
+                                # print ('Received frame', frame_dict.get('id', 'unknown'), 'from sensor', frame_dict.get('sensorId', 'unknown'))
                                 frame_buffer.add_frame(frame_dict.get('id', 'unknown'),
                                                      frame_dict.get('sensorId', 'unknown'), frame_dict)
                             except:
@@ -467,37 +521,50 @@ def real_time_visualization(dataset_path, output_path, show_ids, expected_sensor
                 except:
                     pass
             
-            if current_time - last_update >= 1.0/60:  # 60 FPS
+            while True:
                 frame_id, frame_data = frame_buffer.get_complete_frame()
                 if not frame_data:
-                    frame_id, frame_data = frame_buffer.get_latest_frame()
+                    break
+                            
+                # If the first frame is > 100, it's likely from previous run.
+                if last_frame_id is None and frame_id > 100:
+                    if verbose:
+                        print(f"Discarding frame {frame_id} (from previous run)")
+                    continue
                 
-                if frame_data:
-                    vis_img, frame_history = draw_objects_on_map(frame_data, T_ov2px_scaled, 
-                                                               map_img_resized, trajectories, object_colors, frame_id, frame_history, show_ids, average_multi_cam)
-                    
-                    recording = "REC" if video_writer else ""
-                    info = f"Frame: {frame_id} {recording}"
-                    cv2.putText(vis_img, info, (10, vis_img.shape[0] - 20), 
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                    
-                    last_vis_img = vis_img
-                    if video_writer:
-                        video_writer.write(vis_img)
+                if last_frame_id is not None and frame_id - last_frame_id > 1:
+                    # Process missing frames in between
+                    for missing_frame_id in range(last_frame_id + 1, frame_id):
+                        missing_id, missing_data = frame_buffer.get_frame(missing_frame_id)
+                        if missing_data:
+                            # Render frame with tracking data
+                            vis_img, frame_history = draw_objects_on_map(missing_data, T_ov2px_scaled, 
+                                                                        map_img_resized, trajectories, object_colors, missing_frame_id, frame_history, show_ids, average_multi_cam)
+                            display_frame(vis_img, missing_frame_id, video_writer)
+                        else:
+                            # Render empty frame with correct frame_id
+                            empty_vis_img = map_img_resized.copy()
+                            display_frame(empty_vis_img, missing_frame_id, video_writer)    
+                if last_frame_id is not None and 0 < last_frame_id - frame_id < 30:
+                    if verbose:
+                        print(f"Received late message from frame {frame_id}, last_frame_id was {last_frame_id}")
+                        print(f"Discarding frame {frame_id} (late message)")
+                    continue
+                last_frame_id = frame_id
+                vis_img, frame_history = draw_objects_on_map(frame_data, T_ov2px_scaled, 
+                                                            map_img_resized, trajectories, object_colors, frame_id, frame_history, show_ids, average_multi_cam)
                 
-                last_update = current_time
+                display_frame(vis_img, frame_id, video_writer)
             
-            cv2.imshow('Bird-Eye View of Multi-View 3D Tracking', last_vis_img)
+            last_update = current_time
             
             key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
+            try:
+                window_closed = cv2.getWindowProperty('Bird-Eye View of Multi-View 3D Tracking', cv2.WND_PROP_VISIBLE) < 1
+            except cv2.error:
+                window_closed = True
+            if key == ord('q') or window_closed:
                 break
-            elif key == ord('s'):
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                screenshot_path = os.path.join(output_path, f"trajectory_{timestamp}.png")
-                os.makedirs(output_path, exist_ok=True)
-                cv2.imwrite(screenshot_path, last_vis_img)
-                print(f"Saved frame: {screenshot_path}")
             elif key == ord('c'):
                 trajectories.clear()
                 object_colors.clear()
@@ -509,7 +576,7 @@ def real_time_visualization(dataset_path, output_path, show_ids, expected_sensor
                     live_video_path = os.path.join(output_path, f"live_trajectory_{timestamp}.mp4")
                     os.makedirs(output_path, exist_ok=True)
                     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                    video_writer = cv2.VideoWriter(live_video_path, fourcc, 60, (new_width, new_height))
+                    video_writer = cv2.VideoWriter(live_video_path, fourcc, 30, (new_width, new_height))
                     print(f"Started recording: {live_video_path}" if video_writer.isOpened() else "Recording failed")
                 else:
                     video_writer.release()
@@ -535,11 +602,14 @@ def parse_args():
                        default='output_videos',
                        help='Output directory for videos')
     parser.add_argument('--offline', action='store_true',
-                       help='Run in offline mode (save a video from all messages instead of real-time visualization)')
+                       help='Run in offline mode (save a video from all messages instead of real-time visualization). \
+                           Please run this script after launching the MV3DT app.')
     parser.add_argument('--show-ids', action='store_true',
                        help='Show object IDs near trajectory heads')
     parser.add_argument('--average-multi-cam', action='store_true',
                        help='Average trajectory points from multiple cameras for the same object')
+    parser.add_argument('--verbose', action='store_true',
+                       help='Print warnings and diagnostic messages')
     
     return parser.parse_args()
 
@@ -548,9 +618,9 @@ def main():
     expected_sensors = extract_expected_sensors(args.msgconv_config)
     print(f"Expected sensors: {expected_sensors}")
     if args.offline:
-        generate_video(args.dataset_path, args.output_path, args.show_ids, expected_sensors, args.average_multi_cam)
+        generate_video(args.dataset_path, args.output_path, args.show_ids, expected_sensors, args.average_multi_cam, args.verbose)
     else:
-        real_time_visualization(args.dataset_path, args.output_path, args.show_ids, expected_sensors, args.average_multi_cam)
+        real_time_visualization(args.dataset_path, args.output_path, args.show_ids, expected_sensors, args.average_multi_cam, args.verbose)
 
 
 if __name__ == "__main__":

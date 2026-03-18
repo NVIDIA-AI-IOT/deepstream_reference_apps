@@ -19,11 +19,11 @@ log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # Global variables
-export DEEPSTREAM_IMAGE="${DEEPSTREAM_IMAGE:-nvcr.io/nvidia/deepstream:8.0-triton-multiarch}"
+export DEEPSTREAM_IMAGE="${DEEPSTREAM_IMAGE:-nvcr.io/nvidia/deepstream:9.0-triton-multiarch}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BASE_DIR=${BASE_DIR:-$HOME}
 USE_INFERENCE_BUILDER=${USE_INFERENCE_BUILDER:-false}
-KAFKA_VERSION="4.0.0"
+KAFKA_VERSION="4.2.0"
 SCALA_VERSION="2.13"
 
 # Standardized paths
@@ -69,11 +69,11 @@ check_gpu() {
             local driver_version=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader,nounits | head -1)
             local major_version=$(echo "$driver_version" | cut -d'.' -f1)
             
-            if [[ $major_version -ge 570 ]]; then
+            if [[ $major_version -ge 580 ]]; then
                 log_success "NVIDIA GPU detected with driver version: $driver_version"
                 return 0
             else
-                log_error "NVIDIA driver version $driver_version is too old (need 570+ series)"
+                log_error "NVIDIA driver version $driver_version is too old (need 580+ series)"
                 return 1
             fi
         else
@@ -84,7 +84,7 @@ check_gpu() {
     fi
     
     log_error "NVIDIA GPU or drivers not properly installed"
-    log_info "Please install NVIDIA drivers (version 570.86.15 or higher) and try again"
+    log_info "Please install NVIDIA drivers (version 580.xx or 590.xx) and try again"
     log_info "Visit: https://docs.nvidia.com/cuda/cuda-installation-guide-linux/"
     return 1
 }
@@ -92,7 +92,7 @@ check_gpu() {
 
 setup_deepstream_container() {    
     # Check if DeepStream container is already available
-    if docker images | grep -q $DEEPSTREAM_IMAGE; then
+    if docker images --format "table {{.Repository}}:{{.Tag}}" | grep -q "^$DEEPSTREAM_IMAGE$"; then
         log_success "DeepStream container already available"
     else
         log_info "Pulling DeepStream container image..."
@@ -126,13 +126,27 @@ setup_git_lfs() {
         fi
     fi
     
-    if [[ -f "models/PeopleNetTransformer/peoplenet_transformer_model_op17.onnx" && -f "models/BodyPose3DNet/bodypose3dnet_accuracy.onnx" ]]; then
+    if [[ -f "models/PeopleNetTransformer/peoplenet_transformer_model_op17.onnx" && -f "models/BodyPose3DNet/bodypose3dnet_accuracy.onnx" && -f "models/RTDETR/rtdetr_warehouse_v1.0.fp16.onnx" && -f "models/PeopleNet2.6.3/resnet34_peoplenet.onnx" ]]; then
         log_success "Models already extracted"
     else
-        # Download models from NGC
         log_info "Downloading PeopleNet Transformer model..."
+        mkdir -p models/PeopleNetTransformer
         if ! wget -q --content-disposition 'https://api.ngc.nvidia.com/v2/models/org/nvidia/team/tao/peoplenet_transformer_v2/deployable_v1.0/files?redirect=true&path=dino_fan_small_astro_delta.onnx' -O 'models/PeopleNetTransformer/peoplenet_transformer_model_op17.onnx'; then
             log_error "Failed to download PeopleNet Transformer model"
+            return 1
+        fi
+
+        log_info "Downloading RT-DETR model..."
+        mkdir -p models/RTDETR
+        if ! wget -q --content-disposition 'https://api.ngc.nvidia.com/v2/models/org/nvidia/team/tao/rtdetr_2d_warehouse/deployable_efficientvit_l2_v1.0/files?redirect=true&path=rtdetr_warehouse_v1.0.fp16.onnx' -O 'models/RTDETR/rtdetr_warehouse_v1.0.fp16.onnx'; then
+            log_error "Failed to download RT-DETR model"
+            return 1
+        fi
+
+        log_info "Downloading PeopleNet v2.6.3 model..."
+        mkdir -p models/PeopleNet2.6.3
+        if ! wget -q --content-disposition 'https://api.ngc.nvidia.com/v2/models/org/nvidia/team/tao/peoplenet/deployable_quantized_onnx_v2.6.3/files?redirect=true&path=resnet34_peoplenet.onnx' -O 'models/PeopleNet2.6.3/resnet34_peoplenet.onnx'; then
+            log_error "Failed to download PeopleNet v2.6.3 model"
             return 1
         fi
 
@@ -171,6 +185,13 @@ setup_mosquitto() {
         fi
     fi
     
+    # Configure mosquitto
+    local mosquitto_conf="/etc/mosquitto/conf.d/mv3dt.conf"
+    if [[ ! -f "$mosquitto_conf" ]] || ! grep -q "set_tcp_nodelay true" "$mosquitto_conf"; then
+        log_info "Adding set_tcp_nodelay config to Mosquitto..."
+        echo "set_tcp_nodelay true" | sudo tee "$mosquitto_conf" > /dev/null
+    fi
+
     # Start mosquitto service
     if ! systemctl is-active --quiet mosquitto; then
         log_info "Starting Mosquitto service..."
@@ -238,6 +259,12 @@ setup_kafka() {
         if check_kafka_topic; then
             log_success "Kafka is already running with mv3dt topic"
             return 0
+        else
+            log_warning "Kafka is running but mv3dt topic not found, stopping old Kafka broker..."
+            for old_kafka in "$BASE_DIR"/kafka_*/bin/kafka-server-stop.sh; do
+                [[ -x "$old_kafka" ]] && "$old_kafka" 2>/dev/null || true
+            done
+            sleep 3
         fi
     fi
     
@@ -399,7 +426,7 @@ setup_python_env() {
 }
 
 build_custom_parser() {
-    log_info "Building custom parser..."
+    log_info "Building custom parsers..."
 
     # Set correct GPU flag considering diffent platforms
     if docker info | grep -q 'Runtimes.*nvidia'; then
@@ -410,30 +437,37 @@ build_custom_parser() {
         echo "No GPU support found in Docker."
         exit 1
     fi
-    
-    # Capture output and error code
-    build_output=$(docker run --privileged --rm --net=host $GPU_FLAG \
-        -v $PWD/models:/workspace/models \
-        -w /workspace/models/PeopleNetTransformer \
-        --entrypoint /bin/bash \
-        $DEEPSTREAM_IMAGE \
-        -c "cd custom_parser && make clean 2>&1 && make 2>&1" 2>&1)
-    build_exit_code=$?
 
-    # Show output only if there were errors
-    if [[ $build_exit_code -ne 0 ]]; then
-        log_error "Build failed with errors:"
-        echo "$build_output"
-        return 1
-    fi
+    local models=("PeopleNetTransformer" "RTDETR")
+    for model in "${models[@]}"; do
+        if [[ -f "$PWD/models/$model/custom_parser/libnvds_infercustomparser_tao.so" ]]; then
+            log_success "$model custom parser already built"
+            continue
+        fi
 
-    if [[ -f "$PWD/models/PeopleNetTransformer/custom_parser/libnvds_infercustomparser_tao.so" ]]; then
-        log_success "Custom parser built successfully"
-    else
-        log_error "Failed to build custom parser: libnvds_infercustomparser_tao.so not found"
-        echo "$build_output"
-        return 1
-    fi
+        log_info "Building custom parser for $model..."
+        build_output=$(docker run --privileged --rm --net=host $GPU_FLAG \
+            -v $PWD/models:/workspace/models \
+            -w /workspace/models/$model \
+            --entrypoint /bin/bash \
+            $DEEPSTREAM_IMAGE \
+            -c "cd custom_parser && make clean 2>&1 && make 2>&1" 2>&1)
+        build_exit_code=$?
+
+        if [[ $build_exit_code -ne 0 ]]; then
+            log_error "Build failed for $model with errors:"
+            echo "$build_output"
+            return 1
+        fi
+
+        if [[ -f "$PWD/models/$model/custom_parser/libnvds_infercustomparser_tao.so" ]]; then
+            log_success "$model custom parser built successfully"
+        else
+            log_error "Failed to build $model custom parser: libnvds_infercustomparser_tao.so not found"
+            echo "$build_output"
+            return 1
+        fi
+    done
 }
 
 

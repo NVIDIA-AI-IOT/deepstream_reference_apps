@@ -51,35 +51,82 @@ extern "C" bool NvDsInferParseCustomYoloV4(
                   << ", detected by network: " << NUM_CLASSES_YOLO << std::endl;
     }
 
-    std::vector<NvDsInferParseObjectInfo> objects;
-    uint num_bboxes;
-    float *score_buffer;
-    float *bbox_buffer;
-    
-    
-    for (int i=0; i<outputLayersInfo.size(); i++) {
-        if (!strcmp(outputLayersInfo[i].layerName, "nmsed_boxes")) {
-            const NvDsInferLayerInfo &boxes = outputLayersInfo[i];
-            num_bboxes = boxes.inferDims.d[0];
-            bbox_buffer = (float *)boxes.buffer;
+    const NvDsInferLayerInfo *boxes = nullptr;
+    const NvDsInferLayerInfo *scores = nullptr;
+    const NvDsInferLayerInfo *num = nullptr;
+    const NvDsInferLayerInfo *classes_layer = nullptr;
+
+    for (size_t l = 0; l < outputLayersInfo.size(); l++) {
+        if (!strcmp(outputLayersInfo[l].layerName, "num_detections")) {
+            num = &outputLayersInfo[l];
         }
-        else if (!strcmp(outputLayersInfo[i].layerName, "nmsed_scores")) {
-            const NvDsInferLayerInfo &scores = outputLayersInfo[i];
-            score_buffer = (float *)scores.buffer;
+        if (!strcmp(outputLayersInfo[l].layerName, "nmsed_boxes")) {
+            boxes = &outputLayersInfo[l];
+        }
+        if (!strcmp(outputLayersInfo[l].layerName, "nmsed_scores")) {
+            scores = &outputLayersInfo[l];
+        }
+        if (!strcmp(outputLayersInfo[l].layerName, "nmsed_classes")) {
+            classes_layer = &outputLayersInfo[l];
         }
     }
 
-    for (int n=0; n<num_bboxes; n++) {
+    if (!boxes || !scores || !classes_layer) {
+        std::cerr << "ERROR: Missing required output layers (nmsed_boxes, nmsed_scores, nmsed_classes)" << std::endl;
+        return false;
+    }
+
+    const float* bbox_buffer = (const float*)boxes->buffer;
+    const float* score_buffer = (const float*)scores->buffer;
+    const float* class_buffer = (const float*)classes_layer->buffer;
+
+    // Get number of detections
+    uint num_bboxes;
+    if (num) {
+        num_bboxes = ((int*)num->buffer)[0];
+    } else {
+        num_bboxes = boxes->inferDims.d[0];
+    }
+
+    for (uint n = 0; n < num_bboxes; ++n) {
+        int class_id = static_cast<int>(class_buffer[n]);
+
+        // Validate class_id
+        if (class_id < 0 || class_id >= (int)detectionParams.numClassesConfigured) {
+            continue;
+        }
+
+        float score = score_buffer[n];
+        if (score < detectionParams.perClassPreclusterThreshold[class_id]) {
+            continue;
+        }
+
+        // Parse bbox: [x1, y1, x2, y2] normalized coordinates
+        float bx1 = bbox_buffer[n * 4];
+        float by1 = bbox_buffer[n * 4 + 1];
+        float bx2 = bbox_buffer[n * 4 + 2];
+        float by2 = bbox_buffer[n * 4 + 3];
+
+        // Convert to pixel coordinates
+        float x1 = clamp(bx1 * networkInfo.width, 0.0f, (float)networkInfo.width);
+        float y1 = clamp(by1 * networkInfo.height, 0.0f, (float)networkInfo.height);
+        float x2 = clamp(bx2 * networkInfo.width, 0.0f, (float)networkInfo.width);
+        float y2 = clamp(by2 * networkInfo.height, 0.0f, (float)networkInfo.height);
+
         NvDsInferParseObjectInfo outObj;
-        if(score_buffer[n] > 0.1) {
-            outObj.left = bbox_buffer[n*4] * networkInfo.width;
-            outObj.top = bbox_buffer[n*4+1] * networkInfo.height;
-            outObj.width = (bbox_buffer[n*4+2]-bbox_buffer[n*4]) * networkInfo.width;
-            outObj.height = (bbox_buffer[n*4+3]-bbox_buffer[n*4+1]) * networkInfo.height;
-            outObj.classId=n;
-            outObj.detectionConfidence=score_buffer[n];
-            objectList.push_back(outObj);
-        }       
+        outObj.left = x1;
+        outObj.top = y1;
+        outObj.width = clamp(x2 - x1, 0.0f, (float)networkInfo.width);
+        outObj.height = clamp(y2 - y1, 0.0f, (float)networkInfo.height);
+        outObj.classId = class_id;
+        outObj.rotation_angle = 0.0f;
+        outObj.detectionConfidence = score;
+
+        if (outObj.width < 1 || outObj.height < 1) {
+            continue;
+        }
+
+        objectList.push_back(outObj);
     }
 
     return true;

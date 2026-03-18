@@ -1,9 +1,9 @@
 ## Manual Setup Instructions
 
 
-1. Please check [Deepstream Container Prerequisites](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_docker_containers.html#prerequisites) for Deepstream container setup, and download the latest DeepStream container image (e.g., DS 8.0 in the example below). 
+1. Please check [Deepstream Container Prerequisites](https://docs.nvidia.com/metropolis/deepstream/dev-guide/text/DS_docker_containers.html#prerequisites) for Deepstream container setup, and download the latest DeepStream container image. 
     ```bash
-    docker pull nvcr.io/nvidia/deepstream:8.0-triton-multiarch
+    docker pull nvcr.io/nvidia/deepstream:9.0-triton-multiarch
     ```
 2. Git clone the current `deepstream_reference_apps` repository to the host machine and enter `deepstream-tracker-3d-multi-view` directory
     ```bash
@@ -22,29 +22,34 @@
     ```
 
 
-4. Download the `PeopleNetTransformer` and `BodyPose3DNet` models from NGC, and build the custom parser for `PeopleNetTransformer` model
-    * Download the models ([PeopleNetTransformer](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet_transformer_v2), and [BodyPose3DNet](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/bodypose3dnet))
+4. Download the `PeopleNetTransformer`, `RTDETR`, `PeopleNet v2.6.3`, and `BodyPose3DNet` models from NGC, and build custom parsers
+    * Download the models ([PeopleNetTransformer](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet_transformer_v2), [RT-DETR 2D Warehouse](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/rtdetr_2d_warehouse), [PeopleNet v2.6.3](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet), and [BodyPose3DNet](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/bodypose3dnet))
     ```bash
     wget --content-disposition 'https://api.ngc.nvidia.com/v2/models/org/nvidia/team/tao/peoplenet_transformer_v2/deployable_v1.0/files?redirect=true&path=dino_fan_small_astro_delta.onnx' -O 'models/PeopleNetTransformer/peoplenet_transformer_model_op17.onnx'
+    wget --content-disposition 'https://api.ngc.nvidia.com/v2/models/org/nvidia/team/tao/rtdetr_2d_warehouse/deployable_efficientvit_l2_v1.0/files?redirect=true&path=rtdetr_warehouse_v1.0.fp16.onnx' -O 'models/RTDETR/rtdetr_warehouse_v1.0.fp16.onnx'
+    wget --content-disposition 'https://api.ngc.nvidia.com/v2/models/org/nvidia/team/tao/peoplenet/deployable_quantized_onnx_v2.6.3/files?redirect=true&path=resnet34_peoplenet.onnx' -O 'models/PeopleNet2.6.3/resnet34_peoplenet.onnx'
     wget --content-disposition 'https://api.ngc.nvidia.com/v2/models/org/nvidia/team/tao/bodypose3dnet/deployable_accuracy_onnx_1.0/files?redirect=true&path=bodypose3dnet_accuracy.onnx' -O 'models/BodyPose3DNet/bodypose3dnet_accuracy.onnx'
     ```
 
-    * Build the custom parser
+    * Build the custom parsers for both PeopleNetTransformer and RTDETR
     ```bash
-    # Enter the DeepStream container
-    docker run -it --privileged --rm --net=host --runtime=nvidia \
+    # Build PeopleNetTransformer custom parser
+    docker run --privileged --rm --net=host --runtime=nvidia \
         -v $PWD/models:/workspace/models \
         -w /workspace/models/PeopleNetTransformer \
         --entrypoint /bin/bash \
-        nvcr.io/nvidia/deepstream:8.0-triton-multiarch
+        nvcr.io/nvidia/deepstream:9.0-triton-multiarch \
+        -c "cd custom_parser && make clean && make"
+    # [Expected output] You should see "libnvds_infercustomparser_tao.so" built under models/PeopleNetTransformer/custom_parser/. Warnings during build are expected.
 
-    # Build the custom parser
-    cd custom_parser
-    make clean && make
-    # [Expected output] You should see "libnvds_infercustomparser_tao.so" built under the custom_parser directory. And it is expected to see warnings during the build process.
-
-    # Exit the DeepStream container
-    exit
+    # Build RTDETR custom parser
+    docker run --privileged --rm --net=host --runtime=nvidia \
+        -v $PWD/models:/workspace/models \
+        -w /workspace/models/RTDETR \
+        --entrypoint /bin/bash \
+        nvcr.io/nvidia/deepstream:9.0-triton-multiarch \
+        -c "cd custom_parser && make clean && make"
+    # [Expected output] You should see "libnvds_infercustomparser_tao.so" built under models/RTDETR/custom_parser/. Warnings during build are expected.
     ```
 
 5. Install and run the Mosquitto MQTT broker
@@ -56,8 +61,15 @@
     sudo apt install mosquitto mosquitto-clients
     ```
 
-    * After the installation, the Mosquitto broker service will be automatically started on port 1883. You can verify this by running the provided test script. If the broker is active, you should see `Hello from Mosquitto test!` in the output:
+    * Configure Mosquitto for optimal performance by enabling TCP_NODELAY:
     ```bash
+    echo "set_tcp_nodelay true" | sudo tee /etc/mosquitto/conf.d/mv3dt.conf
+    ```
+
+    * After the installation, the Mosquitto broker service will be automatically started on port 1883. Restart it to apply the new config, then verify by running the provided test script. If the broker is active, you should see `Hello from Mosquitto test!` in the output:
+    ```bash
+    sudo systemctl restart mosquitto
+
     chmod +x ./scripts/mosquitto_test.sh
     ./scripts/mosquitto_test.sh
     ```
@@ -84,9 +96,9 @@
     sudo apt install openjdk-17-jdk 
 
     # Get Kafka
-    wget https://dlcdn.apache.org/kafka/4.0.0/kafka_2.13-4.0.0.tgz
-    tar -xzf kafka_2.13-4.0.0.tgz
-    cd kafka_2.13-4.0.0
+    wget https://dlcdn.apache.org/kafka/4.2.0/kafka_2.13-4.2.0.tgz
+    tar -xzf kafka_2.13-4.2.0.tgz
+    cd kafka_2.13-4.2.0
 
     # Start the Kafka environment
     export KAFKA_CLUSTER_ID="$(bin/kafka-storage.sh random-uuid)"
@@ -101,7 +113,7 @@
     * Create a `mv3dt` topic under broker server `localhost:9092`, and set the message retention to 30 seconds. 
 
     ```bash
-    cd <path to kafka folder, e.g. kafka_2.13-4.0.0>
+    cd <path to kafka folder, e.g. kafka_2.13-4.2.0>
 
     ./bin/kafka-topics.sh --bootstrap-server localhost:9092 \
         --create \
@@ -120,7 +132,7 @@
 
     * To stop a Kafka broker running in the background, you can use the following command:
     ```bash
-    cd <path to kafka folder, e.g. kafka_2.13-4.0.0>
+    cd <path to kafka folder, e.g. kafka_2.13-4.2.0>
     bin/kafka-server-stop.sh
     ```
 
@@ -184,7 +196,7 @@
     ```bash
     # Create a temporary Dockerfile
     cat > ./Dockerfile.ib_mv3dt << 'EOF'
-    FROM nvcr.io/nvidia/deepstream:8.0-triton-multiarch
+    FROM nvcr.io/nvidia/deepstream:9.0-triton-multiarch
     RUN pip3 install torch==2.7.0 omegaconf==2.3.0
     ENV GST_PLUGIN_PATH=/opt/nvidia/deepstream/deepstream/lib/gst-plugins
     ENV LD_LIBRARY_PATH=/opt/nvidia/deepstream/deepstream/lib:$LD_LIBRARY_PATH

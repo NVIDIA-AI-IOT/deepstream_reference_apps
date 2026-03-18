@@ -22,8 +22,10 @@ To install these packages, execute the following command:
 ## Build
 
 ```bash
-  $ export CUDA_VER=xx.x # For DS8.0 on x86 CUDA_VER=12.8, on Jetson CUDA_VER=13.0
-  $ sudo make            # (sudo not required in case of docker containers)
+  $ Set CUDA_VER in the MakeFile as per platform.
+      For x86, CUDA_VER=13.1
+      For Jetson, CUDA_VER=13.0
+  $ sudo make
 ```
 
 NOTE: To compile the sources, run make with "sudo" or root permission.
@@ -31,17 +33,17 @@ NOTE: To compile the sources, run make with "sudo" or root permission.
 
 ## Generate super resolution model
 
-The model is from pytorch [code](https://github.com/pytorch/tutorials/blob/2f4e5c368a2754276d70cf4aed4a97bcf01ed551/advanced_source/super_resolution_with_onnxruntime.py). 
+The model is from pytorch [code](https://github.com/pytorch/tutorials/blob/main/advanced_source/super_resolution_with_onnxruntime.py). 
 Here are the steps to generate the model.
 
 ```bash
-  $ pip install onnx onnxruntime torch torchvision
-  $ git clone --shallow-since=2025-07-10  https://github.com/pytorch/tutorials.git
-  $ cd tutorials && git reset --hard 876c56359626a9716e524ec832674f26272ad13a
+  $ pip install onnx onnxruntime torch torchvision onnxscript
+  $ git clone --shallow-since=2025-07-1  https://github.com/pytorch/tutorials.git
+  $ cd tutorials && git reset --hard `git rev-list --max-parents=0 HEAD`
+  #update opset_version to 18 in advanced_source/super_resolution_with_onnxruntime.py
   $ python3 advanced_source/super_resolution_with_onnxruntime.py
-  # After generating super_resolution.onnx in the current directory,
-  # copy the model to deepstream-ipc-test-sr directory.
-  $ cp advanced_source/super_resolution.onnx /path/to/your/deepstream-ipc-test-sr
+  # copy the generated super_resolution.onnx and super_resolution.onnx.data to deepstream-ipc-test-sr.
+  $ cp advanced_source/super_resolution.onnx* /path/to/your/deepstream-ipc-test-sr
 ```
 
 ## Run

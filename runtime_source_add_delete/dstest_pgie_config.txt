@@ -1,5 +1,5 @@
 ################################################################################
-# SPDX-FileCopyrightText: Copyright (c) 2018-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2018-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,14 +53,14 @@
 gpu-id=0
 net-scale-factor=0.00392156862745098
 onnx-file=../../../../../samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx
-model-engine-file=../../../../../samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx_b1_gpu0_int8.engine
+model-engine-file=../../../../../samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx_b1_gpu0_fp16.engine
 labelfile-path=../../../../../samples/models/Primary_Detector/labels.txt
 int8-calib-file=../../../../../samples/models/Primary_Detector/cal_trt.bin
 batch-size=30
 process-mode=1
 model-color-format=0
 ## 0=FP32, 1=INT8, 2=FP16 mode
-network-mode=1
+network-mode=2
 num-detected-classes=4
 interval=0
 gie-unique-id=1

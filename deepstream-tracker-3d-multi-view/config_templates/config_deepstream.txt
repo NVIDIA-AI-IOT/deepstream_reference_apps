@@ -88,8 +88,8 @@ display-text=1
 [tiled-display]
 enable=1
 gpu-id=0
-width=2880
-height=1620
+width=1920
+height=1080
 nvbuf-memory-type=0
 rows=2
 columns=2

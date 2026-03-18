@@ -8,7 +8,7 @@ TargetManagement:
   maxTargetsPerStream: 200
   minIouDiff4NewTarget: 0.22656630527418112
   minTrackerConfidence: 0.6957540479571296
-  probationAge: 1
+  probationAge: 5
   maxShadowTrackingAge: 162
   earlyTerminationAge: 1
   maxTrajectoryBufferLength: -1
@@ -36,8 +36,8 @@ DataAssociator:
   dataAssociatorType: 0
   associationMatcherType: 1
   checkClassMatch: 0
-  minMatchingScore4Overall: 0.6671945991661751
-  minMatchingScore4SizeSimilarity: 0.6718623956657859
+  minMatchingScore4Overall: 0.4
+  minMatchingScore4SizeSimilarity: 0.4
   minMatchingScore4Iou: 0.1393522182207021
   minMatchingScore4VisualSimilarity: 0.0520394823204932
   matchingScoreWeight4SizeSimilarity: 0.104589699500018
@@ -53,6 +53,7 @@ StateEstimator:
   measurementNoiseVar4Detector: 100.0000
   measurementNoiseVar4Tracker: 883.5847350922555
 ObjectModelProjection:
+  minPoseConfidence: 0.925
   outputFootLocation: 1
   outputVisibility: 1
   outputConvexHull: 0
@@ -80,7 +81,7 @@ MultiViewAssociator:
   maxPeerTrackletSize: 50
   recentlyActiveAge: 178
   minCommonFrames4MatchScore: 2
-  minPeerToPredDistance4Fusion: 1.35
+  maxPeerToPredDistance4Fusion: 1.35
   minPeerVisibility4Fusion: 0.15
   minPeerTrackletMatchScore: 0.48
   maxTrackletMatchingTimeSearchRange: 1
@@ -103,4 +104,4 @@ PoseEstimator:
   netScaleFactor: 0.00392156
   onnxFile: /workspace/models/BodyPose3DNet/bodypose3dnet_accuracy.onnx
   modelEngineFile: /workspace/models/BodyPose3DNet/bodypose3dnet_accuracy.onnx_b1_gpu0_fp16.engine
-  poseInferenceInterval: -1
+  poseInferenceInterval: 30

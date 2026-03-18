@@ -1,5 +1,5 @@
 ################################################################################
-# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -25,11 +25,11 @@ property:
   gpu-id: 0
   net-scale-factor: 0.00392156862745098
   onnx-file: /opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx
-  model-engine-file: /opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx_b2_gpu0_int8.engine
+  model-engine-file: /opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx_b2_gpu0_fp16.engine
   labelfile-path: /opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector/labels.txt
   int8-calib-file: /opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector/cal_trt.bin
   batch-size: 2
-  network-mode: 1
+  network-mode: 2
   num-detected-classes: 4
   interval: 0
   gie-unique-id: 1

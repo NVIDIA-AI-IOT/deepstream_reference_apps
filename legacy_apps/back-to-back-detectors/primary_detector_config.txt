@@ -1,5 +1,5 @@
 ################################################################################
-# SPDX-FileCopyrightText: Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,7 +57,7 @@ onnx-file=/opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector/resn
 labelfile-path=/opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector/labels.txt
 int8-calib-file=/opt/nvidia/deepstream/deepstream/samples/models/Primary_Detector/cal_trt.bin
 batch-size=1
-network-mode=1
+network-mode=2
 process-mode=1
 num-detected-classes=4
 interval=0

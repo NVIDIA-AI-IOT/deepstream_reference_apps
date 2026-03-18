@@ -25,7 +25,6 @@ python utils/deepstream_auto_configurator.py \
     --enable-msg-broker \
     --enable-osd \
     --tracker-config=config_tracker_2d.yml \
-    --config-overrides=override_tracker_12cam.yml \
     --output-dir=$EXPERIMENT_DIR
 
 # Launch real-time BEV visualization
@@ -43,5 +42,5 @@ docker run -t --privileged --rm --net=host $GPU_FLAG \
     -v /tmp/.X11-unix/:/tmp/.X11-unix \
     -e DISPLAY=$DISPLAY \
     -w /workspace/experiments \
-    ${DEEPSTREAM_IMAGE:-nvcr.io/nvidia/deepstream:8.0-triton-multiarch} \
+    ${DEEPSTREAM_IMAGE:-nvcr.io/nvidia/deepstream:9.0-triton-multiarch} \
     deepstream-test5-app -c config_deepstream.txt
