@@ -1579,6 +1579,7 @@ int main(int argc, char *argv[])
   /* Wait till pipeline encounters an error or EOS */
   g_print("Running...\n");
   g_main_loop_run(main_loop);
+  }
 
 done:
 
