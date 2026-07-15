@@ -148,7 +148,7 @@ static gboolean try_load_file(gpointer data) {
     g_object_get(G_OBJECT(dynamicsrcbin), "current-id", &current_id, NULL);
     g_object_get(G_OBJECT(dynamicsrcbin), "current-file", &current_file, NULL);
     
-    if (!current_file || !current_id) {
+    if (!current_file || current_id != -1) {
         g_print("Waiting for file to come...\n");
         return TRUE;
     }
@@ -195,7 +195,7 @@ static gboolean handle_dynamic_source_message(GstElement *dynamicsrcbin) {
         g_object_get(G_OBJECT(dynamicsrcbin), "current-file", &current_file, NULL);
         g_print("Current ID: %d, Current File: %s\n", current_id, current_file);
         
-        if (current_file && current_id) {
+        if (current_file && current_id != -1) {
             gboolean ret = load_file(dynamicsrcbin, current_file);
             g_free(current_file);
             return ret;
