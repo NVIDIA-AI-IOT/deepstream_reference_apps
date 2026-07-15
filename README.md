@@ -1,4 +1,4 @@
-# The repository stops updating, please refer to https://github.com/NVIDIA/deepstream for latest DeepStream reference applications.
+# This repository has ceased updates, please refer to https://github.com/NVIDIA/deepstream for latest DeepStream reference applications.
 
 # Reference Apps using DeepStream 9.0
 
